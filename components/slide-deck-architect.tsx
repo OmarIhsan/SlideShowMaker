@@ -50,11 +50,11 @@ const GENERATION_STEPS = [
 const SLIDE_FRAME = {
   titleY: 0.5,
   bodyX: 0.7,
-  bodyY: 1.4,
+  bodyY: 1.28,
   bodyW: 8.6,
   bodyH: 3.2,
   accentX: 0.3,
-  accentY: 1.4,
+  accentY: 1.28,
   accentW: 0.08,
   accentH: 3.2,
   footerY: 5.2,
@@ -118,7 +118,7 @@ function renderFallbackPdfSlide(doc: any, slide: Slide, theme: Theme) {
   doc.setFont("helvetica", "bold")
   doc.setFontSize(24)
   doc.setTextColor(theme.hexPrimary)
-  doc.text(slide.title, 0.7, SLIDE_FRAME.titleY)
+  doc.text(slide.title, 5.0, SLIDE_FRAME.titleY, { align: "center" })
   renderCenteredPdfBody(doc, slide, theme, SLIDE_FRAME.bodyY)
 }
 
@@ -356,7 +356,7 @@ export default function SlideDeckArchitect() {
         }
         
         // 1. Write the Slide Title (styled like preview)
-        pptxSlide.addText(slide.title, { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.titleY, w: SLIDE_FRAME.bodyW, h: 0.8, fontSize: 24, bold: true, color: primaryHex });
+        pptxSlide.addText(slide.title, { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.titleY, w: SLIDE_FRAME.bodyW, h: 0.8, fontSize: 24, bold: true, color: primaryHex, align: "center" });
 
         // 2. Map body content paragraphs and bullets
         const bodySegments = buildBodySegments(slide.content)
@@ -460,7 +460,7 @@ export default function SlideDeckArchitect() {
         doc.setFont("helvetica", "bold")
         doc.setFontSize(24)
         doc.setTextColor(theme.hexPrimary)
-        doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY)
+        doc.text(slide.title, 5.0, SLIDE_FRAME.titleY, { align: "center" })
 
         // 6. Draw centered body content inside the safe text frame
         const bodySegments = buildBodySegments(slide.content)
@@ -1103,12 +1103,12 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
       <div className="absolute left-0 top-[24.8%] h-[56.8%] w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
       
       {/* Title box positioned cleanly at top-left */}
-      <h2 className="text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" style={{ color: theme.hexPrimary }}>
+      <h2 className="w-full text-center text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" style={{ color: theme.hexPrimary }}>
         {slide.title}
       </h2>
       
       {/* Body text box matched to w: 8.6, h: 3.2, aligned left/top */}
-      <div className="mt-[3.5%] min-h-[350px] max-w-[86%] h-[56.8%] flex flex-col justify-center space-y-3 overflow-hidden break-words text-left pr-2">
+      <div className="mt-1 min-h-[350px] max-w-[86%] h-[56.8%] flex flex-col justify-center space-y-3 overflow-hidden break-words text-left pr-2">
         {slide.content.map((text, i) => {
           const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
           if (isListItem) {
