@@ -67,28 +67,30 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
 
       {/* Body text box matched to w: 8.6, h: 3.5, aligned left/top */}
       <div 
-        className="max-w-[86%] flex flex-col justify-center space-y-3 overflow-hidden break-words pr-2 mt-[6.2%]"
+        className="max-w-[86%] flex flex-col overflow-hidden break-words pr-2 mt-[6.2%]"
         style={{
           height: "62.2%"
         }}
       >
-        {slide.content.map((text, i) => {
-          const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-          if (isListItem) {
-            return (
-              <div key={i} className="flex items-start gap-2.5 text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
-                <span className="leading-normal">{text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()}</span>
-              </div>
-            )
-          }
+        <div className="my-auto w-full flex flex-col space-y-3">
+          {slide.content.map((text, i) => {
+            const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
+            if (isListItem) {
+              return (
+                <div key={i} className="flex items-start gap-2.5 text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
+                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
+                  <span className="leading-normal">{text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()}</span>
+                </div>
+              )
+            }
 
-          return (
-            <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-              {text}
-            </p>
-          )
-        })}
+            return (
+              <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
+                {text}
+              </p>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
