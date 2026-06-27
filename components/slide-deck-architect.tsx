@@ -230,7 +230,7 @@ export default function SlideDeckArchitect() {
       const pptx = new PptxGen()
 
       // Widescreen ratio
-      pptx.layout = "LAYOUT_169"
+      pptx.layout = "LAYOUT_16x9"
 
       // Loop through slides array during export execution
       slides.forEach((slide) => {

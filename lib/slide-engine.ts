@@ -93,108 +93,51 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   const bodySlides: Slide[] = []
 
   let slideIdCounter = 3
+  let currentGroup: string[] = []
 
-  type Block =
-    | { type: "heading"; text: string }
-    | { type: "paragraph"; text: string; header: string }
-    | { type: "list"; items: string[]; header: string }
-    | { type: "table"; rows: string[]; header: string }
+  const flushGroup = () => {
+    if (currentGroup.length > 0) {
+      bodySlides.push({
+        id: slideIdCounter++,
+        title: currentHeader,
+        content: [...currentGroup],
+        layout: "STANDARD_CONTENT"
+      })
+      currentGroup = []
+    }
+  }
 
-  const blocks: Block[] = []
-  
-  let i = 0
-  while (i < lines.length) {
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     if (!line) {
-      i++
       continue
     }
 
     if (line.startsWith("# ")) {
+      flushGroup()
       docTitle = line.replace("# ", "").trim()
-      i++
       continue
     }
     if (line.startsWith("## ")) {
+      flushGroup()
       currentHeader = line.replace("## ", "").trim()
-      blocks.push({ type: "heading", text: currentHeader })
-      i++
       continue
     }
     if (line.startsWith("### ")) {
+      flushGroup()
       currentHeader = line.replace("### ", "").trim()
-      blocks.push({ type: "heading", text: currentHeader })
-      i++
       continue
     }
 
-    // Check table block
-    if (line.startsWith("|")) {
-      const tableLines: string[] = []
-      while (i < lines.length && lines[i].startsWith("|")) {
-        // Skip separator line (---) from being rendered literally in slides
-        if (!lines[i].includes("---")) {
-          tableLines.push(lines[i])
-        }
-        i++
-      }
-      if (tableLines.length > 0) {
-        blocks.push({ type: "table", rows: tableLines, header: currentHeader })
-      }
-      continue
+    // Keep all text lines verbatim (including markdown table lines like |) as standard content text segments
+    currentGroup.push(line)
+
+    if (currentGroup.length >= 4) {
+      flushGroup()
     }
-
-    // Check list item block
-    const isBullet = line.startsWith("-") || line.startsWith("*") || line.startsWith("•")
-    const isNumbered = /^\d+[.)]/.test(line)
-
-    if (isBullet || isNumbered) {
-      const listItems: string[] = []
-      while (i < lines.length && (lines[i].startsWith("-") || lines[i].startsWith("*") || lines[i].startsWith("•") || /^\d+[.)]/.test(lines[i]))) {
-        listItems.push(lines[i])
-        i++
-      }
-      blocks.push({ type: "list", items: listItems, header: currentHeader })
-      continue
-    }
-
-    // Default: standard paragraph block
-    blocks.push({ type: "paragraph", text: line, header: currentHeader })
-    i++
   }
 
-  // Group text content blocks to target ~30 slides (3-5 segments per slide)
-  blocks.forEach((block) => {
-    if (block.type === "paragraph") {
-      bodySlides.push({
-        id: slideIdCounter++,
-        title: block.header,
-        content: [block.text],
-        layout: "STANDARD_CONTENT"
-      })
-    } else if (block.type === "table") {
-      bodySlides.push({
-        id: slideIdCounter++,
-        title: block.header,
-        content: block.rows,
-        layout: "TABULAR_DATA"
-      })
-    } else if (block.type === "list") {
-      const chunkSize = 4 // groups 3 to 5 bullet points logically
-      for (let c = 0; c < block.items.length; c += chunkSize) {
-        const chunk = block.items.slice(c, c + chunkSize)
-        const partNo = Math.floor(c / chunkSize) + 1
-        const totalParts = Math.ceil(block.items.length / chunkSize)
-        
-        bodySlides.push({
-          id: slideIdCounter++,
-          title: totalParts > 1 ? `${block.header} (Part ${partNo}/${totalParts})` : block.header,
-          content: chunk,
-          layout: "STANDARD_CONTENT"
-        })
-      }
-    }
-  })
+  flushGroup()
 
   // Build Outline list dynamically
   const uniqueHeaders = Array.from(new Set(bodySlides.map(s => s.title)))
