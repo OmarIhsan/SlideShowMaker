@@ -129,12 +129,40 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       continue
     }
 
-    // Keep all text lines verbatim (including markdown table lines like |) as standard content text segments
-    currentGroup.push(line)
-
-    if (currentGroup.length >= 4) {
-      flushGroup()
+    // Skip separator lines in markdown tables
+    if (line.includes("|") && line.includes("-")) {
+      const cleanCheck = line.replace(/[|\s-]/g, "")
+      if (cleanCheck.length === 0) {
+        continue
+      }
     }
+
+    // Convert pipe-delimited table rows to bullets
+    if (line.startsWith("|") || line.includes("|")) {
+      const cells = line.split("|").map(c => c.trim()).filter(Boolean)
+      if (cells.length > 0) {
+        let formatted = ""
+        if (cells.length === 1) {
+          formatted = `- ${cells[0]}`
+        } else if (cells.length === 2) {
+          formatted = `- ${cells[0]}: ${cells[1]}`
+        } else {
+          const extra = cells.slice(2).join(", ")
+          formatted = `- ${cells[0]}: ${cells[1]} (${extra})`
+        }
+        currentGroup.push(formatted)
+        continue
+      }
+    }
+
+    // Convert colon-delimited list definitions to bullets
+    const hasListIndicator = line.startsWith("-") || line.startsWith("*") || line.startsWith("•") || /^\d+[.)]/.test(line)
+    if (!hasListIndicator && /^[A-Za-z0-9\s()-]+:\s+.+$/.test(line)) {
+      currentGroup.push(`- ${line}`)
+      continue
+    }
+
+    currentGroup.push(line)
   }
 
   flushGroup()
