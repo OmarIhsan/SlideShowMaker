@@ -132,16 +132,20 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       continue
     }
 
-    // Skip separator lines in markdown tables
-    if (line.includes("|") && line.includes("-")) {
-      const cleanCheck = line.replace(/[|\s-]/g, "")
-      if (cleanCheck.length === 0) {
-        continue
-      }
-    }
+    // Regex cleaners for structural delimiters
+    const pipeRegex = /\|/;
+    const tabIndentRegex = /^(\t+|\s{2,})/;
 
-    // Convert pipe-delimited table rows to bullets
-    if (line.startsWith("|") || line.includes("|")) {
+    // Delimiter Processing & List Mapping
+    if (pipeRegex.test(line)) {
+      // Skip separator lines in markdown tables
+      if (line.includes("-")) {
+        const cleanCheck = line.replace(/[|\s-]/g, "")
+        if (cleanCheck.length === 0) {
+          continue
+        }
+      }
+
       const cells = line.split("|").map(c => c.trim()).filter(Boolean)
       if (cells.length > 0) {
         let formatted = ""
@@ -158,9 +162,8 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       }
     }
 
-    // Convert tab-indented rows to bullets
-    if (/^(\t|\s{2,})/.test(line)) {
-      const trimmed = line.trim()
+    if (tabIndentRegex.test(line)) {
+      const trimmed = line.replace(tabIndentRegex, "").trim()
       if (trimmed.length > 0) {
         currentGroup.push(`- ${trimmed}`)
         continue
@@ -249,23 +252,34 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
       for (let i = 0; i < slide.content.length; i++) {
         const line = slide.content[i]
         const tempChunk = [...currentChunk, line]
+        
         if (getSlideHeight(tempChunk) > 4.9) {
-          // If currentChunk is empty, push the single line anyway to prevent infinite loop.
-          if (currentChunk.length === 0) {
-            step1.push({
-              id: 0,
-              title: `${baseTitle} - Part ${partIndex++}`,
-              content: [line],
-              layout: slide.layout
-            })
+          // Evaluate collective height of remaining topic points before split
+          const remainingLines = slide.content.slice(i)
+          const leftoverHeight = getSlideHeight(remainingLines)
+
+          // Dynamic Merging Enforcer: If leftover points occupy less than 75% of limit (3.675 inches), merge tightly
+          if (leftoverHeight < 3.675) {
+            currentChunk.push(...remainingLines)
+            break
           } else {
-            step1.push({
-              id: 0,
-              title: `${baseTitle} - Part ${partIndex++}`,
-              content: currentChunk,
-              layout: slide.layout
-            })
-            currentChunk = [line]
+            // Execute slide split
+            if (currentChunk.length === 0) {
+              step1.push({
+                id: 0,
+                title: `${baseTitle} - Part ${partIndex++}`,
+                content: [line],
+                layout: slide.layout
+              })
+            } else {
+              step1.push({
+                id: 0,
+                title: `${baseTitle} - Part ${partIndex++}`,
+                content: currentChunk,
+                layout: slide.layout
+              })
+              currentChunk = [line]
+            }
           }
         } else {
           currentChunk.push(line)

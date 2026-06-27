@@ -120,8 +120,41 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
 
     try {
       if (slide.layout === "TABULAR_DATA") {
-        const tableRows = slide.content.map((rowText) => [{ text: rowText }])
-        pptxSlide.addTable(tableRows, { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.bodyY, w: SLIDE_FRAME.bodyW })
+        const tableRows = slide.content.map((rowText, rowIndex) => {
+          const cells = rowText
+            .replace(/^\|/, "")
+            .replace(/\|$/, "")
+            .split("|")
+            .map((cell) => {
+              const cellObj: any = { text: cell.trim() }
+              if (rowIndex === 0) {
+                cellObj.options = {
+                  fill: { color: primaryHex },
+                  color: "FFFFFF",
+                  bold: true,
+                  fontSize: 12,
+                  align: "left",
+                  valign: "middle"
+                }
+              } else {
+                cellObj.options = {
+                  fill: { color: rowIndex % 2 === 1 ? "FFFFFF" : "F8FAFC" },
+                  color: "444444",
+                  fontSize: 10,
+                  align: "left",
+                  valign: "middle"
+                }
+              }
+              return cellObj
+            })
+          return cells
+        })
+        pptxSlide.addTable(tableRows, {
+          x: SLIDE_FRAME.bodyX,
+          y: SLIDE_FRAME.bodyY,
+          w: SLIDE_FRAME.bodyW,
+          border: { type: "solid", color: "E2E8F0", width: 1 },
+        })
       } else {
         const formattedContent = buildFormattedContent(slide, primaryHex)
         pptxSlide.addText(formattedContent, {

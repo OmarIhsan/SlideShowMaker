@@ -31,6 +31,125 @@ function loadScript(url: string): Promise<void> {
   })
 }
 
+function cleanDocText(text: string): string {
+  const lines = text.split(/[\r\n]+/);
+  const cleanLines = lines
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (line.length < 3) return false;
+      const lower = line.toLowerCase();
+
+      // MS Word OLE system streams and metadata properties
+      if (
+        lower.includes("worddocument") ||
+        lower.includes("microsoft word") ||
+        lower.includes("summaryinformation") ||
+        lower.includes("documentsummaryinformation") ||
+        lower.includes("normal.dot") ||
+        lower.includes("compobj") ||
+        lower.includes("objectpool") ||
+        lower.includes("msworddoc") ||
+        lower.includes("word.document.8") ||
+        lower.includes("root entry") ||
+        lower.includes("default paragraph font") ||
+        lower.includes("table")
+      ) {
+        return false;
+      }
+
+      // Common Font/Style names used in Word styling metadata
+      if (
+        lower === "normal" ||
+        lower === "heading" ||
+        lower.startsWith("heading ") ||
+        lower === "times new roman" ||
+        lower === "arial" ||
+        lower === "calibri" ||
+        lower === "courier new" ||
+        lower === "symbol" ||
+        lower === "wingdings" ||
+        lower.includes("font") ||
+        lower.includes("theme")
+      ) {
+        return false;
+      }
+
+      // Filter out purely repeated symbol rows (headers/footers/binary structures)
+      if (/^[\\_/\-\s*.|+=:;?!#@$%^&*(){}[\]]{4,}$/.test(line)) {
+        return false;
+      }
+
+      // Count alphanumeric characters to filter out binary noise
+      const alphaCount = (line.match(/[a-zA-Z0-9]/g) || []).length;
+      if (alphaCount < line.length * 0.4) {
+        return false;
+      }
+
+      return true;
+    });
+
+  return cleanLines.join("\n");
+}
+
+function extractTextFromDoc(arrayBuffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(arrayBuffer);
+  const len = bytes.length;
+  let text = "";
+
+  let i = 0;
+  while (i < len) {
+    // Check for UTF-16LE printable sequence
+    let utf16Temp = "";
+    let j = i;
+    while (j + 1 < len) {
+      const b1 = bytes[j];
+      const b2 = bytes[j + 1];
+
+      const isPrintableUtf16 =
+        (b2 === 0x00 && ((b1 >= 0x20 && b1 <= 0x7E) || b1 === 0x0A || b1 === 0x0D || b1 === 0x09)) ||
+        (b2 === 0x20 && b1 >= 0x00 && b1 <= 0xFF) ||
+        (b2 >= 0x01 && b2 <= 0x04 && b1 >= 0x00 && b1 <= 0xFF);
+
+      if (isPrintableUtf16) {
+        utf16Temp += String.fromCharCode(b1 + (b2 << 8));
+        j += 2;
+      } else {
+        break;
+      }
+    }
+
+    if (utf16Temp.length >= 4) {
+      text += utf16Temp + "\n";
+      i = j;
+      continue;
+    }
+
+    // Check for ASCII/ANSI printable sequence
+    let asciiTemp = "";
+    let k = i;
+    while (k < len) {
+      const b = bytes[k];
+      const isPrintableAscii = (b >= 0x20 && b <= 0x7E) || b === 0x0A || b === 0x0D || b === 0x09;
+      if (isPrintableAscii) {
+        asciiTemp += String.fromCharCode(b);
+        k++;
+      } else {
+        break;
+      }
+    }
+
+    if (asciiTemp.length >= 4) {
+      text += asciiTemp + "\n";
+      i = k;
+      continue;
+    }
+
+    i++;
+  }
+
+  return cleanDocText(text);
+}
+
 export function useSlideDeckGeneration() {
   const [rawText, setRawText] = useState("")
   const [fileName, setFileName] = useState<string | null>(null)
@@ -59,6 +178,8 @@ export function useSlideDeckGeneration() {
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i)
           const textContent = await page.getTextContent()
+          
+          // Native Text Extraction Filter: Target only structural text. Ignore embedded images/vectors.
           const pageText = textContent.items
             .map((item: any) => item.str)
             .join(" ")
@@ -87,6 +208,17 @@ export function useSlideDeckGeneration() {
           setRawText(text)
         } else {
           alert("This document is empty. Please check the file and try again.")
+          setFileName(null)
+          setRawText("")
+        }
+      } else if (nameLower.endsWith(".doc")) {
+        const arrayBuffer = await file.arrayBuffer()
+        const text = extractTextFromDoc(arrayBuffer)
+
+        if (text.trim().length > 0) {
+          setRawText(text)
+        } else {
+          alert("This document does not contain a digital text layer. Please check the file and try again.")
           setFileName(null)
           setRawText("")
         }

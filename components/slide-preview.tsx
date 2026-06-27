@@ -73,23 +73,52 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
         }}
       >
         <div className="my-auto w-full flex flex-col space-y-3">
-          {slide.content.map((text, i) => {
-            const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-            if (isListItem) {
-              return (
-                <div key={i} className="flex items-start gap-2.5 text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
-                  <span className="leading-normal">{text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()}</span>
-                </div>
-              )
+          {(() => {
+            const elements: React.ReactNode[] = []
+            let currentList: string[] = []
+
+            const flushList = (key: string | number) => {
+              if (currentList.length > 0) {
+                elements.push(
+                  <ul key={`ul-${key}`} className="list-disc pl-5 space-y-2 text-slate-600">
+                    {currentList.map((item, idx) => {
+                      const cleanText = item
+                        .replace(/^[-*•]\s*/, "")
+                        .replace(/^\d+[.)]\s*/, "")
+                        .trim()
+                      return (
+                        <li 
+                          key={idx} 
+                          className="text-sm sm:text-base leading-normal list-item"
+                          style={{ color: theme.hexPrimary }}
+                        >
+                          <span className="text-slate-600">{cleanText}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )
+                currentList = []
+              }
             }
 
-            return (
-              <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-                {text}
-              </p>
-            )
-          })}
+            slide.content.forEach((text, i) => {
+              const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
+              if (isListItem) {
+                currentList.push(text)
+              } else {
+                flushList(i)
+                elements.push(
+                  <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
+                    {text}
+                  </p>
+                )
+              }
+            })
+            flushList("final")
+
+            return elements
+          })()}
         </div>
       </div>
     </div>
