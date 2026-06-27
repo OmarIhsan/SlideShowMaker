@@ -259,9 +259,9 @@ export default function SlideDeckArchitect() {
         // Draw vertical primary-colored accent bar on the left margin (mirroring preview)
         pptxSlide.addShape("rect", {
           x: 0.3,
-          y: 1.81,
+          y: 1.5,
           w: 0.08,
-          h: 2.0,
+          h: 2.2,
           fill: { color: primaryHex },
           line: { color: primaryHex, width: 0 }
         });
@@ -269,9 +269,9 @@ export default function SlideDeckArchitect() {
         // Embed lecturer footer
         if (lecturerName) {
           pptxSlide.addText(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, {
-            x: 0.8,
+            x: 0.7,
             y: 5.2,
-            w: 8.4,
+            w: 8.6,
             h: 0.3,
             fontSize: 9,
             color: "777777",
@@ -280,26 +280,15 @@ export default function SlideDeckArchitect() {
           });
         }
         
-        // 1. Combine Slide Title and Body Content into a single vertically centered textbox (styled like preview)
-        let textRuns = [];
+        // 1. Write the Slide Title (styled like preview)
+        pptxSlide.addText(slide.title, { x: 0.7, y: 0.5, w: 8.6, h: 0.8, fontSize: 24, bold: true, color: primaryHex });
 
-        // Add Slide Title
-        textRuns.push({
-          text: slide.title + "\n\n",
-          options: {
-            fontSize: 24,
-            bold: true,
-            color: primaryHex,
-            fontFace: "Arial"
-          }
-        });
-
-        // Add body paragraphs and bullets
-        slide.content.forEach((text, i) => {
+        // 2. Map body content paragraphs and bullets
+        let formattedContent = slide.content.map((text, i) => {
           const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
           const cleanText = isListItem ? text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim() : text
           
-          textRuns.push({
+          return {
             text: cleanText + (i < slide.content.length - 1 ? "\n" : ""),
             options: {
               bullet: isListItem ? { code: "25CF", color: primaryHex } : undefined, // Circle bullet dot matching preview
@@ -308,30 +297,31 @@ export default function SlideDeckArchitect() {
               fontFace: "Arial",
               paraSpaceBefore: 6
             }
-          });
+          };
         });
 
-        // 2. Strict Layout Type Evaluation
+        // 3. Strict Layout Type Evaluation
         try {
           if (slide.layout === 'TABULAR_DATA') {
             // Execute standard table generation assuming content rows match table matrix arrays
-            // Format strings safely into table cells
             let tableRows = slide.content.map(rowText => [ { text: rowText } ]);
-            pptxSlide.addTable(tableRows, { x: 0.8, y: 1.6, w: 8.4 });
+            pptxSlide.addTable(tableRows, { x: 0.7, y: 1.5, w: 8.6 });
           } else {
-            // CRITICAL FALLBACK SAFEGUARD: Force all content into a single combined centered textbox
-            pptxSlide.addText(textRuns, {
-              x: 0.8,
-              y: 0.6,
-              w: 8.4,
-              h: 4.4,
-              valign: 'middle'
+            // CRITICAL FALLBACK SAFEGUARD: Force all content into a locked vertical textbox with font auto-shrink
+            pptxSlide.addText(formattedContent, {
+              x: 0.7,
+              y: 1.5,
+              w: 8.6,
+              h: 3.6,
+              align: 'left',
+              valign: 'top',
+              fit: 'shrink'
             });
           }
         } catch (error) {
           // Global item fallback: guarantee that processing never crashes with an unhandled exception modal
           console.error("Safeguard applied for slide compile exception:", error);
-          pptxSlide.addText(slide.content.join(' '), { x: 0.8, y: 1.6, w: 8.4, h: 3.2, fontSize: 12, color: "333333" });
+          pptxSlide.addText(slide.content.join(' '), { x: 0.7, y: 1.5, w: 8.6, h: 3.6, fontSize: 12, color: "333333" });
         }
       });
 
@@ -383,57 +373,47 @@ export default function SlideDeckArchitect() {
 
         // 3. Draw vertical primary-colored accent bar on the left margin (mirroring preview)
         doc.setFillColor(theme.hexPrimary)
-        doc.rect(0.3, 1.81, 0.08, 2.0, "F")
+        doc.rect(0.3, 1.5, 0.08, 2.2, "F")
 
         // 4. Embed lecturer footer
         if (lecturerName) {
           doc.setFont("helvetica", "italic")
           doc.setFontSize(9)
           doc.setTextColor("#777777")
-          doc.text(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, 0.8, 5.2)
+          doc.text(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, 0.7, 5.2)
         }
 
-        // 5. Calculate total content height to center vertically
-        let totalHeight = 0.5 // slide title + spacer Y gap
-        slide.content.forEach((text) => {
-          const lines = doc.splitTextToSize(text, 8.2)
-          totalHeight += (lines.length * 0.24) + 0.1
-        })
-
-        // Centered Y coordinate base
-        let currentY = Math.max(1.0, (5.625 - totalHeight) / 2)
-
-        // Draw Slide Title
+        // 5. Draw Slide Title
         doc.setFont("helvetica", "bold")
         doc.setFontSize(24)
         doc.setTextColor(theme.hexPrimary)
-        doc.text(slide.title, 0.8, currentY)
-        currentY += 0.5
+        doc.text(slide.title, 0.7, 0.9)
 
-        // 6. Draw body content verbatim starting from centered Y position
+        // 6. Draw body content starting at Y = 1.5 inches
         doc.setFont("helvetica", "normal")
         doc.setFontSize(14)
         doc.setTextColor("#444444")
 
+        let currentY = 1.5
         slide.content.forEach((text) => {
           const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
           
           if (isListItem) {
             // Draw bullet dot matching preview
             doc.setFillColor(theme.hexPrimary)
-            doc.circle(0.85, currentY - 0.05, 0.03, "F")
+            doc.circle(0.75, currentY - 0.05, 0.03, "F")
             
             // Draw list item text
             doc.setFont("helvetica", "normal")
             const cleanText = text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()
             
-            // Wrap text nicely to fit slide width
-            const lines = doc.splitTextToSize(cleanText, 8.0)
-            doc.text(lines, 1.0, currentY)
+            // Wrap text nicely to fit slide width (8.6 - left indent)
+            const lines = doc.splitTextToSize(cleanText, 7.8)
+            doc.text(lines, 0.9, currentY)
             currentY += (lines.length * 0.24) + 0.1
           } else {
             const lines = doc.splitTextToSize(text, 8.2)
-            doc.text(lines, 0.8, currentY)
+            doc.text(lines, 0.7, currentY)
             currentY += (lines.length * 0.24) + 0.1
           }
         })
@@ -1049,10 +1029,17 @@ function SlideRenderer({
 
 function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
   return (
-    <div className="relative flex h-full flex-col justify-center px-8 py-10 sm:px-14">
-      <div className="absolute left-0 top-1/2 h-24 w-1.5 -translate-y-1/2 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
-      <h2 className="text-2xl font-bold sm:text-3xl font-sans" style={{ color: theme.hexPrimary }}>{slide.title}</h2>
-      <div className="mt-4 max-w-3xl space-y-3 overflow-y-auto max-h-[60%] pr-2">
+    <div className="relative flex h-full flex-col px-10 py-8 select-text">
+      {/* Visual Accent bar mirroring coordinates of PowerPoint */}
+      <div className="absolute left-0 top-24 h-24 w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
+      
+      {/* Title box positioned cleanly at top-left */}
+      <h2 className="text-2xl font-bold sm:text-3xl font-sans tracking-tight" style={{ color: theme.hexPrimary }}>
+        {slide.title}
+      </h2>
+      
+      {/* Body text box matched to w: 8.6, h: 3.6, aligned left/top */}
+      <div className="mt-5 max-w-[86%] h-[60%] flex-1 flex flex-col justify-start space-y-3 overflow-hidden break-words text-left pr-2">
         {slide.content.map((text, i) => {
           const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
           if (isListItem) {

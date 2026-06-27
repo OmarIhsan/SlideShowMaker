@@ -200,27 +200,27 @@ function splitLongSlides(slides: Slide[]): Slide[] {
       return
     }
 
-    const wordCount = slide.content.join(" ").split(/\s+/).filter(Boolean).length
+    const totalChars = slide.content.reduce((acc, text) => acc + text.length, 0)
     const estLines = getEstimatedVisualLines(slide.content)
     
-    // Split if there are more than 3 lines, more than 80 words, or estimated visual lines exceed 3
-    if (slide.content.length > 3 || wordCount > 80 || estLines > 3) {
+    // Split if there are more than 4 lines, more than 450 characters total, or estimated visual lines exceed 4
+    if (slide.content.length > 4 || totalChars > 450 || estLines > 4) {
       if (slide.content.length > 1) {
         const half = Math.ceil(slide.content.length / 2)
         const firstHalf = slide.content.slice(0, half)
         const secondHalf = slide.content.slice(half)
 
-        const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+        const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
 
         const part1 = {
           id: slideIdCounter++,
-          title: `${baseTitle} (Part 1/2)`,
+          title: `${baseTitle} (Part 1)`,
           content: firstHalf,
           layout: slide.layout
         }
         const part2 = {
           id: slideIdCounter++,
-          title: `${baseTitle} (Part 2/2)`,
+          title: `${baseTitle} (Part 2)`,
           content: secondHalf,
           layout: slide.layout
         }
@@ -232,7 +232,7 @@ function splitLongSlides(slides: Slide[]): Slide[] {
           result.push(s)
         })
       } else {
-        // If there is only 1 line but it exceeds 45 words or 4 estimated lines, split it by sentence boundary
+        // If there is only 1 line but it exceeds character or line limits, split it by sentence boundary
         const singleLine = slide.content[0]
         const sentences = singleLine.split(/(?<=\.)\s+/).filter(Boolean)
 
@@ -241,17 +241,17 @@ function splitLongSlides(slides: Slide[]): Slide[] {
           const firstHalf = [sentences.slice(0, half).join(" ")]
           const secondHalf = [sentences.slice(half).join(" ")]
 
-          const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+          const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
 
           const part1 = {
             id: slideIdCounter++,
-            title: `${baseTitle} (Part 1/2)`,
+            title: `${baseTitle} (Part 1)`,
             content: firstHalf,
             layout: slide.layout
           }
           const part2 = {
             id: slideIdCounter++,
-            title: `${baseTitle} (Part 2/2)`,
+            title: `${baseTitle} (Part 2)`,
             content: secondHalf,
             layout: slide.layout
           }
@@ -273,7 +273,7 @@ function splitLongSlides(slides: Slide[]): Slide[] {
     }
   })
 
-  // Group split slides by their base title and update part labels dynamically (e.g. Part 1/3)
+  // Group split slides by their base title and update part labels dynamically (e.g. Part 1, Part 2)
   const finalResult: Slide[] = []
   let currentBaseTitle = ""
   let matchingSlides: Slide[] = []
@@ -282,12 +282,12 @@ function splitLongSlides(slides: Slide[]): Slide[] {
     if (matchingSlides.length > 0) {
       if (matchingSlides.length === 1) {
         const s = matchingSlides[0]
-        s.title = s.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+        s.title = s.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
         finalResult.push(s)
       } else {
         matchingSlides.forEach((s, idx) => {
-          const base = s.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
-          s.title = `${base} (Part ${idx + 1}/${matchingSlides.length})`
+          const base = s.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
+          s.title = `${base} (Part ${idx + 1})`
           finalResult.push(s)
         })
       }
@@ -302,7 +302,7 @@ function splitLongSlides(slides: Slide[]): Slide[] {
       return
     }
 
-    const base = s.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+    const base = s.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
     if (base !== currentBaseTitle) {
       flushMatching()
       currentBaseTitle = base
