@@ -3,16 +3,12 @@
 import { AnimatePresence, motion } from "framer-motion"
 import confetti from "canvas-confetti"
 import {
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Check,
   ChevronRight,
-  CircleCheck,
   FileText,
   Hash,
-  ImageIcon,
-  LayoutGrid,
   LayoutTemplate,
   ListOrdered,
   Loader2,
@@ -21,8 +17,6 @@ import {
   Sparkles,
   Tags,
   Upload,
-  X,
-  XCircle,
 } from "lucide-react"
 import {
   type ChangeEvent,
@@ -84,7 +78,7 @@ export default function SlideDeckArchitect() {
   const theme = useMemo<Theme>(() => {
     if (useCustomTheme) {
       return {
-        id: "clinical", // fallback id
+        id: "clinical",
         label: "Custom Colors",
         accentBg: "",
         accentText: "",
@@ -110,7 +104,6 @@ export default function SlideDeckArchitect() {
       reader.onload = () => setRawText(String(reader.result ?? ""))
       reader.readAsText(file)
     } else {
-      // PDF/DOCX binary parsing is simulated client-side.
       setRawText(SAMPLE_SCRIPT)
     }
   }, [])
@@ -168,7 +161,6 @@ export default function SlideDeckArchitect() {
         setPage([0, 0])
         setPhase("ready")
         
-        // Trigger high-fidelity celebration
         confetti({
           particleCount: 100,
           spread: 70,
@@ -242,15 +234,14 @@ export default function SlideDeckArchitect() {
 
       const cleanHex = (hex: string) => hex.replace("#", "")
       const primaryHex = cleanHex(theme.hexPrimary)
-      const secondaryHex = cleanHex(theme.hexSecondary)
       const bgHex = cleanHex(theme.hexBg)
 
       slides.forEach((slide) => {
         const pptSlide = pres.addSlide()
 
         // Apply slide backdrop color
-        if (slide.layout === "title" || slide.layout === "chapter") {
-          pptSlide.background = { color: primaryHex }
+        if (slide.layout === "title") {
+          pptSlide.background = { color: "0F172A" } // Dark blue theme for Title Slide
         } else {
           pptSlide.background = { color: bgHex }
         }
@@ -259,13 +250,13 @@ export default function SlideDeckArchitect() {
         if (logoBase64) {
           if (slide.layout === "title") {
             pptSlide.addImage({ data: logoBase64, x: 8.2, y: 0.5, w: 1.2, h: 0.6 })
-          } else if (slide.layout !== "chapter") {
+          } else {
             pptSlide.addImage({ data: logoBase64, x: 8.5, y: 0.3, w: 1.0, h: 0.5 })
           }
         }
 
-        // Embed lecturer footer (except for title and module divider slides)
-        if (lecturerName && slide.layout !== "title" && slide.layout !== "chapter") {
+        // Embed lecturer footer (except for Title slide)
+        if (lecturerName && slide.layout !== "title") {
           pptSlide.addText(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, {
             x: 0.8,
             y: 5.2,
@@ -278,531 +269,269 @@ export default function SlideDeckArchitect() {
           })
         }
 
-        // Layout translations
-        switch (slide.layout) {
-          case "title": {
-            pptSlide.addText(slide.kicker, {
-              x: 0.8,
-              y: 1.2,
-              w: 8.4,
-              h: 0.4,
-              fontSize: 12,
-              color: "CCCCCC",
-              fontFace: "Arial",
-              bold: true,
-              tracking: 2,
-            })
-            pptSlide.addText(slide.title, {
-              x: 0.8,
-              y: 1.8,
-              w: 8.4,
-              h: 1.6,
-              fontSize: 38,
-              color: "FFFFFF",
-              fontFace: "Arial",
-              bold: true,
-              verticalAlign: "top",
-            })
-            pptSlide.addText(slide.subtitle, {
-              x: 0.8,
-              y: 3.5,
-              w: 8.4,
-              h: 1.0,
-              fontSize: 14,
-              color: "DDDDDD",
-              fontFace: "Arial",
-            })
-            if (lecturerName) {
-              pptSlide.addText(`Presented by: ${lecturerName}`, {
+        // Try-Catch Fail-Safe Processing per slide
+        try {
+          switch (slide.layout) {
+            case "title": {
+              pptSlide.addText(slide.kicker, {
                 x: 0.8,
-                y: 4.6,
+                y: 1.2,
                 w: 8.4,
                 h: 0.4,
                 fontSize: 12,
-                color: "FFFFFF",
-                fontFace: "Arial",
-                italic: true,
-              })
-            }
-            break
-          }
-
-          case "toc": {
-            pptSlide.addText(slide.title, {
-              x: 0.8,
-              y: 0.5,
-              w: 8.4,
-              h: 0.6,
-              fontSize: 24,
-              color: primaryHex,
-              fontFace: "Arial",
-              bold: true,
-            })
-            slide.items.forEach((item, idx) => {
-              const col = idx % 2
-              const row = Math.floor(idx / 2)
-              const x = 0.8 + col * 4.3
-              const y = 1.3 + row * 0.7
-
-              pptSlide.addText(String(item.n).padStart(2, "0"), {
-                x,
-                y,
-                w: 0.4,
-                h: 0.4,
-                fontSize: 12,
-                color: "FFFFFF",
-                fontFace: "Arial",
-                bold: true,
-                align: "center",
-                valign: "middle",
-                fill: { color: primaryHex },
-              })
-
-              pptSlide.addText(item.label, {
-                x: x + 0.5,
-                y,
-                w: 3.6,
-                h: 0.4,
-                fontSize: 12,
-                color: "333333",
-                fontFace: "Arial",
-                bold: true,
-                valign: "middle",
-              })
-            })
-            break
-          }
-
-          case "chapter": {
-            pptSlide.addText(String(slide.index).padStart(2, "0"), {
-              x: 0.8,
-              y: 1.4,
-              w: 8.4,
-              h: 1.0,
-              fontSize: 72,
-              color: "FFFFFF",
-              fontFace: "Arial",
-              bold: true,
-              opacity: 0.3,
-            })
-            pptSlide.addText(slide.kicker, {
-              x: 0.8,
-              y: 2.5,
-              w: 8.4,
-              h: 0.4,
-              fontSize: 14,
-              color: "EEEEEE",
-              fontFace: "Arial",
-              bold: true,
-              tracking: 2,
-            })
-            pptSlide.addText(slide.title, {
-              x: 0.8,
-              y: 3.0,
-              w: 8.4,
-              h: 1.5,
-              fontSize: 32,
-              color: "FFFFFF",
-              fontFace: "Arial",
-              bold: true,
-            })
-            break
-          }
-
-          case "content": {
-            pptSlide.addText(slide.title, {
-              x: 0.8,
-              y: 0.5,
-              w: 8.4,
-              h: 0.6,
-              fontSize: 24,
-              color: primaryHex,
-              fontFace: "Arial",
-              bold: true,
-            })
-            let contentY = 1.3
-            if (slide.paragraphs.length > 0) {
-              const fullText = slide.paragraphs.join("\n\n")
-              pptSlide.addText(fullText, {
-                x: 0.8,
-                y: contentY,
-                w: 8.4,
-                h: 1.5,
-                fontSize: 13,
-                color: "333333",
-                fontFace: "Arial",
-              })
-              contentY += 1.6
-            }
-            if (slide.bullets.length > 0) {
-              const bulletObjs = slide.bullets.map((b) => ({ text: b, options: { bullet: true } }))
-              pptSlide.addText(bulletObjs, {
-                x: 0.8,
-                y: contentY,
-                w: 8.4,
-                h: 2.2,
-                fontSize: 13,
-                color: "444444",
-                fontFace: "Arial",
-              })
-            }
-            break
-          }
-
-          case "split": {
-            pptSlide.addText(slide.title, {
-              x: 0.8,
-              y: 0.5,
-              w: 8.4,
-              h: 0.6,
-              fontSize: 24,
-              color: primaryHex,
-              fontFace: "Arial",
-              bold: true,
-            })
-            if (slide.bullets.length > 0) {
-              const bulletObjs = slide.bullets.map((b) => ({ text: b, options: { bullet: true } }))
-              pptSlide.addText(bulletObjs, {
-                x: 0.8,
-                y: 1.4,
-                w: 4.0,
-                h: 3.5,
-                fontSize: 13,
-                color: "333333",
-                fontFace: "Arial",
-              })
-            }
-            slide.callouts.forEach((c, idx) => {
-              const cardY = 1.4 + idx * 1.1
-              pptSlide.addShape("rect", {
-                x: 5.2,
-                y: cardY,
-                w: 4.0,
-                h: 0.95,
-                fill: { color: "F3F4F6" },
-                line: { color: "E5E7EB", width: 1 },
-              })
-              pptSlide.addText(c.term, {
-                x: 5.35,
-                y: cardY + 0.1,
-                w: 3.7,
-                h: 0.25,
-                fontSize: 11,
                 color: primaryHex,
                 fontFace: "Arial",
                 bold: true,
               })
-              pptSlide.addText(c.def, {
-                x: 5.35,
-                y: cardY + 0.35,
-                w: 3.7,
-                h: 0.5,
-                fontSize: 9.5,
-                color: "555555",
-                fontFace: "Arial",
-              })
-            })
-            break
-          }
-
-          case "process": {
-            pptSlide.addText(slide.title, {
-              x: 0.8,
-              y: 0.5,
-              w: 8.4,
-              h: 0.6,
-              fontSize: 24,
-              color: primaryHex,
-              fontFace: "Arial",
-              bold: true,
-            })
-            const stepCount = slide.steps.length
-            const totalW = 8.4
-            const gap = 0.25
-            const stepW = (totalW - gap * (stepCount - 1)) / stepCount
-
-            slide.steps.forEach((step, idx) => {
-              const stepX = 0.8 + idx * (stepW + gap)
-              pptSlide.addShape("rect", {
-                x: stepX,
-                y: 1.6,
-                w: stepW,
-                h: 3.1,
-                fill: { color: "FFFFFF" },
-                line: { color: "E5E7EB", width: 1.5 },
-              })
-              pptSlide.addText(String(step.step), {
-                x: stepX + 0.15,
-                y: 1.75,
-                w: 0.35,
-                h: 0.35,
-                fontSize: 11,
-                color: "FFFFFF",
-                fontFace: "Arial",
-                bold: true,
-                align: "center",
-                valign: "middle",
-                fill: { color: primaryHex },
-              })
-              pptSlide.addText(step.title, {
-                x: stepX + 0.15,
-                y: 2.3,
-                w: stepW - 0.3,
-                h: 0.5,
-                fontSize: 11,
-                color: "111111",
-                fontFace: "Arial",
-                bold: true,
-              })
-              pptSlide.addText(step.detail, {
-                x: stepX + 0.15,
-                y: 2.9,
-                w: stepW - 0.3,
+              pptSlide.addText(slide.title, {
+                x: 0.8,
+                y: 1.8,
+                w: 8.4,
                 h: 1.6,
-                fontSize: 9.5,
-                color: "555555",
-                fontFace: "Arial",
-              })
-            })
-            break
-          }
-
-          case "grid": {
-            pptSlide.addText(slide.title, {
-              x: 0.8,
-              y: 0.5,
-              w: 8.4,
-              h: 0.6,
-              fontSize: 24,
-              color: primaryHex,
-              fontFace: "Arial",
-              bold: true,
-            })
-            const cols = slide.items.length <= 4 ? 2 : 3
-            const rows = Math.ceil(slide.items.length / cols)
-            const gap = 0.25
-            const totalW = 8.4
-            const cardW = (totalW - gap * (cols - 1)) / cols
-            const cardH = rows === 1 ? 3.0 : 1.4
-
-            slide.items.forEach((item, idx) => {
-              const colIdx = idx % cols
-              const rowIdx = Math.floor(idx / cols)
-              const cardX = 0.8 + colIdx * (cardW + gap)
-              const cardY = 1.5 + rowIdx * (cardH + gap)
-
-              pptSlide.addShape("rect", {
-                x: cardX,
-                y: cardY,
-                w: cardW,
-                h: cardH,
-                fill: { color: "FFFFFF" },
-                line: { color: "E5E7EB", width: 1 },
-              })
-
-              pptSlide.addText(item.title, {
-                x: cardX + 0.15,
-                y: cardY + 0.12,
-                w: cardW - 0.3,
-                h: 0.35,
-                fontSize: 11,
-                color: primaryHex,
+                fontSize: 38,
+                color: "FFFFFF",
                 fontFace: "Arial",
                 bold: true,
               })
-
-              if (item.detail) {
-                pptSlide.addText(item.detail, {
-                  x: cardX + 0.15,
-                  y: cardY + 0.5,
-                  w: cardW - 0.3,
-                  h: cardH - 0.6,
-                  fontSize: 9.5,
-                  color: "555555",
+              pptSlide.addText(slide.subtitle, {
+                x: 0.8,
+                y: 3.6,
+                w: 8.4,
+                h: 0.8,
+                fontSize: 16,
+                color: "CCCCCC",
+                fontFace: "Arial",
+              })
+              if (lecturerName) {
+                pptSlide.addText(`Presented by: ${lecturerName}`, {
+                  x: 0.8,
+                  y: 4.5,
+                  w: 8.4,
+                  h: 0.4,
+                  fontSize: 12,
+                  color: "999999",
                   fontFace: "Arial",
+                  bold: true,
                 })
               }
-            })
-            break
-          }
+              break
+            }
 
-          case "table": {
-            pptSlide.addText(slide.title, {
-              x: 0.8,
-              y: 0.5,
-              w: 8.4,
-              h: 0.6,
-              fontSize: 24,
-              color: primaryHex,
-              fontFace: "Arial",
-              bold: true,
-            })
-            const tableData: any[] = []
+            case "toc": {
+              // Header
+              pptSlide.addText(slide.title, {
+                x: 0.8,
+                y: 0.5,
+                w: 8.4,
+                h: 0.6,
+                fontSize: 24,
+                color: primaryHex,
+                fontFace: "Arial",
+                bold: true,
+              })
+              pptSlide.addText("Lecture Outline", {
+                x: 0.8,
+                y: 1.0,
+                w: 8.4,
+                h: 0.3,
+                fontSize: 12,
+                color: "666666",
+                fontFace: "Arial",
+                bold: true,
+              })
 
-            tableData.push(
-              slide.columns.map((colName) => ({
-                text: colName,
-                options: {
-                  fill: { color: primaryHex },
+              // Outline list
+              slide.items.forEach((item, idx) => {
+                const colIdx = idx % 2
+                const rowIdx = Math.floor(idx / 2)
+                const itemX = 0.8 + colIdx * 4.3
+                const itemY = 1.6 + rowIdx * 0.55
+                
+                // Number block
+                pptSlide.addText(String(item.n).padStart(2, "0"), {
+                  x: itemX,
+                  y: itemY,
+                  w: 0.4,
+                  h: 0.35,
+                  fontSize: 11,
                   color: "FFFFFF",
-                  bold: true,
-                  align: "left",
-                  fontSize: 10,
                   fontFace: "Arial",
-                },
-              }))
-            )
+                  bold: true,
+                  fill: { color: primaryHex },
+                  align: "center",
+                  valign: "middle",
+                })
+                
+                // Text label
+                pptSlide.addText(item.label, {
+                  x: itemX + 0.5,
+                  y: itemY,
+                  w: 3.5,
+                  h: 0.35,
+                  fontSize: 11,
+                  color: "333333",
+                  fontFace: "Arial",
+                  bold: true,
+                  valign: "middle",
+                })
+              })
+              break
+            }
 
-            slide.rows.forEach((row, rIdx) => {
-              const bg = rIdx % 2 === 0 ? "FFFFFF" : "F9FAFB"
+            case "content": {
+              // Header
+              pptSlide.addText(slide.title, {
+                x: 0.8,
+                y: 0.5,
+                w: 8.4,
+                h: 0.6,
+                fontSize: 24,
+                color: primaryHex,
+                fontFace: "Arial",
+                bold: true,
+              })
+
+              // Verbatim contents (Template A: Standard vertical layout)
+              let verticalOffset = 1.3
+              
+              if (slide.paragraphs && slide.paragraphs.length > 0) {
+                slide.paragraphs.forEach((para) => {
+                  pptSlide.addText(para, {
+                    x: 0.8,
+                    y: verticalOffset,
+                    w: 8.4,
+                    h: 1.5,
+                    fontSize: 15,
+                    color: "444444",
+                    fontFace: "Arial",
+                    lineSpacing: 22,
+                  })
+                  verticalOffset += 1.6
+                })
+              }
+
+              if (slide.bullets && slide.bullets.length > 0) {
+                slide.bullets.forEach((bullet) => {
+                  pptSlide.addText(bullet, {
+                    x: 0.8,
+                    y: verticalOffset,
+                    w: 8.4,
+                    h: 0.7,
+                    fontSize: 14,
+                    color: "444444",
+                    fontFace: "Arial",
+                    valign: "middle",
+                  })
+                  verticalOffset += 0.8
+                })
+              }
+              break
+            }
+
+            case "table": {
+              // Header
+              pptSlide.addText(slide.title, {
+                x: 0.8,
+                y: 0.5,
+                w: 8.4,
+                h: 0.6,
+                fontSize: 24,
+                color: primaryHex,
+                fontFace: "Arial",
+                bold: true,
+              })
+
+              // Render comparison grid table (Template B)
+              const tableData: any[][] = []
+
+              // Table header row
               tableData.push(
-                row.map((cellText, cIdx) => ({
-                  text: cellText,
+                slide.columns.map((colName) => ({
+                  text: colName,
                   options: {
-                    fill: { color: bg },
-                    color: cIdx === 0 ? primaryHex : "333333",
-                    bold: cIdx === 0,
+                    fill: { color: primaryHex },
+                    color: "FFFFFF",
+                    bold: true,
                     align: "left",
-                    fontSize: 9,
+                    fontSize: 10,
                     fontFace: "Arial",
                   },
                 }))
               )
-            })
 
-            pptSlide.addTable(tableData, {
-              x: 0.8,
-              y: 1.4,
-              w: 8.4,
-              h: 3.2,
-            })
-            break
+              // Table data rows
+              slide.rows.forEach((row, rIdx) => {
+                const bg = rIdx % 2 === 0 ? "FFFFFF" : "F9FAFB"
+                tableData.push(
+                  row.map((cellText, cIdx) => ({
+                    text: cellText,
+                    options: {
+                      fill: { color: bg },
+                      color: cIdx === 0 ? primaryHex : "333333",
+                      bold: cIdx === 0,
+                      align: "left",
+                      fontSize: 9,
+                      fontFace: "Arial",
+                    },
+                  }))
+                )
+              })
+
+              pptSlide.addTable(tableData, {
+                x: 0.8,
+                y: 1.4,
+                w: 8.4,
+                h: 3.2,
+              })
+              break
+            }
+
+            default:
+              break
           }
-
-          case "warning": {
-            pptSlide.addText(slide.title, {
-              x: 0.8,
-              y: 0.5,
-              w: 8.4,
+        } catch (slideErr) {
+          console.error("Failed to compile slide layout, invoking fail-safe fallback:", slideErr)
+          // Fail-Safe Fallback: Title and safe text frame
+          try {
+            pptSlide.addShape("rect", {
+              x: 0.7,
+              y: 0.4,
+              w: 8.6,
+              h: 4.6,
+              fill: { color: bgHex },
+              line: { color: primaryHex, width: 2 }
+            })
+            pptSlide.addText(slide.title || "Academic Lecture", {
+              x: 0.9,
+              y: 0.6,
+              w: 8.2,
               h: 0.6,
               fontSize: 24,
               color: primaryHex,
               fontFace: "Arial",
               bold: true,
             })
+            
+            let fallbackBody = ""
+            if (slide.layout === "content") {
+              fallbackBody = [...(slide.paragraphs || []), ...(slide.bullets || [])].join("\n\n")
+            } else if (slide.layout === "table") {
+              fallbackBody = (slide.rows || []).map(r => r.join(" | ")).join("\n")
+            } else {
+              fallbackBody = "Verbatim academic slide content."
+            }
 
-            const isDanger = slide.level === "danger"
-            const borderCol = isDanger ? "FCA5A5" : "FCD34D"
-            const fillCol = isDanger ? "FEF2F2" : "FFFBEB"
-            const textCol = isDanger ? "991B1B" : "92400E"
-
-            pptSlide.addShape("rect", {
-              x: 0.8,
-              y: 1.3,
-              w: 8.4,
-              h: 3.4,
-              fill: { color: fillCol },
-              line: { color: borderCol, width: 2 },
-            })
-
-            pptSlide.addText(isDanger ? "CRITICAL ETHICAL WARNING" : "ACADEMIC PRECAUTION", {
-              x: 1.1,
-              y: 1.5,
-              w: 7.8,
-              h: 0.35,
-              fontSize: 11,
-              color: textCol,
-              fontFace: "Arial",
-              bold: true,
-            })
-
-            const bulletObjs = slide.points.map((p) => ({ text: p, options: { bullet: true } }))
-            pptSlide.addText(bulletObjs, {
-              x: 1.1,
-              y: 1.9,
-              w: 7.8,
-              h: 2.2,
-              fontSize: 12,
+            pptSlide.addText(fallbackBody, {
+              x: 0.9,
+              y: 1.4,
+              w: 8.2,
+              h: 3.2,
+              fontSize: 13,
               color: "333333",
               fontFace: "Arial",
             })
-
-            if (slide.note) {
-              pptSlide.addText(`Note: ${slide.note}`, {
-                x: 1.1,
-                y: 4.2,
-                w: 7.8,
-                h: 0.3,
-                fontSize: 9,
-                color: "666666",
-                fontFace: "Arial",
-                italic: true,
-              })
-            }
-            break
-          }
-
-          case "quiz": {
-            pptSlide.addText(`Review Question:`, {
-              x: 0.8,
-              y: 0.6,
-              w: 8.4,
-              h: 0.3,
-              fontSize: 11,
-              color: secondaryHex,
-              fontFace: "Arial",
-              bold: true,
-            })
-
-            pptSlide.addText(slide.question, {
-              x: 0.8,
-              y: 0.9,
-              w: 8.4,
-              h: 1.0,
-              fontSize: 18,
-              color: "111111",
-              fontFace: "Arial",
-              bold: true,
-            })
-
-            slide.options.forEach((opt, idx) => {
-              const col = idx % 2
-              const row = Math.floor(idx / 2)
-              const cardX = 0.8 + col * 4.3
-              const cardY = 2.0 + row * 1.1
-
-              pptSlide.addShape("rect", {
-                x: cardX,
-                y: cardY,
-                w: 4.0,
-                h: 0.9,
-                fill: { color: "FFFFFF" },
-                line: { color: "D1D5DB", width: 1.5 },
-              })
-
-              pptSlide.addText(`${String.fromCharCode(65 + idx)})  ${opt.text}`, {
-                x: cardX + 0.15,
-                y: cardY + 0.1,
-                w: 3.7,
-                h: 0.7,
-                fontSize: 11,
-                color: "333333",
-                fontFace: "Arial",
-                valign: "middle",
-              })
-            })
-
-            pptSlide.addText(`Correct Answer Indicator: Option ${String.fromCharCode(65 + slide.correctIndex)}  |  Explanation: ${slide.explanation}`, {
-              x: 0.8,
-              y: 4.4,
-              w: 8.4,
-              h: 0.5,
-              fontSize: 9.5,
-              color: "666666",
-              fontFace: "Arial",
-              italic: true,
-            })
-            break
+          } catch (fallbackErr) {
+            console.error("Fatal failure in slide compiler fallback:", fallbackErr)
           }
         }
       })
@@ -833,167 +562,163 @@ export default function SlideDeckArchitect() {
                   <Presentation className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
-                  <h1 className="text-lg font-semibold leading-tight text-slate-900">AI SlideDeck Architect</h1>
-                  <p className="text-xs text-slate-500">Academic Lecture Presentation Builder.</p>
+                  <h1 className="text-sm font-bold text-slate-900 leading-tight">AI SlideDeck Architect</h1>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Verbatim Compiler</p>
                 </div>
               </div>
             </header>
 
-            {/* Outline list (only once a deck exists) */}
-            {phase === "ready" && (
-              <OutlineDrawer outline={outline} current={current} theme={theme} onJump={paginate} />
-            )}
-
-            {/* File Ingestion */}
-            <section aria-labelledby="ingest-heading" className="flex flex-col gap-3">
+            {/* Ingestion Canvas */}
+            <section aria-labelledby="ingest-heading" className="flex flex-col gap-2.5">
               <SectionLabel id="ingest-heading" icon={Upload}>
                 Document Ingestion
               </SectionLabel>
 
               <div
-                role="button"
-                tabIndex={0}
-                onClick={() => fileInputRef.current?.click()}
-                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && fileInputRef.current?.click()}
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setIsDragging(true)
-                }}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
-                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors border-slate-300 hover:border-slate-400 hover:bg-slate-50"
-                style={isDragging ? { borderColor: theme.hexPrimary, backgroundColor: theme.hexBg } : undefined}
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-3 text-center transition-all ${
+                  isDragging
+                    ? "border-teal-500 bg-teal-50/40"
+                    : fileName
+                      ? "border-slate-300 bg-slate-50/50 hover:bg-slate-50"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
               >
-                <span 
-                  className="flex h-11 w-11 items-center justify-center rounded-full"
-                  style={{ backgroundColor: theme.hexSecondary + "1A", color: theme.hexSecondary }}
-                >
-                  <Upload className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <p className="text-sm font-medium text-slate-700">
-                  Drag &amp; drop a document, or <span style={{ color: theme.hexPrimary }}>browse</span>
-                </p>
-                <p className="text-xs text-slate-400">Supports PDF, DOCX, and TXT — structured outlines welcome</p>
                 <input
-                  ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.docx,.txt"
-                  className="hidden"
+                  ref={fileInputRef}
                   onChange={handleFileSelect}
+                  accept=".txt"
+                  className="hidden"
+                  aria-label="Upload academic script"
                 />
+                <FileText className={`h-6 w-6 ${fileName ? "text-teal-600" : "text-slate-400"}`} aria-hidden="true" />
+                {fileName ? (
+                  <div className="mt-1.5 max-w-[200px]">
+                    <p className="truncate text-xs font-bold text-slate-800">{fileName}</p>
+                    <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Click to replace</p>
+                  </div>
+                ) : (
+                  <div className="mt-1.5">
+                    <p className="text-xs font-bold text-slate-700">Drag outline file here</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">or browse files (.txt)</p>
+                  </div>
+                )}
               </div>
+            </section>
 
-              {fileName && (
-                <div className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                  <span className="flex items-center gap-2 truncate text-sm text-slate-700">
-                    <FileText className="h-4 w-4 shrink-0" style={{ color: theme.hexPrimary }} aria-hidden="true" />
-                    <span className="truncate">{fileName}</span>
-                  </span>
+            {/* Custom Academic Branding */}
+            <section aria-labelledby="branding-heading" className="flex flex-col gap-3">
+              <SectionLabel id="branding-heading" icon={Settings2}>
+                Branding Configuration
+              </SectionLabel>
+
+              <div className="grid gap-3 rounded-xl border border-slate-200 p-4">
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="lecturer-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Lecturer Name
+                  </label>
+                  <input
+                    id="lecturer-name"
+                    type="text"
+                    value={lecturerName}
+                    onChange={(e) => setLecturerName(e.target.value)}
+                    placeholder="Enter academic name"
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-slate-300 focus:ring-1 focus:ring-slate-300"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Custom Logo</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={logoInputRef}
+                      onChange={handleLogoSelect}
+                      accept="image/*"
+                      className="hidden"
+                      aria-label="Upload logo image"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Upload className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+                      {logoUrl ? "Replace logo" : "Upload image"}
+                    </button>
+                    {logoUrl && (
+                      <div className="flex items-center gap-1">
+                        <img src={logoUrl} alt="Logo thumbnail" className="h-6 w-12 object-contain rounded border border-slate-200 p-0.5 bg-slate-50" />
+                        <button
+                          type="button"
+                          onClick={() => { setLogoUrl(null); setLogoBase64(null) }}
+                          className="rounded p-0.5 text-slate-400 hover:text-red-500"
+                          aria-label="Remove logo"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Academic Themes */}
+            <section aria-labelledby="theme-heading" className="flex flex-col gap-3">
+              <SectionLabel id="theme-heading" icon={LayoutTemplate}>
+                Academic Colors
+              </SectionLabel>
+
+              <div className="grid gap-3 rounded-xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <span className="text-xs font-semibold text-slate-700">Custom Colors</span>
                   <button
                     type="button"
-                    onClick={() => {
-                      setFileName(null)
-                      setRawText("")
-                    }}
-                    className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
-                    aria-label="Remove file"
+                    role="switch"
+                    aria-checked={useCustomTheme}
+                    onClick={() => setUseCustomTheme(!useCustomTheme)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      useCustomTheme ? "bg-slate-800" : "bg-slate-200"
+                    }`}
                   >
-                    <X className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-
-              <div className="relative">
-                <textarea
-                  value={rawText}
-                  onChange={(e) => setRawText(e.target.value)}
-                  rows={5}
-                  placeholder="…or paste your raw structured notes here. Headers (##/###) and lists will be parsed into sequential slides."
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-slate-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setRawText(SAMPLE_SCRIPT)}
-                  className="absolute bottom-3 right-3 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200"
-                >
-                  Load Academic Sample
-                </button>
-              </div>
-            </section>
-
-            {/* Branding Ingestion */}
-            <section aria-labelledby="brand-heading" className="flex flex-col gap-4 border-t border-slate-100 pt-4">
-              <SectionLabel id="brand-heading" icon={ImageIcon}>
-                Branding &amp; Lecturer
-              </SectionLabel>
-              
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-slate-500">Lecturer Name</label>
-                <input
-                  type="text"
-                  value={lecturerName}
-                  onChange={(e) => setLecturerName(e.target.value)}
-                  placeholder="e.g. Dr. Faisal Alhuwaizi"
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
-                />
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => logoInputRef.current?.click()}
-                  className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400 hover:border-slate-400 focus:outline-none"
-                  aria-label="Upload custom logo"
-                >
-                  {logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={logoUrl} alt="Custom logo preview" className="h-full w-full object-contain" />
-                  ) : (
-                    <ImageIcon className="h-5 w-5" aria-hidden="true" />
-                  )}
-                </button>
-                <div className="text-sm">
-                  <p className="font-medium text-slate-700">Upload Custom Logo</p>
-                  <p className="text-xs text-slate-400">Embeds on title slide &amp; PPTX master layer</p>
-                </div>
-                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoSelect} />
-              </div>
-            </section>
-
-            {/* Theme Customization Engine */}
-            <section aria-labelledby="options-heading" className="flex flex-col gap-4 border-t border-slate-100 pt-4">
-              <SectionLabel id="options-heading" icon={Settings2}>
-                Academic Theme Engine
-              </SectionLabel>
-
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-600">Palette Options</span>
-                  <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={useCustomTheme}
-                      onChange={(e) => setUseCustomTheme(e.target.checked)}
-                      className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        useCustomTheme ? "translate-x-4" : "translate-x-0"
+                      }`}
                     />
-                    Custom Colors
-                  </label>
+                  </button>
                 </div>
 
                 {!useCustomTheme ? (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-slate-500">Theme Profile</label>
-                    <select
-                      value={themeId}
-                      onChange={(e) => setThemeId(e.target.value as ThemeId)}
-                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
-                    >
-                      {Object.values(THEMES).map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(Object.keys(THEMES) as ThemeId[]).map((key) => {
+                      const t = THEMES[key]
+                      const active = themeId === key
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setThemeId(key)}
+                          className={`flex flex-col items-center gap-1.5 rounded-lg border p-2 transition-all ${
+                            active ? "border-slate-800 bg-slate-50 ring-1 ring-slate-800" : "border-slate-200 hover:border-slate-300"
+                          }`}
+                        >
+                          <span
+                            className="h-4 w-4 rounded-full border border-black/5"
+                            style={{ backgroundColor: t.hexPrimary }}
+                          />
+                          <span className="text-[9px] font-bold text-slate-600 truncate max-w-full">{t.label}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 gap-2">
@@ -1037,6 +762,10 @@ export default function SlideDeckArchitect() {
                 )}
               </div>
             </section>
+
+            {phase === "ready" && total > 0 && (
+              <OutlineDrawer outline={outline} current={current} theme={theme} onJump={paginate} />
+            )}
           </div>
 
           {/* Action Footer */}
@@ -1252,7 +981,7 @@ function OutlineDrawer({
                     className="ml-auto shrink-0 text-[9px] uppercase tracking-wide opacity-75"
                     style={active ? { color: "#FFFFFF" } : { color: theme.hexSecondary }}
                   >
-                    {LAYOUT_LABELS[o.layout]}
+                    {o.layout === "title" ? "Title" : o.layout === "toc" ? "Outline" : o.layout === "table" ? "Table" : "Text"}
                   </span>
                 </button>
               </li>
@@ -1373,14 +1102,14 @@ function SlideRenderer({
   return (
     <div className="relative h-full w-full overflow-hidden select-none" style={{ backgroundColor: theme.hexBg }}>
       {/* Global Logo Placement */}
-      {logoUrl && slide.layout !== "title" && slide.layout !== "chapter" && (
+      {logoUrl && slide.layout !== "title" && (
         <div className="absolute right-8 top-6 z-10">
           <img src={logoUrl} alt="Branding Logo" className="h-8 w-auto object-contain" />
         </div>
       )}
 
       {/* Global Academic Footer */}
-      {slide.layout !== "title" && slide.layout !== "chapter" && (
+      {slide.layout !== "title" && (
         <div className="absolute bottom-4 left-8 right-8 flex items-center justify-between border-t border-slate-200/60 pt-2 text-[10px] text-slate-400">
           <span>Lecturer: <strong>{lecturerName || "Academic Staff"}</strong></span>
           <span>Academic Lecture Series</span>
@@ -1393,22 +1122,10 @@ function SlideRenderer({
             return <TitleSlide slide={slide} theme={theme} logoUrl={logoUrl} lecturerName={lecturerName} />
           case "toc":
             return <TocSlide slide={slide} theme={theme} onJump={onJump} />
-          case "chapter":
-            return <ChapterSlide slide={slide} theme={theme} logoUrl={logoUrl} />
           case "content":
             return <ContentSlide slide={slide} theme={theme} />
-          case "split":
-            return <SplitSlide slide={slide} theme={theme} />
-          case "process":
-            return <ProcessSlide slide={slide} theme={theme} />
-          case "grid":
-            return <GridSlide slide={slide} theme={theme} />
           case "table":
             return <TableSlide slide={slide} theme={theme} />
-          case "warning":
-            return <WarningSlide slide={slide} />
-          case "quiz":
-            return <QuizSlide slide={slide} theme={theme} />
           default:
             return null
         }
@@ -1497,34 +1214,6 @@ function TocSlide({
   )
 }
 
-function ChapterSlide({
-  slide,
-  theme,
-  logoUrl,
-}: {
-  slide: Extract<Slide, { layout: "chapter" }>
-  theme: Theme
-  logoUrl: string | null
-}) {
-  return (
-    <div className="relative flex h-full flex-col justify-center overflow-hidden px-10 py-12 sm:px-16" style={{ backgroundColor: theme.hexPrimary }}>
-      <div className="absolute -bottom-20 -left-10 h-72 w-72 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
-      {logoUrl && (
-        <div className="absolute right-10 top-10">
-          <img src={logoUrl} alt="Presentation logo" className="h-10 w-auto object-contain opacity-90" />
-        </div>
-      )}
-      <p className="text-7xl font-black leading-none text-white/30 sm:text-8xl">
-        {String(slide.index).padStart(2, "0")}
-      </p>
-      <p className="mt-4 text-sm font-semibold uppercase tracking-widest text-white/80">{slide.kicker}</p>
-      <h2 className="mt-2 max-w-3xl text-balance text-3xl font-bold leading-tight text-white sm:text-5xl">
-        {slide.title}
-      </h2>
-    </div>
-  )
-}
-
 function ContentSlide({ slide, theme }: { slide: Extract<Slide, { layout: "content" }>; theme: Theme }) {
   return (
     <div className="relative flex h-full flex-col justify-center px-8 py-10 sm:px-14">
@@ -1537,10 +1226,10 @@ function ContentSlide({ slide, theme }: { slide: Extract<Slide, { layout: "conte
           </p>
         ))}
         {slide.bullets.length > 0 && (
-          <ul className="space-y-1.5 pt-1">
+          <ul className="space-y-3 pt-1">
             {slide.bullets.map((b) => (
               <li key={b} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-600 sm:text-base">
-                <CircleCheck className="mt-0.5 h-4 w-4 shrink-0" style={{ color: theme.hexPrimary }} aria-hidden="true" />
+                <span className="mt-2 h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
                 <span>{b}</span>
               </li>
             ))}
@@ -1551,87 +1240,10 @@ function ContentSlide({ slide, theme }: { slide: Extract<Slide, { layout: "conte
   )
 }
 
-function SplitSlide({ slide, theme }: { slide: Extract<Slide, { layout: "split" }>; theme: Theme }) {
-  return (
-    <div className="grid h-full grid-cols-1 sm:grid-cols-2">
-      <div className="flex flex-col justify-center gap-4 px-8 py-10 sm:px-12">
-        <h2 className="text-2xl font-bold sm:text-3xl" style={{ color: theme.hexPrimary }}>{slide.title}</h2>
-        <ul className="space-y-2.5 overflow-y-auto max-h-[70%]">
-          {slide.bullets.map((b) => (
-            <li key={b} className="flex items-start gap-3 text-sm leading-relaxed text-slate-600 sm:text-base">
-              <CircleCheck className="mt-0.5 h-5 w-5 shrink-0" style={{ color: theme.hexPrimary }} aria-hidden="true" />
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="flex items-center bg-slate-50/50 px-8 py-10 sm:px-12 border-l border-slate-100">
-        <div className="grid w-full gap-2.5 overflow-y-auto max-h-[80%]">
-          {slide.callouts.map((c) => (
-            <div key={c.term} className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-              <p className="text-sm font-bold" style={{ color: theme.hexPrimary }}>{c.term}</p>
-              <p className="mt-0.5 text-xs leading-relaxed text-slate-600 sm:text-sm">{c.def}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ProcessSlide({ slide, theme }: { slide: Extract<Slide, { layout: "process" }>; theme: Theme }) {
-  return (
-    <div className="flex h-full flex-col justify-center px-8 py-10 sm:px-12">
-      <h2 className="text-2xl font-bold sm:text-3xl" style={{ color: theme.hexPrimary }}>{slide.title}</h2>
-      {slide.intro && <p className="mt-1 max-w-2xl text-xs text-slate-500 sm:text-sm">{slide.intro}</p>}
-      <div className="mt-6 flex flex-col gap-2.5 lg:flex-row lg:items-stretch overflow-x-auto pr-2">
-        {slide.steps.map((step, i) => (
-          <div key={step.step} className="flex flex-1 items-center gap-2 lg:flex-col lg:items-stretch">
-            <div className="relative flex flex-1 flex-col rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-              <span
-                className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
-                style={{ backgroundColor: theme.hexPrimary }}
-              >
-                {step.step}
-              </span>
-              <p className="mt-2 text-xs font-bold text-slate-900">{step.title}</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">{step.detail}</p>
-            </div>
-            {i < slide.steps.length - 1 && (
-              <ChevronRight className="hidden h-5 w-5 shrink-0 self-center text-slate-300 lg:block" aria-hidden="true" />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function GridSlide({ slide, theme }: { slide: Extract<Slide, { layout: "grid" }>; theme: Theme }) {
-  const cols = slide.items.length <= 4 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"
-  return (
-    <div className="flex h-full flex-col justify-center px-8 py-10 sm:px-12">
-      <div className="flex items-center gap-2">
-        <LayoutGrid className="h-5 w-5" style={{ color: theme.hexPrimary }} aria-hidden="true" />
-        <h2 className="text-2xl font-bold sm:text-3xl" style={{ color: theme.hexPrimary }}>{slide.title}</h2>
-      </div>
-      <div className={`mt-5 grid grid-cols-1 gap-2.5 overflow-y-auto max-h-[60%] pr-2 ${cols}`}>
-        {slide.items.map((item) => (
-          <div key={item.title} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-            <p className="text-xs font-bold text-slate-900">{item.title}</p>
-            {item.detail && <p className="mt-0.5 text-[10px] leading-relaxed text-slate-500">{item.detail}</p>}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 function TableSlide({ slide, theme }: { slide: Extract<Slide, { layout: "table" }>; theme: Theme }) {
   return (
     <div className="flex h-full flex-col justify-center px-8 py-10 sm:px-12">
       <h2 className="text-2xl font-bold sm:text-3xl" style={{ color: theme.hexPrimary }}>{slide.title}</h2>
-      {slide.intro && <p className="mt-1 text-xs text-slate-500 sm:text-sm">{slide.intro}</p>}
       <div className="mt-4 overflow-y-auto max-h-[60%] border border-slate-200 rounded-xl pr-1">
         <table className="w-full text-left text-xs">
           <thead>
@@ -1662,97 +1274,6 @@ function TableSlide({ slide, theme }: { slide: Extract<Slide, { layout: "table" 
           </tbody>
         </table>
       </div>
-    </div>
-  )
-}
-
-function WarningSlide({ slide }: { slide: Extract<Slide, { layout: "warning" }> }) {
-  const danger = slide.level === "danger"
-  const palette = danger
-    ? { border: "border-red-300", bg: "bg-red-50", icon: "text-red-600", chipBg: "bg-red-100", chipText: "text-red-700", dot: "text-red-500" }
-    : { border: "border-amber-300", bg: "bg-amber-50", icon: "text-amber-600", chipBg: "bg-amber-100", chipText: "text-amber-700", dot: "text-amber-500" }
-
-  return (
-    <div className="flex h-full flex-col justify-center px-8 py-10 sm:px-12">
-      <div className={`rounded-2xl border-2 ${palette.border} ${palette.bg} p-6 sm:p-8 overflow-y-auto max-h-[85%]`}>
-        <div className="flex items-center gap-3">
-          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${palette.chipBg} ${palette.icon}`}>
-            <AlertTriangle className="h-6 w-6" aria-hidden="true" />
-          </span>
-          <div>
-            <span className={`text-[10px] font-bold uppercase tracking-widest ${palette.chipText}`}>
-              {danger ? "Critical • Ethical Warning" : "Academic Precaution"}
-            </span>
-            <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">{slide.title}</h2>
-          </div>
-        </div>
-        <ul className="mt-4 space-y-2">
-          {slide.points.map((p) => (
-            <li key={p} className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-700 sm:text-sm">
-              <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${palette.dot}`} aria-hidden="true" />
-              <span>{p}</span>
-            </li>
-          ))}
-        </ul>
-        {slide.note && <p className="mt-4 text-[10px] italic text-slate-500">Note: {slide.note}</p>}
-      </div>
-    </div>
-  )
-}
-
-function QuizSlide({ slide, theme }: { slide: Extract<Slide, { layout: "quiz" }>; theme: Theme }) {
-  const [selected, setSelected] = useState<number | null>(null)
-  const answered = selected !== null
-
-  return (
-    <div className="flex h-full flex-col justify-center px-8 py-10 sm:px-12">
-      <span
-        className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold"
-        style={{ backgroundColor: theme.hexSecondary + "1A", color: theme.hexSecondary }}
-      >
-        <Sparkles className="h-3 w-3" aria-hidden="true" />
-        {slide.title}
-      </span>
-      <h2 className="mt-3 max-w-2xl text-lg font-bold text-slate-900 sm:text-xl">{slide.question}</h2>
-
-      <div className="mt-4 grid max-w-2xl gap-2.5 sm:grid-cols-2">
-        {slide.options.map((opt, i) => {
-          const isCorrect = i === slide.correctIndex
-          const isChosen = i === selected
-          let state = "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-          if (answered && isCorrect) state = "border-green-500 bg-green-50 text-green-800"
-          else if (answered && isChosen && !isCorrect) state = "border-red-500 bg-red-50 text-red-800"
-          else if (answered) state = "border-slate-200 bg-white text-slate-400"
-
-          return (
-            <button
-              key={opt.text}
-              type="button"
-              disabled={answered}
-              onClick={() => setSelected(i)}
-              className={`flex items-center justify-between gap-2 rounded-xl border-2 px-3.5 py-2.5 text-left text-xs font-semibold transition-colors disabled:cursor-default ${state}`}
-            >
-              <span>{opt.text}</span>
-              {answered && isCorrect && <Check className="h-4 w-4 text-green-600" aria-hidden="true" />}
-              {answered && isChosen && !isCorrect && <XCircle className="h-4 w-4 text-red-600" aria-hidden="true" />}
-            </button>
-          )
-        })}
-      </div>
-
-      <AnimatePresence>
-        {answered && (
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="mt-4 flex max-w-2xl items-start gap-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-600"
-          >
-            <CircleCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: theme.hexPrimary }} aria-hidden="true" />
-            <span>{slide.explanation}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }

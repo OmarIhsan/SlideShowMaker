@@ -1,5 +1,5 @@
 // Content-agnostic academic document-to-presentation translation engine.
-// Splits script content into 30+ highly structured academic slides.
+// Programmed to strictly parse text verbatim and split content into 30-45 slides.
 
 export type ThemeId = "clinical" | "midnight" | "warm"
 
@@ -59,327 +59,26 @@ export const THEMES: Record<ThemeId, Theme> = {
   },
 }
 
-export type Callout = { term: string; def: string }
-export type ProcessStep = { step: number; title: string; detail: string }
-export type GridItem = { title: string; detail: string }
-export type QuizOption = { text: string }
-
 export type Slide =
   | { id: string; layout: "title"; kicker: string; title: string; subtitle: string }
   | { id: string; layout: "toc"; title: string; items: { n: number; label: string; target: number }[] }
-  | { id: string; layout: "chapter"; title: string; kicker: string; index: number; subtitle?: string }
   | { id: string; layout: "content"; title: string; paragraphs: string[]; bullets: string[] }
-  | { id: string; layout: "split"; title: string; bullets: string[]; callouts: Callout[] }
-  | { id: string; layout: "process"; title: string; intro: string; steps: ProcessStep[] }
-  | { id: string; layout: "grid"; title: string; intro: string; items: GridItem[] }
   | { id: string; layout: "table"; title: string; intro: string; columns: string[]; rows: string[][] }
-  | {
-      id: string
-      layout: "warning"
-      title: string
-      level: "warning" | "danger"
-      points: string[]
-      note: string
-    }
-  | {
-      id: string
-      layout: "quiz"
-      title: string
-      question: string
-      options: QuizOption[]
-      correctIndex: number
-      explanation: string
-    }
 
 export type LayoutTag = Slide["layout"]
 
 export const LAYOUT_LABELS: Record<LayoutTag, string> = {
   title: "Title Slide",
   toc: "Table of Contents",
-  chapter: "Chapter Divider",
-  content: "Reading & Bullet Points",
-  split: "Two-Column Matrix",
-  process: "Horizontal Process",
-  grid: "Data Comparison Grid",
-  table: "Tabular Layout",
-  warning: "Clinical Warning",
-  quiz: "Interactive Assessment",
+  content: "Template A (Verbatim Text)",
+  table: "Template B (Verbatim Table)",
 }
 
 export function getSlideTitle(slide: Slide): string {
   return slide.title
 }
 
-/* ----------------------------- Parsing helpers ----------------------------- */
-
-const H1 = /^#\s+(.*)$/
-const H2 = /^##\s+(.*)$/
-const H3 = /^###\s+(.*)$/
-const BULLET = /^[-*•]\s+(.*)$/
-const NUMBERED = /^\d+[.)]\s+(.*)$/
-
-type Sub = { title: string; lines: string[] }
-type Chapter = { title: string; intro: string[]; subs: Sub[] }
-
-function isWarningTitle(t: string): boolean {
-  return /\b(warning|caution|precaution|contraindicat|danger|alert|risk|avoid|safety|ethics?|violations?)\b/i.test(t)
-}
-
-function isQuizTitle(t: string): boolean {
-  return /\b(assessment|quiz|evaluation|knowledge check|questions?|self-assessment)\b/i.test(t)
-}
-
-function isDangerTitle(t: string): boolean {
-  return /\b(contraindicat|danger|critical|fatal|severe|plagiarism|fabrication)\b/i.test(t)
-}
-
-function splitSentences(lines: string[]): string[] {
-  return lines
-    .join(" ")
-    .split(/(?<=[.!?])\s+/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-
-function asPair(line: string): Callout | null {
-  const idx = line.indexOf(":")
-  if (idx < 1) return null
-  const term = line.slice(0, idx).trim()
-  const def = line.slice(idx + 1).trim()
-  if (!term || !def) return null
-  if (term.split(/\s+/).length > 4 || term.length > 32) return null
-  return { term, def }
-}
-
 /* ------------------------------ Document parse ------------------------------ */
-
-function tokenize(raw: string): { docTitle: string; chapters: Chapter[] } {
-  const lines = raw.replace(/\r\n/g, "\n").split("\n")
-  let docTitle = ""
-  const chapters: Chapter[] = []
-  let chapter: Chapter | null = null
-  let sub: Sub | null = null
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim()
-    if (!line) continue
-
-    const h1 = line.match(H1)
-    const h2 = line.match(H2)
-    const h3 = line.match(H3)
-
-    if (h3) {
-      if (!chapter) {
-        chapter = { title: "Overview", intro: [], subs: [] }
-        chapters.push(chapter)
-      }
-      sub = { title: h3[1].trim(), lines: [] }
-      chapter.subs.push(sub)
-    } else if (h2) {
-      chapter = { title: h2[1].trim(), intro: [], subs: [] }
-      chapters.push(chapter)
-      sub = null
-    } else if (h1) {
-      if (!docTitle) docTitle = h1[1].trim()
-    } else {
-      if (sub) sub.lines.push(line)
-      else if (chapter) chapter.intro.push(line)
-      else if (!docTitle) docTitle = line
-    }
-  }
-
-  // Fallback: no markdown structure -> synthesize chapters from paragraph groups.
-  if (chapters.length === 0) {
-    const paras = raw
-      .replace(/\r\n/g, "\n")
-      .split(/\n\s*\n/)
-      .map((p) => p.trim())
-      .filter(Boolean)
-    if (!docTitle && paras.length) docTitle = paras[0].split(/[.!?]/)[0].slice(0, 60)
-    const groups: string[][] = []
-    for (let i = 0; i < paras.length; i += 2) groups.push(paras.slice(i, i + 2))
-    groups.forEach((g, i) => {
-      chapters.push({
-        title: `Section ${i + 1}`,
-        intro: g,
-        subs: [],
-      })
-    })
-  }
-
-  if (!docTitle) docTitle = "Academic Lecture Series"
-  return { docTitle, chapters }
-}
-
-/* --------------------------- Block classification --------------------------- */
-
-let counter = 0
-const nextId = (p: string) => `${p}-${counter++}`
-
-function classifyBlock(title: string, lines: string[]): Slide | Slide[] | null {
-  if (lines.length === 0 && !title) return null
-
-  // Table structures
-  const tableHeader = lines.find((l) => l.startsWith("|"))
-  if (tableHeader) {
-    const columns = tableHeader
-      .replace(/^\|/, "")
-      .split("|")
-      .map((c) => c.trim())
-      .filter(Boolean)
-    const rows = lines
-      .filter((l) => l !== tableHeader && l.includes("|") && !l.includes("---"))
-      .map((l) =>
-        l
-          .replace(/^\|/, "")
-          .split("|")
-          .map((c) => c.trim())
-          .filter((_, i) => i < columns.length)
-      )
-    return { id: nextId("tbl"), layout: "table", title, intro: "", columns, rows }
-  }
-
-  // Warning structures
-  if (isWarningTitle(title)) {
-    const bullets = lines.map((l) => l.match(BULLET)?.[1]).filter(Boolean) as string[]
-    const points = bullets.length ? bullets : splitSentences(lines)
-    return {
-      id: nextId("warn"),
-      layout: "warning",
-      title,
-      level: isDangerTitle(title) ? "danger" : "warning",
-      points,
-      note: "Ethics guidelines must be strictly adhered to in academic publication.",
-    }
-  }
-
-  // Numbered list -> horizontal process steps
-  const numbered = lines.map((l) => l.match(NUMBERED)?.[1]).filter(Boolean) as string[]
-  if (numbered.length >= 2) {
-    const steps: ProcessStep[] = numbered.slice(0, 5).map((n, i) => {
-      const idx = n.indexOf(":")
-      const hasTitle = idx > 0 && idx < 28
-      return {
-        step: i + 1,
-        title: hasTitle ? n.slice(0, idx).trim() : `Phase ${i + 1}`,
-        detail: hasTitle ? n.slice(idx + 1).trim() : n,
-      }
-    })
-    return { id: nextId("proc"), layout: "process", title, intro: "", steps }
-  }
-
-  // Bullet and term/definition parsing
-  const bullets = lines.map((l) => l.match(BULLET)?.[1]).filter(Boolean) as string[]
-  const nonBullet = lines.filter((l) => !BULLET.test(l))
-  const pairs = nonBullet.map(asPair).filter(Boolean) as Callout[]
-  const paragraphs = nonBullet.filter((l) => !asPair(l))
-
-  // If a slide has too many bullet points, split them to avoid clutter!
-  if (bullets.length > 4) {
-    const slideChunks: Slide[] = []
-    const chunkSize = 3
-    for (let i = 0; i < bullets.length; i += chunkSize) {
-      const chunk = bullets.slice(i, i + chunkSize)
-      const part = Math.floor(i / chunkSize) + 1
-      const totalParts = Math.ceil(bullets.length / chunkSize)
-      slideChunks.push({
-        id: nextId("cnt-chunk"),
-        layout: "content",
-        title: `${title} (Part ${part}/${totalParts})`,
-        paragraphs: i === 0 ? paragraphs : [],
-        bullets: chunk,
-      })
-    }
-    return slideChunks
-  }
-
-  // Split view (bullets on left, callouts/definitions on right)
-  if (paragraphs.length >= 1 && pairs.length >= 2) {
-    return {
-      id: nextId("split"),
-      layout: "split",
-      title,
-      bullets: paragraphs.length ? splitSentences(paragraphs).slice(0, 5) : bullets,
-      callouts: pairs.slice(0, 4),
-    }
-  }
-
-  // Data Comparison Grid
-  if (pairs.length >= 3) {
-    return {
-      id: nextId("grid"),
-      layout: "grid",
-      title,
-      intro: "",
-      items: pairs.slice(0, 6).map((p) => ({ title: p.term, detail: p.def })),
-    }
-  }
-
-  // Generic Grid from Bullets with terms
-  if (bullets.length >= 4) {
-    return {
-      id: nextId("grid"),
-      layout: "grid",
-      title,
-      intro: "",
-      items: bullets.slice(0, 6).map((b) => {
-        const idx = b.indexOf(":")
-        return idx > 0 && idx < 28
-          ? { title: b.slice(0, idx).trim(), detail: b.slice(idx + 1).trim() }
-          : { title: b, detail: "" }
-      }),
-    }
-  }
-
-  // Standard content reading slide
-  return {
-    id: nextId("cnt"),
-    layout: "content",
-    title,
-    paragraphs: paragraphs.length ? paragraphs : splitSentences(lines),
-    bullets,
-  }
-}
-
-function parseQuiz(title: string, lines: string[]): Slide[] {
-  const slides: Slide[] = []
-  let q: { question: string; options: QuizOption[]; correctIndex: number; explanation: string } | null = null
-
-  const flush = () => {
-    if (q && q.options.length >= 2) {
-      slides.push({
-        id: nextId("quiz"),
-        layout: "quiz",
-        title,
-        question: q.question,
-        options: q.options,
-        correctIndex: q.correctIndex < 0 ? 0 : q.correctIndex,
-        explanation: q.explanation || "Review the corresponding lecture sections for the full rationale.",
-      })
-    }
-    q = null
-  }
-
-  for (const line of lines) {
-    if (/^Q:/i.test(line)) {
-      flush()
-      q = { question: line.replace(/^Q:\s*/i, "").trim(), options: [], correctIndex: -1, explanation: "" }
-    } else if (/^A:/i.test(line) && q) {
-      q.explanation = line.replace(/^A:\s*/i, "").trim()
-    } else if (q) {
-      const correct = /^\*\s+/.test(line)
-      const opt = line.replace(/^[-*•]\s+/, "").trim()
-      if (opt && (correct || /^[-•]\s+/.test(line))) {
-        if (correct) q.correctIndex = q.options.length
-        q.options.push({ text: opt })
-      }
-    }
-  }
-  flush()
-  return slides
-}
-
-/* ------------------------------ Deck assembly ------------------------------- */
 
 export type ParseResult = {
   slides: Slide[]
@@ -387,78 +86,158 @@ export type ParseResult = {
 }
 
 export function parseDocumentToSlides(raw: string): ParseResult {
-  counter = 0
   const source = raw && raw.trim().length > 0 ? raw : SAMPLE_SCRIPT
-  const { docTitle, chapters } = tokenize(source)
+  const lines = source.replace(/\r\n/g, "\n").split("\n").map(l => l.trim())
 
-  const body: Slide[] = []
-  const tocItems: { n: number; label: string; target: number }[] = []
-  let chapterNo = 0
+  let docTitle = "Academic Lecture Series"
+  let currentHeader = "General Concepts"
+  const bodySlides: Slide[] = []
 
-  for (const chapter of chapters) {
-    chapterNo += 1
-    const dividerBodyIndex = body.length
-    // +2 accounts for Title Slide and TOC Slide
-    tocItems.push({ n: chapterNo, label: chapter.title, target: dividerBodyIndex + 2 })
+  let counter = 0
+  const nextId = (p: string) => `${p}-${counter++}`
 
-    body.push({
-      id: nextId("chap"),
-      layout: "chapter",
-      title: chapter.title,
-      kicker: `Module ${String(chapterNo).padStart(2, "0")}`,
-      index: chapterNo,
-    })
+  // Parse lines into logical paragraph blocks, tables, and lists.
+  type Block =
+    | { type: "heading"; text: string }
+    | { type: "paragraph"; text: string; header: string }
+    | { type: "list"; items: string[]; header: string }
+    | { type: "table"; columns: string[]; rows: string[][]; header: string }
 
-    if (isQuizTitle(chapter.title)) {
-      const quizLines = [...chapter.intro, ...chapter.subs.flatMap((s) => s.lines)]
-      const quizSlides = parseQuiz(chapter.title, quizLines)
-      body.push(...quizSlides)
+  const blocks: Block[] = []
+  
+  let i = 0
+  while (i < lines.length) {
+    const line = lines[i]
+    if (!line) {
+      i++
       continue
     }
 
-    if (chapter.intro.length) {
-      const introSlide = classifyBlock(chapter.title, chapter.intro)
-      if (introSlide) {
-        if (Array.isArray(introSlide)) body.push(...introSlide)
-        else body.push(introSlide)
-      }
+    if (line.startsWith("# ")) {
+      docTitle = line.replace("# ", "").trim()
+      i++
+      continue
+    }
+    if (line.startsWith("## ")) {
+      currentHeader = line.replace("## ", "").trim()
+      blocks.push({ type: "heading", text: currentHeader })
+      i++
+      continue
+    }
+    if (line.startsWith("### ")) {
+      currentHeader = line.replace("### ", "").trim()
+      blocks.push({ type: "heading", text: currentHeader })
+      i++
+      continue
     }
 
-    for (const sub of chapter.subs) {
-      const slide = classifyBlock(sub.title, sub.lines)
-      if (slide) {
-        if (Array.isArray(slide)) body.push(...slide)
-        else body.push(slide)
+    // Check table block
+    if (line.startsWith("|")) {
+      const tableLines: string[] = []
+      while (i < lines.length && lines[i].startsWith("|")) {
+        tableLines.push(lines[i])
+        i++
+      }
+      const headerLine = tableLines.find(l => l.startsWith("|") && !l.includes("---"))
+      if (headerLine) {
+        const columns = headerLine.replace(/^\|/, "").split("|").map(c => c.trim()).filter(Boolean)
+        const rows = tableLines
+          .filter(l => l !== headerLine && l.includes("|") && !l.includes("---"))
+          .map(l => l.replace(/^\|/, "").split("|").map(c => c.trim()).filter((_, idx) => idx < columns.length))
+        blocks.push({ type: "table", columns, rows, header: currentHeader })
+      }
+      continue
+    }
+
+    // Check list item block
+    const isBullet = line.startsWith("-") || line.startsWith("*") || line.startsWith("•")
+    const isNumbered = /^\d+[.)]/.test(line)
+
+    if (isBullet || isNumbered) {
+      const listItems: string[] = []
+      while (i < lines.length && (lines[i].startsWith("-") || lines[i].startsWith("*") || lines[i].startsWith("•") || /^\d+[.)]/.test(lines[i]))) {
+        listItems.push(lines[i])
+        i++
+      }
+      blocks.push({ type: "list", items: listItems, header: currentHeader })
+      continue
+    }
+
+    // Default: standard paragraph block
+    blocks.push({ type: "paragraph", text: line, header: currentHeader })
+    i++
+  }
+
+  // Translate blocks to slides verbatim
+  blocks.forEach((block) => {
+    if (block.type === "paragraph") {
+      bodySlides.push({
+        id: nextId("cnt-para"),
+        layout: "content",
+        title: block.header,
+        paragraphs: [block.text],
+        bullets: []
+      })
+    } else if (block.type === "table") {
+      bodySlides.push({
+        id: nextId("tbl"),
+        layout: "table",
+        title: block.header,
+        intro: "",
+        columns: block.columns,
+        rows: block.rows
+      })
+    } else if (block.type === "list") {
+      // Chunk lists into 2 items max per slide to avoid crowded canvases.
+      const chunkSize = 2
+      for (let c = 0; c < block.items.length; c += chunkSize) {
+        const chunk = block.items.slice(c, c + chunkSize)
+        const partNo = Math.floor(c / chunkSize) + 1
+        const totalParts = Math.ceil(block.items.length / chunkSize)
+        
+        bodySlides.push({
+          id: nextId("cnt-list"),
+          layout: "content",
+          title: totalParts > 1 ? `${block.header} (Part ${partNo}/${totalParts})` : block.header,
+          paragraphs: [],
+          bullets: chunk
+        })
       }
     }
-  }
+  })
+
+  // Build the Table of Contents dynamically based on unique slide headers
+  const uniqueHeaders = Array.from(new Set(bodySlides.map(s => s.title)))
+  const tocItems = uniqueHeaders.slice(0, 12).map((h, index) => {
+    const targetIdx = bodySlides.findIndex(s => s.title === h)
+    return {
+      n: index + 1,
+      label: h.length > 30 ? h.slice(0, 27) + "..." : h,
+      target: targetIdx + 2
+    }
+  })
 
   const titleSlide: Slide = {
     id: nextId("title"),
     layout: "title",
-    kicker: deriveKicker(chapters),
+    kicker: `${uniqueHeaders.length} Lecture Areas`,
     title: docTitle,
-    subtitle: deriveSubtitle(chapters),
+    subtitle: "Verbatim Academic Presentation Courseware"
   }
 
   const tocSlide: Slide = {
     id: nextId("toc"),
     layout: "toc",
-    title: "Lecture Table of Contents",
-    items: tocItems,
+    title: "Lecture Outline",
+    items: tocItems
   }
 
-  return { slides: [titleSlide, tocSlide, ...body], chapterCount: chapters.length }
-}
+  const allSlides = [titleSlide, tocSlide, ...bodySlides]
 
-function deriveKicker(chapters: Chapter[]): string {
-  return `${chapters.length} Modules • Structured Curriculum`
-}
-
-function deriveSubtitle(chapters: Chapter[]): string {
-  const first = chapters[0]?.intro?.[0]
-  if (first) return first.length > 160 ? `${first.slice(0, 157)}…` : first
-  return "A comprehensive, automatically structured academic presentation generated from your source document."
+  return {
+    slides: allSlides,
+    chapterCount: uniqueHeaders.length
+  }
 }
 
 /* ------------------------------- Sample script ------------------------------ */
@@ -615,31 +394,31 @@ Drafting and publishing papers requires clear formatting to communicate findings
 - Maintain a professional, collaborative tone in all letters
 
 ## Academic Knowledge Assessment
-Q: What does a low p-value (p < 0.05) indicate in statistical testing?
-- The hypothesis is completely proven correct
-- The sample size was too small to detect patterns
-* The null hypothesis is rejected with low probability of random chance
-- Correlation and causation are mathematically equal
-A: A p-value below 0.05 indicates statistical significance, prompting rejection of the null hypothesis.
+- Question 1: What does a low p-value (p < 0.05) indicate in statistical testing?
+- Option A: The hypothesis is completely proven correct
+- Option B: The sample size was too small to detect patterns
+- Option C: The null hypothesis is rejected with low probability of random chance
+- Option D: Correlation and causation are mathematically equal
+- Explanation: A p-value below 0.05 indicates statistical significance, prompting rejection of the null hypothesis.
 
-Q: Which section of a manuscript details the steps to replicate a study?
-- Abstract and Overview
-- Results and Visualizations
-* Methods and Materials
-- Literature Review
-A: The Methods section must contain detailed descriptions of procedures so others can replicate the study.
+- Question 2: Which section of a manuscript details the steps to replicate a study?
+- Option A: Abstract and Overview
+- Option B: Results and Visualizations
+- Option C: Methods and Materials
+- Option D: Literature Review
+- Explanation: The Methods section must contain detailed descriptions of procedures so others can replicate the study.
 
-Q: What is the main purpose of double-blinding in clinical trials?
-- To reduce the cost of participant compensation
-* To eliminate researcher and participant bias
-- To speed up the manuscript writing process
-- To guarantee statistical significance
-A: Double-blinding prevents both participants and researchers from introducing cognitive bias into results.
+- Question 3: What is the main purpose of double-blinding in clinical trials?
+- Option A: To reduce the cost of participant compensation
+- Option B: To eliminate researcher and participant bias
+- Option C: To speed up the manuscript writing process
+- Option D: To guarantee statistical significance
+- Explanation: Double-blinding prevents both participants and researchers from introducing cognitive bias into results.
 
-Q: Which qualitative coding phase groups simple labels into conceptual sub-themes?
-- Open Coding
-* Axial Coding
-- Selective Coding
-- Descriptive Coding
-A: Axial coding links open codes to identify structural relationships and conceptual sub-themes.
+- Question 4: Which qualitative coding phase groups simple labels into conceptual sub-themes?
+- Option A: Open Coding
+- Option B: Axial Coding
+- Option C: Selective Coding
+- Option D: Descriptive Coding
+- Explanation: Axial coding links open codes to identify structural relationships and conceptual sub-themes.
 `
