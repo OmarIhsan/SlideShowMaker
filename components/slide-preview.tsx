@@ -40,7 +40,7 @@ export function SlideRenderer({
       {/* Slide Title Header Box */}
       <div className="mb-6 border-b pb-2">
         <h2 
-          className="text-3xl md:text-4xl font-bold font-sans tracking-tight leading-none text-teal-800"
+          className="text-2xl md:text-3xl font-bold font-sans tracking-tight leading-none text-teal-800"
         >
           {slide.title}
         </h2>
@@ -72,7 +72,7 @@ export function SlideRenderer({
 function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
   return (
     <div className="w-full">
-      <ul className="list-disc pl-6 space-y-4">
+      <ul className="list-disc pl-6 space-y-3">
         {slide.content.map((text, i) => {
           const cleanText = text
             .replace(/^[-*•]\s*/, "")
@@ -82,7 +82,7 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
           return (
             <li 
               key={i} 
-              className="text-xl md:text-2xl font-medium leading-relaxed text-slate-700 list-item"
+              className="text-lg md:text-xl font-medium leading-relaxed list-item"
               style={{ color: theme.hexPrimary }}
             >
               <span className="text-slate-700">{cleanText}</span>

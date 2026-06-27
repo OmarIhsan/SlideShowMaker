@@ -26,7 +26,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string) {
       options: {
         bullet: segment.isListItem ? { code: "25CF", color: primaryHex } : undefined,
         color: '334155',
-        fontSize: 18,
+        fontSize: 14,
         fontFace: 'Arial',
         lineSpacing: 24,
       },
@@ -37,7 +37,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string) {
 function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
   if (typeof doc.text === "function") {
     doc.setFont("helvetica", "bold")
-    doc.setFontSize(28)
+    doc.setFontSize(24)
     doc.setTextColor("#115E59")
     doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), {
       align: "left",
@@ -49,7 +49,7 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
       y: 0.5,
       w: 8.6,
       h: 0.8,
-      fontSize: 28,
+      fontSize: 24,
       bold: true,
       color: '115E59',
       fontFace: 'Arial',
