@@ -314,14 +314,14 @@ export default function SlideDeckArchitect() {
               w: 8.6,
               h: 3.2,
               align: 'left',
-              valign: 'top',
+              valign: 'middle',
               fit: 'shrink'
             });
           }
         } catch (error) {
           // Global item fallback: guarantee that processing never crashes with an unhandled exception modal
           console.error("Safeguard applied for slide compile exception:", error);
-          pptxSlide.addText(slide.content.join(' '), { x: 0.7, y: 1.4, w: 8.6, h: 3.2, fontSize: 12, color: "333333" });
+          pptxSlide.addText(slide.content.join(' '), { x: 0.7, y: 1.4, w: 8.6, h: 3.2, fontSize: 12, color: "333333", valign: 'middle' });
         }
       });
 
@@ -1039,7 +1039,7 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
       </h2>
       
       {/* Body text box matched to w: 8.6, h: 3.2, aligned left/top */}
-      <div className="mt-[3.5%] max-w-[86%] h-[56.8%] flex flex-col justify-start space-y-3 overflow-hidden break-words text-left pr-2">
+      <div className="mt-[3.5%] min-h-[350px] max-w-[86%] h-[56.8%] flex flex-col justify-center space-y-3 overflow-hidden break-words text-left pr-2">
         {slide.content.map((text, i) => {
           const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
           if (isListItem) {
