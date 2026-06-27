@@ -37,7 +37,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string) {
 function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
   if (typeof doc.text === "function") {
     doc.setFont("helvetica", "bold")
-    doc.setFontSize(24)
+    doc.setFontSize(20)
     doc.setTextColor("#115E59")
     doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), {
       align: "left",
@@ -49,7 +49,7 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
       y: 0.5,
       w: 8.6,
       h: 0.8,
-      fontSize: 24,
+      fontSize: 20,
       bold: true,
       color: '115E59',
       fontFace: 'Arial',

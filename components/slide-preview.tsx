@@ -40,7 +40,7 @@ export function SlideRenderer({
       {/* Slide Title Header Box */}
       <div className="mb-6 border-b pb-2">
         <h2 
-          className="text-2xl md:text-3xl font-bold font-sans tracking-tight leading-none text-teal-800"
+          className="text-xl md:text-2xl font-bold font-sans tracking-tight leading-none text-teal-800"
         >
           {slide.title}
         </h2>
