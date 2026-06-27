@@ -280,8 +280,36 @@ export default function SlideDeckArchitect() {
           });
         }
         
-        // 1. Always write the Slide Title uniformly (styled like preview)
-        pptxSlide.addText(slide.title, { x: 0.8, y: 0.6, w: 8.4, h: 0.8, fontSize: 24, bold: true, color: primaryHex });
+        // 1. Combine Slide Title and Body Content into a single vertically centered textbox (styled like preview)
+        let textRuns = [];
+
+        // Add Slide Title
+        textRuns.push({
+          text: slide.title + "\n\n",
+          options: {
+            fontSize: 24,
+            bold: true,
+            color: primaryHex,
+            fontFace: "Arial"
+          }
+        });
+
+        // Add body paragraphs and bullets
+        slide.content.forEach((text, i) => {
+          const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
+          const cleanText = isListItem ? text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim() : text
+          
+          textRuns.push({
+            text: cleanText + (i < slide.content.length - 1 ? "\n" : ""),
+            options: {
+              bullet: isListItem ? { code: "25CF" } : undefined, // Circle bullet dot matching preview
+              color: "444444",
+              fontSize: 14,
+              fontFace: "Arial",
+              paraSpaceBefore: 6
+            }
+          });
+        });
 
         // 2. Strict Layout Type Evaluation
         try {
@@ -291,29 +319,13 @@ export default function SlideDeckArchitect() {
             let tableRows = slide.content.map(rowText => [ { text: rowText } ]);
             pptxSlide.addTable(tableRows, { x: 0.8, y: 1.6, w: 8.4 });
           } else {
-            // CRITICAL FALLBACK SAFEGUARD: Force all content (including 'STANDARD_CONTENT' 
-            // or any unexpected runtime variant) into a standard master vertical textbox
-            // Map individual paragraphs and native circle bullets to match the preview exactly
-            let formattedContent = slide.content.map(text => {
-              const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-              return {
-                text: isListItem ? text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim() : text,
-                options: {
-                  bullet: isListItem ? { code: "25CF" } : undefined, // Circle bullet dot matching preview
-                  color: "444444",
-                  fontSize: 14,
-                  fontFace: "Arial",
-                  paraSpaceAfter: 12
-                }
-              }
-            });
-            
-            pptxSlide.addText(formattedContent, {
+            // CRITICAL FALLBACK SAFEGUARD: Force all content into a single combined centered textbox
+            pptxSlide.addText(textRuns, {
               x: 0.8,
-              y: 1.6,
+              y: 0.6,
               w: 8.4,
-              h: 3.2,
-              valign: 'top'
+              h: 4.4,
+              valign: 'middle'
             });
           }
         } catch (error) {
@@ -381,18 +393,28 @@ export default function SlideDeckArchitect() {
           doc.text(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, 0.8, 5.2)
         }
 
-        // 5. Always write the Slide Title uniformly (styled like preview)
+        // 5. Calculate total content height to center vertically
+        let totalHeight = 0.5 // slide title + spacer Y gap
+        slide.content.forEach((text) => {
+          const lines = doc.splitTextToSize(text, 8.2)
+          totalHeight += (lines.length * 0.24) + 0.1
+        })
+
+        // Centered Y coordinate base
+        let currentY = Math.max(1.0, (5.625 - totalHeight) / 2)
+
+        // Draw Slide Title
         doc.setFont("helvetica", "bold")
         doc.setFontSize(24)
         doc.setTextColor(theme.hexPrimary)
-        doc.text(slide.title, 0.8, 0.9)
+        doc.text(slide.title, 0.8, currentY)
+        currentY += 0.5
 
-        // 6. Write body content verbatim (matching the preview list items and paragraphs)
+        // 6. Draw body content verbatim starting from centered Y position
         doc.setFont("helvetica", "normal")
         doc.setFontSize(14)
         doc.setTextColor("#444444")
 
-        let currentY = 1.6
         slide.content.forEach((text) => {
           const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
           
