@@ -139,6 +139,7 @@ export function useSlideDeckGeneration() {
     rawText,
     setRawText,
     fileName,
+    setFileName,
     isDragging,
     setIsDragging,
     phase,

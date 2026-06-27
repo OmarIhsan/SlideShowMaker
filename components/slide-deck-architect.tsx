@@ -5,6 +5,7 @@ import confetti from "canvas-confetti"
 import {
   ArrowLeft,
   ArrowRight,
+  Clipboard,
   FileText,
   Hash,
   LayoutTemplate,
@@ -51,11 +52,13 @@ export default function SlideDeckArchitect() {
   const [customBg, setCustomBg] = useState("#F8FAFC")
   const [isExporting, setIsExporting] = useState(false)
   const [isExportingPDF, setIsExportingPDF] = useState(false)
+  const [ingestMode, setIngestMode] = useState<"upload" | "paste">("upload")
 
   const {
     rawText,
     setRawText,
     fileName,
+    setFileName,
     isDragging,
     setIsDragging,
     phase,
@@ -166,44 +169,87 @@ export default function SlideDeckArchitect() {
 
             {/* Ingestion Control Zone */}
             <section aria-labelledby="ingest-heading" className="flex flex-col gap-2.5">
-              <SectionLabel id="ingest-heading" icon={Upload}>
-                Document Ingestion
-              </SectionLabel>
+              <div className="flex items-center justify-between">
+                <SectionLabel id="ingest-heading" icon={Upload}>
+                  Document Ingestion
+                </SectionLabel>
 
-              <div
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`relative flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-3 text-center transition-all ${
-                  isDragging
-                    ? "border-teal-500 bg-teal-50/40"
-                    : fileName
-                      ? "border-slate-300 bg-slate-50/50 hover:bg-slate-50"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                }`}
-              >
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                  accept="*/*"
-                  className="hidden"
-                  aria-label="Upload academic script"
-                />
-                <FileText className={`h-6 w-6 ${fileName ? "text-teal-600" : "text-slate-400"}`} aria-hidden="true" />
-                {fileName ? (
-                  <div className="mt-1.5 max-w-[200px]">
-                    <p className="truncate text-xs font-bold text-slate-800">{fileName}</p>
-                    <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Click to replace</p>
-                  </div>
-                ) : (
-                  <div className="mt-1.5">
-                    <p className="text-xs font-bold text-slate-700">Drag outline file here</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">or browse files</p>
-                  </div>
-                )}
+                {/* Mode Selector Toggle */}
+                <div className="flex rounded-lg bg-slate-100 p-0.5 text-[10px] font-semibold text-slate-600">
+                  <button
+                    type="button"
+                    onClick={() => setIngestMode("upload")}
+                    className={`rounded px-2.5 py-1 transition-all ${ingestMode === "upload" ? "bg-white text-slate-800 shadow-sm" : "hover:text-slate-800"}`}
+                  >
+                    File Upload
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIngestMode("paste")}
+                    className={`rounded px-2.5 py-1 transition-all ${ingestMode === "paste" ? "bg-white text-slate-800 shadow-sm" : "hover:text-slate-800"}`}
+                  >
+                    Paste Text
+                  </button>
+                </div>
               </div>
+
+              {ingestMode === "upload" ? (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`relative flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-3 text-center transition-all ${
+                    isDragging
+                      ? "border-teal-500 bg-teal-50/40"
+                      : fileName && fileName !== "Pasted Outline.txt"
+                        ? "border-slate-300 bg-slate-50/50 hover:bg-slate-50"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="*/*"
+                    className="hidden"
+                    aria-label="Upload academic script"
+                  />
+                  <FileText className={`h-6 w-6 ${fileName && fileName !== "Pasted Outline.txt" ? "text-teal-600" : "text-slate-400"}`} aria-hidden="true" />
+                  {fileName && fileName !== "Pasted Outline.txt" ? (
+                    <div className="mt-1.5 max-w-[200px]">
+                      <p className="truncate text-xs font-bold text-slate-800">{fileName}</p>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Click to replace</p>
+                    </div>
+                  ) : (
+                    <div className="mt-1.5">
+                      <p className="text-xs font-bold text-slate-700">Drag outline file here</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">or browse files</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="relative">
+                  <textarea
+                    value={rawText}
+                    onChange={(e) => {
+                      setRawText(e.target.value)
+                      if (e.target.value.trim().length > 0) {
+                        setFileName("Pasted Outline.txt")
+                      } else {
+                        setFileName(null)
+                      }
+                    }}
+                    placeholder="Paste your academic outline or syllabus text here..."
+                    className="h-28 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-700 outline-none focus:border-slate-300 focus:ring-1 focus:ring-slate-300 resize-none font-sans leading-relaxed"
+                  />
+                  {rawText.trim().length > 0 && (
+                    <span className="absolute bottom-2 right-3 rounded bg-teal-50 px-1.5 py-0.5 text-[9px] font-bold text-teal-700">
+                      Loaded
+                    </span>
+                  )}
+                </div>
+              )}
             </section>
 
             {/* Custom Academic Branding */}
