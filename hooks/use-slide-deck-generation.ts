@@ -21,10 +21,9 @@ export function useSlideDeckGeneration() {
   const [slides, setSlides] = useState<Slide[]>([])
   const [[current, direction], setPage] = useState<[number, number]>([0, 0])
 
-  const canGenerate = rawText.trim().length > 0 || fileName !== null
+  const canGenerate = rawText.trim().length > 0
 
   const ingestFile = useCallback((file: File) => {
-    setFileName(file.name)
     const nameLower = file.name.toLowerCase()
     const isBinary = nameLower.endsWith(".pdf") || 
                      nameLower.endsWith(".docx") || 
@@ -40,11 +39,14 @@ export function useSlideDeckGeneration() {
                      file.type.startsWith("audio/")
 
     if (!isBinary) {
+      setFileName(file.name)
       const reader = new FileReader()
       reader.onload = () => setRawText(String(reader.result ?? ""))
       reader.readAsText(file)
     } else {
-      setRawText(SAMPLE_SCRIPT)
+      alert("Unsupported file format. Please copy and paste the text instead under the Paste Text tab.")
+      setFileName(null)
+      setRawText("")
     }
   }, [])
 
@@ -71,7 +73,7 @@ export function useSlideDeckGeneration() {
     setPhase("generating")
     setStepIndex(0)
 
-    const source = rawText.trim().length > 0 ? rawText : SAMPLE_SCRIPT
+    const source = rawText
     const result = parseDocumentToSlides(source)
 
     let step = 0

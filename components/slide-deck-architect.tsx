@@ -40,7 +40,7 @@ import { EmptyState, GeneratingState, NavButton, OutlineDrawer, SectionLabel, To
 
 export default function SlideDeckArchitect() {
   // Branding States
-  const [lecturerName, setLecturerName] = useState("Dr. Faisal Alhuwaizi")
+  const [lecturerName, setLecturerName] = useState("")
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [logoBase64, setLogoBase64] = useState<string | null>(null)
 

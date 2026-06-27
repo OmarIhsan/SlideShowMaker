@@ -85,7 +85,10 @@ export type ParseResult = {
 }
 
 export function parseDocumentToSlides(raw: string): ParseResult {
-  const source = raw && raw.trim().length > 0 ? raw : SAMPLE_SCRIPT
+  const source = raw || ""
+  if (source.trim().length === 0) {
+    return { slides: [], chapterCount: 0 }
+  }
   const lines = source.replace(/\r\n/g, "\n").split("\n").map(l => l.trim())
 
   let docTitle = "Academic Lecture Series"
