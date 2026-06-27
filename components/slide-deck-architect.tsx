@@ -5,18 +5,15 @@ import confetti from "canvas-confetti"
 import {
   ArrowLeft,
   ArrowRight,
-  Check,
-  ChevronRight,
   FileText,
   Hash,
   LayoutTemplate,
-  ListOrdered,
-  Loader2,
   Presentation,
   Settings2,
   Sparkles,
   Tags,
   Upload,
+  Loader2,
 } from "lucide-react"
 import {
   type ChangeEvent,
@@ -27,20 +24,18 @@ import {
 } from "react"
 
 import {
-  getSlideTitle,
   LAYOUT_LABELS,
-  type Slide,
   THEMES,
   type Theme,
   type ThemeId,
-  parseDocumentToSlides,
-  SAMPLE_SCRIPT,
 } from "@/lib/slide-engine"
 import {
   exportSlidesToPDFWithFallback,
   exportSlidesToPowerPoint,
 } from "@/lib/presentation-exporters"
 import { useSlideDeckGeneration } from "@/hooks/use-slide-deck-generation"
+import { SlideRenderer } from "@/components/slide-preview"
+import { EmptyState, GeneratingState, NavButton, OutlineDrawer, SectionLabel, TopBar } from "@/components/slide-deck-chrome"
 
 export default function SlideDeckArchitect() {
   // Branding States
@@ -532,299 +527,9 @@ export default function SlideDeckArchitect() {
   )
 }
 
-/* ----------------------------- Animation variants -------------------------- */
-
 const slideVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 64 : dir < 0 ? -64 : 0 }),
   center: { opacity: 1, x: 0 },
   exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -64 : dir < 0 ? 64 : 0 }),
 }
 
-/* ----------------------------- Sub-components ------------------------------ */
-
-function TopBar({ total, phase }: { total: number; phase: Phase }) {
-  return (
-    <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2.5">
-      <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-        <LayoutTemplate className="h-4 w-4 text-teal-600" aria-hidden="true" />
-        Academic Layout Engine
-      </div>
-      <div className="flex items-center gap-2">
-        {phase === "ready" && (
-          <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
-            {total} slides generated
-          </span>
-        )}
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">Academic Lecture</span>
-      </div>
-    </div>
-  )
-}
-
-function OutlineDrawer({
-  outline,
-  current,
-  theme,
-  onJump,
-}: {
-  outline: { index: number; title: string; layout: Slide["layout"] }[]
-  current: number
-  theme: Theme
-  onJump: (i: number) => void
-}) {
-  return (
-    <section aria-labelledby="outline-heading" className="flex flex-col gap-3">
-      <SectionLabel id="outline-heading" icon={ListOrdered}>
-        Slide Outline Index
-      </SectionLabel>
-      <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-1.5">
-        <ul className="flex flex-col gap-0.5">
-          {outline.map((o) => {
-            const active = o.index === current
-            return (
-              <li key={o.index}>
-                <button
-                  type="button"
-                  onClick={() => onJump(o.index)}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors text-slate-600 hover:bg-white"
-                  style={active ? { backgroundColor: theme.hexPrimary, color: "#FFFFFF" } : undefined}
-                >
-                  <span
-                    className="flex h-5 w-6 shrink-0 items-center justify-center rounded text-[10px] font-semibold bg-white text-slate-500 border border-slate-200"
-                    style={active ? { color: theme.hexPrimary } : undefined}
-                  >
-                    {o.index + 1}
-                  </span>
-                  <span className="truncate">{o.title}</span>
-                  <span
-                    className="ml-auto shrink-0 text-[9px] uppercase tracking-wide opacity-75 font-bold"
-                    style={active ? { color: "#FFFFFF" } : { color: theme.hexSecondary }}
-                  >
-                    {o.layout}
-                  </span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      </div>
-    </section>
-  )
-}
-
-function SectionLabel({
-  id,
-  icon: Icon,
-  children,
-}: {
-  id: string
-  icon: typeof Upload
-  children: React.ReactNode
-}) {
-  return (
-    <h2 id={id} className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-      {children}
-    </h2>
-  )
-}
-
-function NavButton({
-  onClick,
-  disabled,
-  label,
-  children,
-}: {
-  onClick: () => void
-  disabled: boolean
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full text-slate-200 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
-    >
-      {children}
-    </button>
-  )
-}
-
-function EmptyState() {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/5 ring-1 ring-white/10">
-        <Presentation className="h-9 w-9 text-slate-400" aria-hidden="true" />
-      </div>
-      <div className="max-w-sm">
-        <h2 className="text-lg font-semibold text-slate-100">No lecture loaded</h2>
-        <p className="mt-1 text-sm text-slate-400">
-          Upload your script or click "Load Academic Sample" to initialize the compiler.
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function GeneratingState({ stepIndex, theme }: { stepIndex: number; theme: Theme }) {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8">
-      <Loader2 className="h-10 w-10 animate-spin" style={{ color: theme.hexPrimary }} aria-hidden="true" />
-      <div className="w-full max-w-sm space-y-3">
-        {GENERATION_STEPS.map((label, i) => {
-          const done = i < stepIndex
-          const active = i === stepIndex
-          return (
-            <div key={label} className="flex items-center gap-3">
-              <span
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs"
-                style={
-                  done
-                    ? { backgroundColor: theme.hexPrimary, color: "white" }
-                    : active
-                      ? { backgroundColor: "#334155", color: "white" }
-                      : { backgroundColor: "#1e293b", color: "#64748b" }
-                }
-              >
-                {done ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : i + 1}
-              </span>
-              <span className={`text-sm ${done ? "text-slate-300" : active ? "text-slate-100" : "text-slate-500"}`}>
-                {label}
-              </span>
-              {active && <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin text-slate-400" aria-hidden="true" />}
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-/* ------------------------------ Slide renderers ---------------------------- */
-
-function SlideRenderer({
-  slide,
-  theme,
-  logoUrl,
-  lecturerName,
-}: {
-  slide: Slide
-  theme: Theme
-  logoUrl: string | null
-  lecturerName: string
-}) {
-  return (
-    <div className="relative h-full w-full overflow-hidden select-none" style={{ backgroundColor: theme.hexBg }}>
-      {/* Centered Watermark Logo */}
-      {logoUrl && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-0 opacity-10">
-          <img src={logoUrl} alt="Watermark Logo" className="w-[60%] h-[55%] object-contain" />
-        </div>
-      )}
-
-      {/* Global Academic Footer */}
-      <div className="absolute bottom-4 left-8 right-8 flex items-center justify-between border-t border-slate-200/60 pt-2 text-[10px] text-slate-400">
-        <span>Lecturer: <strong>{lecturerName || "Academic Staff"}</strong></span>
-        <span>Academic Lecture Series</span>
-      </div>
-
-      {(() => {
-        switch (slide.layout) {
-          case "STANDARD_CONTENT":
-            return <ContentSlide slide={slide} theme={theme} />
-          case "TABULAR_DATA":
-            return <TableSlide slide={slide} theme={theme} />
-          default:
-            return <ContentSlide slide={slide} theme={theme} />
-        }
-      })()}
-    </div>
-  )
-}
-
-function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
-  return (
-    <div className="relative flex h-full flex-col justify-center px-10 pb-16 select-text">
-      {/* Visual Accent bar mirroring coordinates of PowerPoint */}
-      <div className="absolute left-0 top-[31.1%] h-[56.8%] w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
-      
-      <div className="flex flex-col items-start gap-4">
-        {/* Title box positioned cleanly at top-left */}
-        <h2 className="w-full text-left text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" style={{ color: theme.hexPrimary }}>
-          {slide.title}
-        </h2>
-        
-        {/* Body text box matched to w: 8.6, h: 3.2, aligned left/top */}
-        <div className="min-h-[350px] max-w-[86%] h-[56.8%] flex flex-col justify-center space-y-3 overflow-hidden break-words text-left pr-2">
-          {slide.content.map((text, i) => {
-            const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-            if (isListItem) {
-              return (
-                <div key={i} className="flex items-start gap-2.5 text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
-                  <span>{text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()}</span>
-                </div>
-              )
-            }
-            return (
-              <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-                {text}
-              </p>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function TableSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
-  // Parse markdown table rows verbatim
-  const rowsParsed = slide.content.map(rowText => {
-    return rowText
-      .replace(/^\|/, "")
-      .replace(/\|$/, "")
-      .split("|")
-      .map(cell => cell.trim())
-  })
-
-  const headers = rowsParsed[0] || []
-  const bodyRows = rowsParsed.slice(1)
-
-  return (
-    <div className="flex h-full flex-col justify-center px-8 py-10 sm:px-12">
-      <h2 className="text-2xl font-bold sm:text-3xl" style={{ color: theme.hexPrimary }}>{slide.title}</h2>
-      <div className="mt-4 overflow-y-auto max-h-[60%] border border-slate-200 rounded-xl pr-1">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="text-[10px] uppercase tracking-wide text-white" style={{ backgroundColor: theme.hexPrimary }}>
-              {headers.map((h, i) => (
-                <th key={i} className="px-3 py-2 font-semibold">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {bodyRows.map((row, rIdx) => (
-              <tr key={rIdx} className={rIdx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
-                {row.map((cell, cIdx) => (
-                  <td
-                    key={cIdx}
-                    className={`px-3 py-2 ${cIdx === 0 ? "font-semibold" : "text-slate-600"}`}
-                    style={cIdx === 0 ? { color: theme.hexPrimary } : undefined}
-                  >
-                    {cell}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
