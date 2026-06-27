@@ -144,6 +144,26 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       continue
     }
 
+    // Tabular Data Identification: numerical comparison indicators (e.g. 1 Hardness, 2 Brittleness, 3 Permeability)
+    const matrixRegex = /\b\d+\s+[A-Za-z0-9\s()-]+(,\s*\d+\s+[A-Za-z0-9\s()-]+)+/;
+    if (matrixRegex.test(line)) {
+      const columns = line.split(",").map(c => c.trim()).filter(Boolean)
+      const pipeRow = "| " + columns.map(col => {
+        const parts = col.match(/^(\d+)\s+(.+)$/)
+        if (parts) {
+          return `${parts[1]}: ${parts[2].trim()}`
+        }
+        return col
+      }).join(" | ") + " |"
+
+      if (!seenFirstHeader) {
+        titleSlideContent.push(pipeRow)
+      } else {
+        currentGroup.push(pipeRow)
+      }
+      continue
+    }
+
     // Table Detection: Vertical separators | or explicit tabs \t
     if (line.includes("|") || line.includes("\t")) {
       if (line.includes("-")) {
@@ -191,11 +211,36 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       continue
     }
 
-    // Default loose paragraph text
-    if (!seenFirstHeader) {
-      titleSlideContent.push(line)
+    // Bullet List Conversion for loose paragraph text:
+    // Tokenize sequential sentences separated by periods or implicit breaks,
+    // stripping inline spaces and wrapping each into a structured bullet list item.
+    const sentences = line
+      .split(/[.!?]\s+/)
+      .map(s => {
+        let cleaned = s.trim();
+        if (!cleaned) return "";
+        if (!/[.!?]$/.test(cleaned)) {
+          cleaned += ".";
+        }
+        return cleaned;
+      })
+      .filter(Boolean);
+
+    if (sentences.length > 0) {
+      sentences.forEach(sentence => {
+        const bulletLine = `- ${sentence}`;
+        if (!seenFirstHeader) {
+          titleSlideContent.push(bulletLine)
+        } else {
+          currentGroup.push(bulletLine)
+        }
+      });
     } else {
-      currentGroup.push(line)
+      if (!seenFirstHeader) {
+        titleSlideContent.push(line)
+      } else {
+        currentGroup.push(line)
+      }
     }
   }
 
@@ -284,7 +329,7 @@ export function getSlideHeight(content: string[]): number {
 function applyVerticalThresholds(slides: Slide[]): Slide[] {
   const step1: Slide[] = []
 
-  // Step 1: Vertical Axis Splitting Rule (Calibrated Threshold: 4.6 inches)
+  // Step 1: Vertical Axis Splitting Rule (Calibrated Threshold: 3.675 inches, 75% of 4.9 inches budget)
   slides.forEach((slide) => {
     if (slide.id === 1 || slide.id === 2) {
       step1.push(slide)
@@ -292,7 +337,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
     }
 
     const height = getSlideHeight(slide.content)
-    if (height > 4.9) {
+    if (height > 3.675) {
       // Split lines one-by-one
       let currentChunk: string[] = []
       let partIndex = 1
@@ -302,33 +347,23 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
         const line = slide.content[i]
         const tempChunk = [...currentChunk, line]
         
-        if (getSlideHeight(tempChunk) > 4.9) {
-          // Evaluate collective height of remaining topic points before split
-          const remainingLines = slide.content.slice(i)
-          const leftoverHeight = getSlideHeight(remainingLines)
-
-          // Dynamic Merging Enforcer: If leftover points occupy less than 75% of limit (3.675 inches), merge tightly
-          if (leftoverHeight < 3.675) {
-            currentChunk.push(...remainingLines)
-            break
+        if (getSlideHeight(tempChunk) > 3.675) {
+          // Truncate and split
+          if (currentChunk.length === 0) {
+            step1.push({
+              id: 0,
+              title: `${baseTitle} - Part ${partIndex++}`,
+              content: [line],
+              layout: slide.layout
+            })
           } else {
-            // Execute slide split
-            if (currentChunk.length === 0) {
-              step1.push({
-                id: 0,
-                title: `${baseTitle} - Part ${partIndex++}`,
-                content: [line],
-                layout: slide.layout
-              })
-            } else {
-              step1.push({
-                id: 0,
-                title: `${baseTitle} - Part ${partIndex++}`,
-                content: currentChunk,
-                layout: slide.layout
-              })
-              currentChunk = [line]
-            }
+            step1.push({
+              id: 0,
+              title: `${baseTitle} - Part ${partIndex++}`,
+              content: currentChunk,
+              layout: slide.layout
+            })
+            currentChunk = [line]
           }
         } else {
           currentChunk.push(line)
@@ -347,7 +382,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
     }
   })
 
-  // Step 2: Dynamic Merging Enforcer (Consolidate content up to the 4.9 inches limit)
+  // Step 2: Dynamic Merging Enforcer (Consolidate content up to the 3.675 inches limit)
   const step2: Slide[] = []
   let i = 0
   while (i < step1.length) {
@@ -378,7 +413,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
       
       for (let j = 0; j < nextSlide.content.length; j++) {
         const nextLine = nextSlide.content[j]
-        if (getSlideHeight([...tempContent, nextLine]) <= 4.9) {
+        if (getSlideHeight([...tempContent, nextLine]) <= 3.675) {
           tempContent.push(nextLine)
         } else {
           allMerged = false
@@ -394,7 +429,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
         // Could not fit all content of nextSlide, merge as many lines as possible and update nextSlide
         for (let j = 0; j < nextSlide.content.length; j++) {
           const nextLine = nextSlide.content[j]
-          if (getSlideHeight([...mergedContent, nextLine]) <= 4.9) {
+          if (getSlideHeight([...mergedContent, nextLine]) <= 3.675) {
             mergedContent.push(nextLine)
             nextSlide.content.splice(j, 1)
             j--

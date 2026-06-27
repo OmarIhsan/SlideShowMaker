@@ -339,7 +339,19 @@ export async function exportSlidesToPDF({ slides, theme, logoBase64, lecturerNam
       doc.addPage([10, 5.625], "landscape")
     }
 
-    renderPdfPage(doc, slide, theme, lecturerName, logoBase64)
+    try {
+      renderPdfPage(doc, slide, theme, lecturerName, logoBase64)
+    } catch (error) {
+      console.error("Safeguard applied for PDF slide render exception:", error)
+      try {
+        renderFallbackPdfPage(doc, slide, theme)
+      } catch (fallbackError) {
+        console.error("Critical fail inside fallback PDF render:", fallbackError)
+        // Hard fallback to guarantee downlink never fails
+        doc.text(slide.title, 0.7, 1.4)
+        doc.text(slide.content.join(" "), 0.7, 2.0)
+      }
+    }
   })
 
   try {
@@ -366,7 +378,14 @@ export async function exportSlidesToPDFWithFallback(args: ExportDeckArgs): Promi
       if (index > 0) {
         fallbackDoc.addPage([10, 5.625], "landscape")
       }
-      renderFallbackPdfPage(fallbackDoc, slide, args.theme)
+      try {
+        renderFallbackPdfPage(fallbackDoc, slide, args.theme)
+      } catch (err) {
+        console.error("Critical fail inside fallback PDF render:", err)
+        // Hard fallback to guarantee downlink never fails
+        fallbackDoc.text(slide.title, 0.7, 1.4)
+        fallbackDoc.text(slide.content.join(" "), 0.7, 2.0)
+      }
     })
 
     fallbackDoc.save(`Academic_Lecture_${Date.now()}.pdf`)
