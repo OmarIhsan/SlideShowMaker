@@ -232,6 +232,10 @@ export default function SlideDeckArchitect() {
       // Widescreen ratio
       pptx.layout = "LAYOUT_16x9"
 
+      const cleanHex = (hex: string) => hex.replace("#", "")
+      const primaryHex = cleanHex(theme.hexPrimary)
+      const bgHex = cleanHex(theme.hexBg)
+
       // Loop through slides array during export execution
       slides.forEach((slide) => {
         const pptxSlide = pptx.addSlide();
