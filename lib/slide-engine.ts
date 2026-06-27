@@ -84,6 +84,30 @@ export type ParseResult = {
   chapterCount: number
 }
 
+export function isTopicHeader(line: string): string | null {
+  const indexMatch = line.match(/^(?:-\s+|•\s+)?((\d+(?:\.\d+)*)\.?\s+([A-Z][A-Za-z0-9\s()&/,-:]+))$/);
+  if (indexMatch) {
+    return indexMatch[1].trim();
+  }
+
+  // 2. Short non-bullet title-cased lines:
+  // e.g. "Properties of Enamel: Hardness & Brittleness"
+  if (!line.startsWith("-") && !line.startsWith("*") && !line.startsWith("•") && !line.includes("|") && line.length < 60) {
+    const words = line.split(/\s+/).filter(Boolean);
+    if (words.length >= 2) {
+      const allowedLowercase = ["of", "to", "and", "with", "in", "the", "a", "or", "for", "by", "on", "is", "are", "at", "&"];
+      const capitalizedCount = words.filter(w => 
+        /^[A-Z0-9]/.test(w) || allowedLowercase.includes(w.toLowerCase())
+      ).length;
+      
+      if (capitalizedCount === words.length) {
+        return line.trim();
+      }
+    }
+  }
+  return null;
+}
+
 export function parseDocumentToSlides(raw: string): ParseResult {
   const source = raw || ""
   if (source.trim().length === 0) {
@@ -142,42 +166,6 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       continue
     }
 
-    const cleanLine = line.trim()
-    const COMMON_HEADERS = [
-      "introduction", "abstract", "literature review", "methodology", "methods", 
-      "results", "discussion", "conclusion", "conclusions", "references", "summary",
-      "background", "objectives", "aims", "outline", "overview", "definition", "definitions",
-      "measurement variables", "descriptive vs. inferential", "introduction & structural properties",
-      "properties of enamel: hardness & brittleness", "solubility to acids", "clinical appearance & diagnostic signs"
-    ]
-    const hasIndex = /^\d+(\.\d+)*[.)]?\s+/.test(cleanLine)
-    const endsWithPunctuation = /[.!?]$/.test(cleanLine)
-
-    const isImplicitHeader = 
-      cleanLine.length > 0 && 
-      cleanLine.length <= 55 && 
-      !cleanLine.startsWith("-") && 
-      !cleanLine.startsWith("*") && 
-      !cleanLine.startsWith("•") && 
-      (!endsWithPunctuation || (hasIndex && cleanLine.endsWith("."))) &&
-      (COMMON_HEADERS.includes(cleanLine.toLowerCase()) || 
-       (hasIndex && /^\d+(\.\d+)*[.)]?\s+[A-Z]/.test(cleanLine)) ||
-       (/^[A-Z][A-Za-z0-9\s()&/,-:]+$/.test(cleanLine)))
-
-    if (isImplicitHeader) {
-      if (!hasSetDocTitle) {
-        docTitle = cleanLine
-        hasSetDocTitle = true
-        currentHeader = cleanLine
-        seenFirstHeader = true
-      } else {
-        flushGroup()
-        currentHeader = cleanLine
-        seenFirstHeader = true
-      }
-      continue
-    }
-
     if (line.startsWith("# ")) {
       const headerText = line.replace("# ", "").trim()
       if (!hasSetDocTitle) {
@@ -200,6 +188,21 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       flushGroup()
       currentHeader = line.replace("### ", "").trim()
       seenFirstHeader = true
+      continue
+    }
+
+    const topicHeader = isTopicHeader(line)
+    if (topicHeader) {
+      if (!hasSetDocTitle) {
+        docTitle = topicHeader
+        hasSetDocTitle = true
+        currentHeader = topicHeader
+        seenFirstHeader = true
+      } else {
+        flushGroup()
+        currentHeader = topicHeader
+        seenFirstHeader = true
+      }
       continue
     }
 

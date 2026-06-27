@@ -54,7 +54,7 @@ export function measurePdfBodyHeight(doc: { splitTextToSize: (text: string, size
 export function renderCenteredPdfBody(doc: any, slide: Slide, theme: Theme, startY: number) {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(BODY_FONT_SIZE)
-  doc.setTextColor("#444444")
+  doc.setTextColor("#334155")
 
   let currentY = startY
   buildBodySegments(slide.content).forEach((segment) => {

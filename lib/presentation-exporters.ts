@@ -38,17 +38,17 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
   if (typeof doc.text === "function") {
     doc.setFont("helvetica", "bold")
     doc.setFontSize(28)
-    doc.setTextColor(theme.hexPrimary)
+    doc.setTextColor("#115E59")
     doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), {
       align: "left",
       baseline: "middle",
     })
   } else {
     doc.addText(slide.title, {
-      x: SLIDE_FRAME.bodyX,
-      y: SLIDE_FRAME.titleY,
-      w: SLIDE_FRAME.bodyW,
-      h: SLIDE_FRAME.titleH,
+      x: 0.7,
+      y: 0.5,
+      w: 8.6,
+      h: 0.8,
       fontSize: 28,
       bold: true,
       color: '115E59',
@@ -151,22 +151,18 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
           return cells
         })
         pptxSlide.addTable(tableRows, {
-          x: SLIDE_FRAME.bodyX,
-          y: SLIDE_FRAME.bodyY,
-          w: SLIDE_FRAME.bodyW,
+          x: 0.7,
+          y: 1.5,
+          w: 8.6,
           border: { type: "solid", color: "E2E8F0", width: 1 },
         })
       } else {
         const formattedContent = buildFormattedContent(slide, primaryHex)
         pptxSlide.addText(formattedContent, {
-          x: SLIDE_FRAME.bodyX,
-          y: SLIDE_FRAME.bodyY,
-          w: SLIDE_FRAME.bodyW,
-          h: SLIDE_FRAME.bodyH,
-          fontSize: 18,
-          fontFace: 'Arial',
-          color: '334155',
-          lineSpacing: 24,
+          x: 0.7,
+          y: 1.5,
+          w: 8.6,
+          h: 3.4,
           align: "left",
           valign: "middle",
           fit: "shrink",
@@ -176,13 +172,13 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
     } catch (error) {
       console.error("Safeguard applied for slide compile exception:", error)
       pptxSlide.addText(slide.content.join(" "), {
-        x: SLIDE_FRAME.bodyX,
-        y: SLIDE_FRAME.bodyY,
-        w: SLIDE_FRAME.bodyW,
-        h: SLIDE_FRAME.bodyH,
+        x: 0.7,
+        y: 1.5,
+        w: 8.6,
+        h: 3.4,
         fontSize: 18,
-        color: "334155",
         fontFace: "Arial",
+        color: "334155",
         lineSpacing: 24,
         valign: "middle",
         margin: 0,
