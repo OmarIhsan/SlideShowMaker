@@ -48,13 +48,14 @@ const GENERATION_STEPS = [
 ]
 
 const SLIDE_FRAME = {
-  titleY: 0.5,
+  titleY: 0.95,
+  titleH: 0.8,
   bodyX: 0.7,
-  bodyY: 1.28,
+  bodyY: 1.75,
   bodyW: 8.6,
   bodyH: 3.2,
   accentX: 0.3,
-  accentY: 1.28,
+  accentY: 1.75,
   accentW: 0.08,
   accentH: 3.2,
   footerY: 5.2,
@@ -118,7 +119,7 @@ function renderFallbackPdfSlide(doc: any, slide: Slide, theme: Theme) {
   doc.setFont("helvetica", "bold")
   doc.setFontSize(24)
   doc.setTextColor(theme.hexPrimary)
-  doc.text(slide.title, 5.0, SLIDE_FRAME.titleY, { align: "center" })
+  doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), { align: "left", baseline: "middle" })
   renderCenteredPdfBody(doc, slide, theme, SLIDE_FRAME.bodyY)
 }
 
@@ -356,7 +357,7 @@ export default function SlideDeckArchitect() {
         }
         
         // 1. Write the Slide Title (styled like preview)
-        pptxSlide.addText(slide.title, { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.titleY, w: SLIDE_FRAME.bodyW, h: 0.8, fontSize: 24, bold: true, color: primaryHex, align: "center" });
+        pptxSlide.addText(slide.title, { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.titleY, w: SLIDE_FRAME.bodyW, h: SLIDE_FRAME.titleH, fontSize: 24, bold: true, color: primaryHex, align: "left", valign: "middle" });
 
         // 2. Map body content paragraphs and bullets
         const bodySegments = buildBodySegments(slide.content)
@@ -460,7 +461,7 @@ export default function SlideDeckArchitect() {
         doc.setFont("helvetica", "bold")
         doc.setFontSize(24)
         doc.setTextColor(theme.hexPrimary)
-        doc.text(slide.title, 5.0, SLIDE_FRAME.titleY, { align: "center" })
+        doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), { align: "left", baseline: "middle" })
 
         // 6. Draw centered body content inside the safe text frame
         const bodySegments = buildBodySegments(slide.content)
@@ -1098,33 +1099,35 @@ function SlideRenderer({
 
 function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
   return (
-    <div className="relative flex h-full flex-col px-10 pt-[8.8%] pb-16 select-text">
+    <div className="relative flex h-full flex-col justify-center px-10 pb-16 select-text">
       {/* Visual Accent bar mirroring coordinates of PowerPoint */}
-      <div className="absolute left-0 top-[24.8%] h-[56.8%] w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
+      <div className="absolute left-0 top-[31.1%] h-[56.8%] w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
       
-      {/* Title box positioned cleanly at top-left */}
-      <h2 className="w-full text-center text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" style={{ color: theme.hexPrimary }}>
-        {slide.title}
-      </h2>
-      
-      {/* Body text box matched to w: 8.6, h: 3.2, aligned left/top */}
-      <div className="mt-1 min-h-[350px] max-w-[86%] h-[56.8%] flex flex-col justify-center space-y-3 overflow-hidden break-words text-left pr-2">
-        {slide.content.map((text, i) => {
-          const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-          if (isListItem) {
+      <div className="flex flex-col items-start gap-4">
+        {/* Title box positioned cleanly at top-left */}
+        <h2 className="w-full text-left text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" style={{ color: theme.hexPrimary }}>
+          {slide.title}
+        </h2>
+        
+        {/* Body text box matched to w: 8.6, h: 3.2, aligned left/top */}
+        <div className="min-h-[350px] max-w-[86%] h-[56.8%] flex flex-col justify-center space-y-3 overflow-hidden break-words text-left pr-2">
+          {slide.content.map((text, i) => {
+            const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
+            if (isListItem) {
+              return (
+                <div key={i} className="flex items-start gap-2.5 text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
+                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
+                  <span>{text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()}</span>
+                </div>
+              )
+            }
             return (
-              <div key={i} className="flex items-start gap-2.5 text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
-                <span>{text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()}</span>
-              </div>
+              <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
+                {text}
+              </p>
             )
-          }
-          return (
-            <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-              {text}
-            </p>
-          )
-        })}
+          })}
+        </div>
       </div>
     </div>
   )
