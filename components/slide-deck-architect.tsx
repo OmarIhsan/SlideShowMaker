@@ -235,9 +235,50 @@ export default function SlideDeckArchitect() {
       // Loop through slides array during export execution
       slides.forEach((slide) => {
         const pptxSlide = pptx.addSlide();
+
+        // Set uniform slide background color matching the theme
+        pptxSlide.background = { color: bgHex };
+
+        // Embed watermark logo in the center of the page, larger and with low opacity
+        if (logoBase64) {
+          pptxSlide.addImage({
+            data: logoBase64,
+            x: 2.0,
+            y: 1.31,
+            w: 6.0,
+            h: 3.0,
+            transparency: 90 // 90% transparent (10% opacity)
+          });
+        }
+
+        // Draw vertical primary-colored accent bar on the left (except for Slide 1/Title slide)
+        if (slide.id !== 1) {
+          pptxSlide.addShape("rect", {
+            x: 0.25,
+            y: 2.0,
+            w: 0.08,
+            h: 2.0,
+            fill: { color: primaryHex },
+            line: { color: primaryHex, width: 0 }
+          });
+        }
+
+        // Embed lecturer footer (except for title slide)
+        if (lecturerName && slide.id !== 1) {
+          pptxSlide.addText(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, {
+            x: 0.5,
+            y: 5.2,
+            w: 9.0,
+            h: 0.3,
+            fontSize: 9,
+            color: "777777",
+            fontFace: "Arial",
+            italic: true,
+          });
+        }
         
-        // 1. Always write the Slide Title uniformly
-        pptxSlide.addText(slide.title, { x: 0.5, y: 0.5, w: 9.0, h: 0.8, fontSize: 24, bold: true });
+        // 1. Always write the Slide Title uniformly (styled like preview)
+        pptxSlide.addText(slide.title, { x: 0.5, y: 0.5, w: 9.0, h: 0.8, fontSize: 24, bold: true, color: primaryHex });
 
         // 2. Strict Layout Type Evaluation
         try {
@@ -249,21 +290,33 @@ export default function SlideDeckArchitect() {
           } else {
             // CRITICAL FALLBACK SAFEGUARD: Force all content (including 'STANDARD_CONTENT' 
             // or any unexpected runtime variant) into a standard master vertical textbox
-            let combinedBodyText = slide.content.join('\n\n');
-            pptxSlide.addText(combinedBodyText, {
+            // Map individual paragraphs and native circle bullets to match the preview exactly
+            let formattedContent = slide.content.map(text => {
+              const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
+              return {
+                text: isListItem ? text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim() : text,
+                options: {
+                  bullet: isListItem ? { code: "25CF" } : undefined, // Circle bullet dot matching preview
+                  color: "444444",
+                  fontSize: 14,
+                  fontFace: "Arial",
+                  paraSpaceAfter: 12
+                }
+              }
+            });
+            
+            pptxSlide.addText(formattedContent, {
               x: 0.5,
               y: 1.5,
               w: 9.0,
               h: 5.5,
-              fontSize: 14,
-              align: 'left',
               valign: 'top'
             });
           }
         } catch (error) {
           // Global item fallback: guarantee that processing never crashes with an unhandled exception modal
           console.error("Safeguard applied for slide compile exception:", error);
-          pptxSlide.addText(slide.content.join(' '), { x: 0.5, y: 1.5, w: 9.0, h: 5.5, fontSize: 12 });
+          pptxSlide.addText(slide.content.join(' '), { x: 0.5, y: 1.5, w: 9.0, h: 5.5, fontSize: 12, color: "333333" });
         }
       });
 
@@ -830,10 +883,10 @@ function SlideRenderer({
 }) {
   return (
     <div className="relative h-full w-full overflow-hidden select-none" style={{ backgroundColor: theme.hexBg }}>
-      {/* Global Logo Placement */}
+      {/* Centered Watermark Logo */}
       {logoUrl && (
-        <div className="absolute right-8 top-6 z-10">
-          <img src={logoUrl} alt="Branding Logo" className="h-8 w-auto object-contain" />
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-0 opacity-10">
+          <img src={logoUrl} alt="Watermark Logo" className="w-[60%] h-[55%] object-contain" />
         </div>
       )}
 
