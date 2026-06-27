@@ -4,13 +4,13 @@ export const SLIDE_FRAME = {
   titleY: 0.5,
   titleH: 0.8,
   bodyX: 0.7,
-  bodyY: 1.5,
+  bodyY: 1.1,
   bodyW: 8.6,
-  bodyH: 3.4,
+  bodyH: 3.8,
   accentX: 0.3,
-  accentY: 1.5,
+  accentY: 1.1,
   accentW: 0.08,
-  accentH: 3.4,
+  accentH: 3.8,
   footerY: 5.2,
 }
 

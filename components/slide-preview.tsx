@@ -29,22 +29,13 @@ export function SlideRenderer({
         <div 
           className="absolute left-0 w-1.5 rounded-r" 
           style={{ 
-            top: "26.7%", // 1.5 inches out of 5.625 inches
-            height: "60.4%", // 3.4 inches out of 5.625 inches
+            top: "19.6%", // 1.1 inches out of 5.625 inches
+            height: "67.6%", // 3.8 inches out of 5.625 inches
             backgroundColor: theme.hexPrimary 
           }} 
           aria-hidden="true" 
         />
       )}
-
-      {/* Slide Title Header Box */}
-      <div className="mb-6 border-b pb-2">
-        <h2 
-          className="text-xl md:text-2xl font-bold font-sans tracking-tight leading-none text-teal-800"
-        >
-          {slide.title}
-        </h2>
-      </div>
 
       {/* Main Slide Body Content (maps into an independent, vertically centered middle container box) */}
       <div className="flex-grow flex flex-col justify-center pb-12 text-left max-w-[86%] overflow-hidden break-words pr-2">

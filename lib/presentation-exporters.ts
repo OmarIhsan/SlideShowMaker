@@ -117,7 +117,6 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
       })
     }
 
-    addSlideTitle(pptxSlide, slide, theme)
 
     try {
       if (slide.layout === "TABULAR_DATA") {
@@ -293,7 +292,6 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
     doc.text(`Lecturer: ${lecturerName}`, SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
   }
 
-  addSlideTitle(doc, slide, theme)
 
   if (slide.layout === "TABULAR_DATA") {
     const rows = slide.content.map((rowText) => {
@@ -320,7 +318,6 @@ function renderFallbackPdfPage(doc: any, slide: Slide, theme: Theme) {
   doc.setFillColor(theme.hexBg)
   doc.rect(0, 0, 10, 5.625, "F")
   addSlideDecoration(doc, theme)
-  addSlideTitle(doc, slide, theme)
   
   if (slide.layout === "TABULAR_DATA") {
     renderPdfTableGrid(doc, slide, theme, SLIDE_FRAME.bodyY)
