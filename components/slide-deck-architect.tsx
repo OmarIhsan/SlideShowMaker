@@ -47,6 +47,81 @@ const GENERATION_STEPS = [
   "Configuring branding metadata...",
 ]
 
+const SLIDE_FRAME = {
+  titleY: 0.5,
+  bodyX: 0.7,
+  bodyY: 1.4,
+  bodyW: 8.6,
+  bodyH: 3.2,
+  accentX: 0.3,
+  accentY: 1.4,
+  accentW: 0.08,
+  accentH: 3.2,
+  footerY: 5.2,
+}
+
+const BODY_LINE_HEIGHT_IN = 0.24
+const BODY_PARAGRAPH_GAP_IN = 0.1
+const BODY_FONT_SIZE = 14
+
+type BodySegment = {
+  text: string
+  cleanText: string
+  isListItem: boolean
+}
+
+function buildBodySegments(content: string[]): BodySegment[] {
+  return content.map((text) => {
+    const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
+    const cleanText = isListItem ? text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim() : text
+
+    return { text, cleanText, isListItem }
+  })
+}
+
+function measurePdfBodyHeight(doc: { splitTextToSize: (text: string, size: number) => string[] }, segments: BodySegment[]): number {
+  return segments.reduce((height, segment) => {
+    const wrapWidth = segment.isListItem ? 7.8 : 8.2
+    const lineCount = doc.splitTextToSize(segment.cleanText, wrapWidth).length
+    return height + (lineCount * BODY_LINE_HEIGHT_IN) + BODY_PARAGRAPH_GAP_IN
+  }, 0)
+}
+
+function renderCenteredPdfBody(doc: any, slide: Slide, theme: Theme, startY: number) {
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(BODY_FONT_SIZE)
+  doc.setTextColor("#444444")
+
+  let currentY = startY
+  buildBodySegments(slide.content).forEach((segment) => {
+    if (segment.isListItem) {
+      doc.setFillColor(theme.hexPrimary)
+      doc.circle(0.75, currentY - 0.05, 0.03, "F")
+
+      const lines = doc.splitTextToSize(segment.cleanText, 7.8)
+      doc.text(lines, 0.9, currentY)
+      currentY += (lines.length * BODY_LINE_HEIGHT_IN) + BODY_PARAGRAPH_GAP_IN
+      return
+    }
+
+    const lines = doc.splitTextToSize(segment.cleanText, 8.2)
+    doc.text(lines, 0.7, currentY)
+    currentY += (lines.length * BODY_LINE_HEIGHT_IN) + BODY_PARAGRAPH_GAP_IN
+  })
+}
+
+function renderFallbackPdfSlide(doc: any, slide: Slide, theme: Theme) {
+  doc.setFillColor(theme.hexBg)
+  doc.rect(0, 0, 10, 5.625, "F")
+  doc.setFillColor(theme.hexPrimary)
+  doc.rect(SLIDE_FRAME.accentX, SLIDE_FRAME.accentY, SLIDE_FRAME.accentW, SLIDE_FRAME.accentH, "F")
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(24)
+  doc.setTextColor(theme.hexPrimary)
+  doc.text(slide.title, 0.7, SLIDE_FRAME.titleY)
+  renderCenteredPdfBody(doc, slide, theme, SLIDE_FRAME.bodyY)
+}
+
 type Phase = "idle" | "generating" | "ready"
 
 export default function SlideDeckArchitect() {
@@ -258,10 +333,10 @@ export default function SlideDeckArchitect() {
 
         // Draw vertical primary-colored accent bar on the left margin (mirroring preview)
         pptxSlide.addShape("rect", {
-          x: 0.3,
-          y: 1.4,
-          w: 0.08,
-          h: 3.2,
+          x: SLIDE_FRAME.accentX,
+          y: SLIDE_FRAME.accentY,
+          w: SLIDE_FRAME.accentW,
+          h: SLIDE_FRAME.accentH,
           fill: { color: primaryHex },
           line: { color: primaryHex, width: 0 }
         });
@@ -269,9 +344,9 @@ export default function SlideDeckArchitect() {
         // Embed lecturer footer
         if (lecturerName) {
           pptxSlide.addText(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, {
-            x: 0.7,
-            y: 5.2,
-            w: 8.6,
+            x: SLIDE_FRAME.bodyX,
+            y: SLIDE_FRAME.footerY,
+            w: SLIDE_FRAME.bodyW,
             h: 0.3,
             fontSize: 9,
             color: "777777",
@@ -281,19 +356,17 @@ export default function SlideDeckArchitect() {
         }
         
         // 1. Write the Slide Title (styled like preview)
-        pptxSlide.addText(slide.title, { x: 0.7, y: 0.5, w: 8.6, h: 0.8, fontSize: 24, bold: true, color: primaryHex });
+        pptxSlide.addText(slide.title, { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.titleY, w: SLIDE_FRAME.bodyW, h: 0.8, fontSize: 24, bold: true, color: primaryHex });
 
         // 2. Map body content paragraphs and bullets
-        let formattedContent = slide.content.map((text, i) => {
-          const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-          const cleanText = isListItem ? text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim() : text
-          
+        const bodySegments = buildBodySegments(slide.content)
+        const formattedContent = bodySegments.map((segment, i) => {
           return {
-            text: cleanText + (i < slide.content.length - 1 ? "\n" : ""),
+            text: segment.cleanText + (i < bodySegments.length - 1 ? "\n" : ""),
             options: {
-              bullet: isListItem ? { code: "25CF", color: primaryHex } : undefined, // Circle bullet dot matching preview
+              bullet: segment.isListItem ? { code: "25CF", color: primaryHex } : undefined, // Circle bullet dot matching preview
               color: "444444",
-              fontSize: 14,
+              fontSize: BODY_FONT_SIZE,
               fontFace: "Arial",
               paraSpaceBefore: 6
             }
@@ -305,14 +378,14 @@ export default function SlideDeckArchitect() {
           if (slide.layout === 'TABULAR_DATA') {
             // Execute standard table generation assuming content rows match table matrix arrays
             let tableRows = slide.content.map(rowText => [ { text: rowText } ]);
-            pptxSlide.addTable(tableRows, { x: 0.7, y: 1.4, w: 8.6 });
+            pptxSlide.addTable(tableRows, { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.bodyY, w: SLIDE_FRAME.bodyW });
           } else {
             // CRITICAL FALLBACK SAFEGUARD: Force all content into a locked vertical textbox with font auto-shrink
             pptxSlide.addText(formattedContent, {
-              x: 0.7,
-              y: 1.4,
-              w: 8.6,
-              h: 3.2,
+              x: SLIDE_FRAME.bodyX,
+              y: SLIDE_FRAME.bodyY,
+              w: SLIDE_FRAME.bodyW,
+              h: SLIDE_FRAME.bodyH,
               align: 'left',
               valign: 'middle',
               fit: 'shrink'
@@ -321,7 +394,7 @@ export default function SlideDeckArchitect() {
         } catch (error) {
           // Global item fallback: guarantee that processing never crashes with an unhandled exception modal
           console.error("Safeguard applied for slide compile exception:", error);
-          pptxSlide.addText(slide.content.join(' '), { x: 0.7, y: 1.4, w: 8.6, h: 3.2, fontSize: 12, color: "333333", valign: 'middle' });
+          pptxSlide.addText(slide.content.join(' '), { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.bodyY, w: SLIDE_FRAME.bodyW, h: SLIDE_FRAME.bodyH, fontSize: 12, color: "333333", valign: 'middle' });
         }
       });
 
@@ -373,56 +446,52 @@ export default function SlideDeckArchitect() {
 
         // 3. Draw vertical primary-colored accent bar on the left margin (mirroring preview)
         doc.setFillColor(theme.hexPrimary)
-        doc.rect(0.3, 1.4, 0.08, 3.2, "F")
+        doc.rect(SLIDE_FRAME.accentX, SLIDE_FRAME.accentY, SLIDE_FRAME.accentW, SLIDE_FRAME.accentH, "F")
 
         // 4. Embed lecturer footer
         if (lecturerName) {
           doc.setFont("helvetica", "italic")
           doc.setFontSize(9)
           doc.setTextColor("#777777")
-          doc.text(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, 0.7, 5.2)
+          doc.text(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
         }
 
         // 5. Draw Slide Title
         doc.setFont("helvetica", "bold")
         doc.setFontSize(24)
         doc.setTextColor(theme.hexPrimary)
-        doc.text(slide.title, 0.7, 0.9)
+        doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY)
 
-        // 6. Draw body content starting at Y = 1.4 inches
-        doc.setFont("helvetica", "normal")
-        doc.setFontSize(14)
-        doc.setTextColor("#444444")
-
-        let currentY = 1.4
-        slide.content.forEach((text) => {
-          const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-          
-          if (isListItem) {
-            // Draw bullet dot matching preview
-            doc.setFillColor(theme.hexPrimary)
-            doc.circle(0.75, currentY - 0.05, 0.03, "F")
-            
-            // Draw list item text
-            doc.setFont("helvetica", "normal")
-            const cleanText = text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()
-            
-            // Wrap text nicely to fit slide width (8.6 - left indent)
-            const lines = doc.splitTextToSize(cleanText, 7.8)
-            doc.text(lines, 0.9, currentY)
-            currentY += (lines.length * 0.24) + 0.1
-          } else {
-            const lines = doc.splitTextToSize(text, 8.2)
-            doc.text(lines, 0.7, currentY)
-            currentY += (lines.length * 0.24) + 0.1
-          }
-        })
+        // 6. Draw centered body content inside the safe text frame
+        const bodySegments = buildBodySegments(slide.content)
+        const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments)
+        const startY = SLIDE_FRAME.bodyY + Math.max(0, (SLIDE_FRAME.bodyH - centeredBodyHeight) / 2)
+        renderCenteredPdfBody(doc, slide, theme, startY)
       })
 
       doc.save(`Academic_Lecture_${Date.now()}.pdf`)
     } catch (err) {
       console.error("Failed to generate PDF document", err)
-      alert("Failed to export PDF: " + (err instanceof Error ? err.message : String(err)))
+      try {
+        const { jsPDF } = await import("jspdf")
+        const fallbackDoc = new jsPDF({
+          orientation: "landscape",
+          unit: "in",
+          format: [10, 5.625]
+        })
+
+        slides.forEach((slide, index) => {
+          if (index > 0) {
+            fallbackDoc.addPage([10, 5.625], "landscape")
+          }
+          renderFallbackPdfSlide(fallbackDoc, slide, theme)
+        })
+
+        fallbackDoc.save(`Academic_Lecture_${Date.now()}.pdf`)
+      } catch (fallbackErr) {
+        console.error("Failed to generate fallback PDF document", fallbackErr)
+        alert("Failed to export PDF: " + (fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)))
+      }
     } finally {
       setIsExportingPDF(false)
     }
@@ -474,7 +543,7 @@ export default function SlideDeckArchitect() {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileSelect}
-                  accept=".txt"
+                  accept="*/*"
                   className="hidden"
                   aria-label="Upload academic script"
                 />
@@ -487,7 +556,7 @@ export default function SlideDeckArchitect() {
                 ) : (
                   <div className="mt-1.5">
                     <p className="text-xs font-bold text-slate-700">Drag outline file here</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">or browse files (.txt)</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">or browse files</p>
                   </div>
                 )}
               </div>
