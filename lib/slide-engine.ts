@@ -1,6 +1,5 @@
-// Mock high-capacity document-to-presentation translation engine.
-// Simulates parsing a long-form script by chunking it on markdown headers,
-// then distributing the content across a comprehensive (25-35 slide) deck.
+// Content-agnostic academic document-to-presentation translation engine.
+// Splits script content into 30+ highly structured academic slides.
 
 export type ThemeId = "clinical" | "midnight" | "warm"
 
@@ -13,48 +12,52 @@ export type Theme = {
   chipText: string
   ring: string
   border: string
+  hexPrimary: string
+  hexSecondary: string
+  hexBg: string
 }
 
 export const THEMES: Record<ThemeId, Theme> = {
   clinical: {
     id: "clinical",
-    label: "Clinical (Slate / Teal)",
+    label: "Clinical Teal",
     accentBg: "bg-teal-600",
     accentText: "text-teal-600",
     chipBg: "bg-teal-50",
     chipText: "text-teal-700",
     ring: "ring-teal-500",
     border: "border-teal-500",
+    hexPrimary: "#0D9488",
+    hexSecondary: "#0F766E",
+    hexBg: "#F8FAFC",
   },
   midnight: {
     id: "midnight",
-    label: "Midnight (Slate / Indigo)",
+    label: "Midnight Blue",
     accentBg: "bg-indigo-600",
     accentText: "text-indigo-600",
     chipBg: "bg-indigo-50",
     chipText: "text-indigo-700",
     ring: "ring-indigo-500",
     border: "border-indigo-500",
+    hexPrimary: "#4F46E5",
+    hexSecondary: "#4338CA",
+    hexBg: "#F8FAFC",
   },
   warm: {
     id: "warm",
-    label: "Warm (Slate / Amber)",
-    accentBg: "bg-amber-600",
-    accentText: "text-amber-600",
-    chipBg: "bg-amber-50",
-    chipText: "text-amber-700",
-    ring: "ring-amber-500",
-    border: "border-amber-500",
+    label: "Forest Academy",
+    accentBg: "bg-emerald-600",
+    accentText: "text-emerald-600",
+    chipBg: "bg-emerald-50",
+    chipText: "text-emerald-700",
+    ring: "ring-emerald-500",
+    border: "border-emerald-500",
+    hexPrimary: "#059669",
+    hexSecondary: "#047857",
+    hexBg: "#F8FAFC",
   },
 }
-
-export type OutputType = "academic" | "clinical" | "corporate"
-
-export const OUTPUT_TYPES: { id: OutputType; label: string }[] = [
-  { id: "academic", label: "Academic Lecture" },
-  { id: "clinical", label: "Clinical Case Study" },
-  { id: "corporate", label: "Corporate Pitch" },
-]
 
 export type Callout = { term: string; def: string }
 export type ProcessStep = { step: number; title: string; detail: string }
@@ -91,16 +94,16 @@ export type Slide =
 export type LayoutTag = Slide["layout"]
 
 export const LAYOUT_LABELS: Record<LayoutTag, string> = {
-  title: "Title",
-  toc: "Contents",
+  title: "Title Slide",
+  toc: "Table of Contents",
   chapter: "Chapter Divider",
-  content: "Reading",
-  split: "Dual Column Matrix",
-  process: "Linear Process",
-  grid: "Granular Grid",
-  table: "Comparison Table",
+  content: "Reading & Bullet Points",
+  split: "Two-Column Matrix",
+  process: "Horizontal Process",
+  grid: "Data Comparison Grid",
+  table: "Tabular Layout",
   warning: "Clinical Warning",
-  quiz: "Evaluation",
+  quiz: "Interactive Assessment",
 }
 
 export function getSlideTitle(slide: Slide): string {
@@ -119,15 +122,15 @@ type Sub = { title: string; lines: string[] }
 type Chapter = { title: string; intro: string[]; subs: Sub[] }
 
 function isWarningTitle(t: string): boolean {
-  return /\b(warning|caution|precaution|contraindicat|danger|alert|risk|avoid|safety)\b/i.test(t)
+  return /\b(warning|caution|precaution|contraindicat|danger|alert|risk|avoid|safety|ethics?|violations?)\b/i.test(t)
 }
 
 function isQuizTitle(t: string): boolean {
-  return /\b(assessment|quiz|evaluation|knowledge check|questions?)\b/i.test(t)
+  return /\b(assessment|quiz|evaluation|knowledge check|questions?|self-assessment)\b/i.test(t)
 }
 
 function isDangerTitle(t: string): boolean {
-  return /\b(contraindicat|danger|critical|fatal|severe)\b/i.test(t)
+  return /\b(contraindicat|danger|critical|fatal|severe|plagiarism|fabrication)\b/i.test(t)
 }
 
 function splitSentences(lines: string[]): string[] {
@@ -204,7 +207,7 @@ function tokenize(raw: string): { docTitle: string; chapters: Chapter[] } {
     })
   }
 
-  if (!docTitle) docTitle = "Generated Presentation"
+  if (!docTitle) docTitle = "Academic Lecture Series"
   return { docTitle, chapters }
 }
 
@@ -213,9 +216,10 @@ function tokenize(raw: string): { docTitle: string; chapters: Chapter[] } {
 let counter = 0
 const nextId = (p: string) => `${p}-${counter++}`
 
-function classifyBlock(title: string, lines: string[]): Slide | null {
+function classifyBlock(title: string, lines: string[]): Slide | Slide[] | null {
   if (lines.length === 0 && !title) return null
 
+  // Table structures
   const tableHeader = lines.find((l) => l.startsWith("|"))
   if (tableHeader) {
     const columns = tableHeader
@@ -224,16 +228,18 @@ function classifyBlock(title: string, lines: string[]): Slide | null {
       .map((c) => c.trim())
       .filter(Boolean)
     const rows = lines
-      .filter((l) => l !== tableHeader && l.includes("|"))
+      .filter((l) => l !== tableHeader && l.includes("|") && !l.includes("---"))
       .map((l) =>
         l
           .replace(/^\|/, "")
           .split("|")
-          .map((c) => c.trim()),
+          .map((c) => c.trim())
+          .filter((_, i) => i < columns.length)
       )
     return { id: nextId("tbl"), layout: "table", title, intro: "", columns, rows }
   }
 
+  // Warning structures
   if (isWarningTitle(title)) {
     const bullets = lines.map((l) => l.match(BULLET)?.[1]).filter(Boolean) as string[]
     const points = bullets.length ? bullets : splitSentences(lines)
@@ -243,10 +249,11 @@ function classifyBlock(title: string, lines: string[]): Slide | null {
       title,
       level: isDangerTitle(title) ? "danger" : "warning",
       points,
-      note: "Review these items carefully before proceeding with treatment.",
+      note: "Ethics guidelines must be strictly adhered to in academic publication.",
     }
   }
 
+  // Numbered list -> horizontal process steps
   const numbered = lines.map((l) => l.match(NUMBERED)?.[1]).filter(Boolean) as string[]
   if (numbered.length >= 2) {
     const steps: ProcessStep[] = numbered.slice(0, 5).map((n, i) => {
@@ -254,18 +261,39 @@ function classifyBlock(title: string, lines: string[]): Slide | null {
       const hasTitle = idx > 0 && idx < 28
       return {
         step: i + 1,
-        title: hasTitle ? n.slice(0, idx).trim() : `Step ${i + 1}`,
+        title: hasTitle ? n.slice(0, idx).trim() : `Phase ${i + 1}`,
         detail: hasTitle ? n.slice(idx + 1).trim() : n,
       }
     })
     return { id: nextId("proc"), layout: "process", title, intro: "", steps }
   }
 
+  // Bullet and term/definition parsing
   const bullets = lines.map((l) => l.match(BULLET)?.[1]).filter(Boolean) as string[]
   const nonBullet = lines.filter((l) => !BULLET.test(l))
   const pairs = nonBullet.map(asPair).filter(Boolean) as Callout[]
   const paragraphs = nonBullet.filter((l) => !asPair(l))
 
+  // If a slide has too many bullet points, split them to avoid clutter!
+  if (bullets.length > 4) {
+    const slideChunks: Slide[] = []
+    const chunkSize = 3
+    for (let i = 0; i < bullets.length; i += chunkSize) {
+      const chunk = bullets.slice(i, i + chunkSize)
+      const part = Math.floor(i / chunkSize) + 1
+      const totalParts = Math.ceil(bullets.length / chunkSize)
+      slideChunks.push({
+        id: nextId("cnt-chunk"),
+        layout: "content",
+        title: `${title} (Part ${part}/${totalParts})`,
+        paragraphs: i === 0 ? paragraphs : [],
+        bullets: chunk,
+      })
+    }
+    return slideChunks
+  }
+
+  // Split view (bullets on left, callouts/definitions on right)
   if (paragraphs.length >= 1 && pairs.length >= 2) {
     return {
       id: nextId("split"),
@@ -276,6 +304,7 @@ function classifyBlock(title: string, lines: string[]): Slide | null {
     }
   }
 
+  // Data Comparison Grid
   if (pairs.length >= 3) {
     return {
       id: nextId("grid"),
@@ -286,6 +315,7 @@ function classifyBlock(title: string, lines: string[]): Slide | null {
     }
   }
 
+  // Generic Grid from Bullets with terms
   if (bullets.length >= 4) {
     return {
       id: nextId("grid"),
@@ -301,6 +331,7 @@ function classifyBlock(title: string, lines: string[]): Slide | null {
     }
   }
 
+  // Standard content reading slide
   return {
     id: nextId("cnt"),
     layout: "content",
@@ -323,7 +354,7 @@ function parseQuiz(title: string, lines: string[]): Slide[] {
         question: q.question,
         options: q.options,
         correctIndex: q.correctIndex < 0 ? 0 : q.correctIndex,
-        explanation: q.explanation || "Review the related section for the full rationale.",
+        explanation: q.explanation || "Review the corresponding lecture sections for the full rationale.",
       })
     }
     q = null
@@ -367,14 +398,14 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   for (const chapter of chapters) {
     chapterNo += 1
     const dividerBodyIndex = body.length
-    // +2 accounts for the title slide (0) and TOC slide (1) prepended later.
+    // +2 accounts for Title Slide and TOC Slide
     tocItems.push({ n: chapterNo, label: chapter.title, target: dividerBodyIndex + 2 })
 
     body.push({
       id: nextId("chap"),
       layout: "chapter",
       title: chapter.title,
-      kicker: `Section ${String(chapterNo).padStart(2, "0")}`,
+      kicker: `Module ${String(chapterNo).padStart(2, "0")}`,
       index: chapterNo,
     })
 
@@ -387,12 +418,18 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
     if (chapter.intro.length) {
       const introSlide = classifyBlock(chapter.title, chapter.intro)
-      if (introSlide) body.push(introSlide)
+      if (introSlide) {
+        if (Array.isArray(introSlide)) body.push(...introSlide)
+        else body.push(introSlide)
+      }
     }
 
     for (const sub of chapter.subs) {
       const slide = classifyBlock(sub.title, sub.lines)
-      if (slide) body.push(slide)
+      if (slide) {
+        if (Array.isArray(slide)) body.push(...slide)
+        else body.push(slide)
+      }
     }
   }
 
@@ -407,7 +444,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   const tocSlide: Slide = {
     id: nextId("toc"),
     layout: "toc",
-    title: "Presentation Outline",
+    title: "Lecture Table of Contents",
     items: tocItems,
   }
 
@@ -415,138 +452,194 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 }
 
 function deriveKicker(chapters: Chapter[]): string {
-  return `${chapters.length} chapters • Auto-structured deck`
+  return `${chapters.length} Modules • Structured Curriculum`
 }
 
 function deriveSubtitle(chapters: Chapter[]): string {
   const first = chapters[0]?.intro?.[0]
   if (first) return first.length > 160 ? `${first.slice(0, 157)}…` : first
-  return "A comprehensive, automatically structured presentation generated from your source document."
+  return "A comprehensive, automatically structured academic presentation generated from your source document."
 }
 
 /* ------------------------------- Sample script ------------------------------ */
 
-export const SAMPLE_SCRIPT = `# Enamel, Caries & Operative Restoration
+export const SAMPLE_SCRIPT = `# Research Methodology and Scientific Writing
 
-## Introduction to Enamel
-Enamel is the visible, outermost layer of every tooth and the hardest tissue the human body produces. Understanding its structure is the foundation of all operative dentistry.
+## Introduction to Research Design
+A research design is the conceptual framework within which research is conducted. It constitutes the blueprint for the collection, measurement, and analysis of data.
 
-### Composition
-Enamel is almost entirely mineral, which gives it unmatched hardness and translucency.
-Hydroxyapatite: Roughly 96% mineral content by weight
-Water: About 3% of the total structure
-Organic matrix: The final 1%, made of proteins and lipids
+### Scope and Objectives
+- Establish a rigorous structural framework for academic inquiry
+- Maximize the validity and reliability of experimental results
+- Prevent researcher bias from contaminating experimental outcomes
+- Minimize the waste of institutional funding and researcher hours
+- Define boundaries for data collection and control groups
+- Coordinate multi-disciplinary teams in clinical settings
 
-### Physical Properties
-- Hardest substance in the human body
-- Translucent with a bluish-white hue
-- Cannot regenerate once it is destroyed
-- Highly resistant to compressive force
-- Brittle and prone to fracture under shear stress
-- Reaches up to 2.5 mm thick at the cusp tips
+### Core Principles
+Scientific Method: Systematic observation, measurement, and experiment.
+Hypothesis: A testable proposition based on empirical evidence.
+Control Group: Baseline group that receives no experimental treatment.
+Randomization: Randomly allocating subjects to prevent selection bias.
 
-## The Caries Process
-Dental caries is a multifactorial, biofilm-driven disease that advances along a predictable continuum. Early detection dramatically changes the treatment a patient will need.
+### Hypothesis Formulation
+1. Identify a critical literature gap in the target field
+2. Construct a testable, binary causal hypothesis
+3. Set mathematical boundaries for null and alternative parameters
+4. Select appropriate sample populations to test validity
 
-### Stages of Decay
-1. Plaque bacteria ferment dietary sugars and release acid
-2. Demineralization begins as local pH drops below 5.5
-3. A white spot lesion forms from subsurface mineral loss
-4. The weakened surface cavitates into an irreversible cavity
-5. Decay advances into dentin and progresses toward the pulp
+### Designing Controlled Trials
+Randomized controlled trials (RCTs) are the gold standard for clinical and experimental academic research.
+- Blinding: Single, double, or triple-blind setups to mask variables
+- Cohort Selection: Narrow exclusion criteria to select homogenous populations
+- Control Group: Placebo or active baseline treatments for comparisons
+- Longitudinal Tracking: Consistent observation points across years
 
-### Risk Factors
-- Frequent sugar and refined carbohydrate intake
-- Poor oral hygiene and heavy plaque accumulation
-- Reduced salivary flow, also called xerostomia
-- Deep occlusal pits and fissures that trap debris
+## Literature Reviews & Sourcing
+Literature review processes synthesize existing knowledge and outline the historical framework of a study.
 
-### Clinical Warning Signs
-- Sharp pain triggered by cold or sweet stimuli
-- Visible brown or black surface discoloration
-- Food consistently impacting between the same teeth
-- Persistent bad breath or an altered taste
+### Critical Source Analysis
+- Trace the historical evolution of research paradigms
+- Compare opposing methodology frameworks across papers
+- Evaluate statistical power and population sample sizes
+- Uncover systemic biases in previous researchers' funding
 
-## Tooth Anatomy
-### Structural Layers
-| Component | Definition | Clinical Behavior
-Enamel | Outer mineralized layer | Brittle, cannot self-repair
-Dentin | Living tubular tissue | Sensitive, forms reparative dentin
-Pulp | Neurovascular core of the tooth | Inflames as caries nears, source of pain
-Cementum | Mineralized covering of the root | Anchors periodontal fibers
+### Credibility Gap Discovery
+1. Identify contradicting conclusions in high-impact journals
+2. Evaluate outdated methodologies lacking modern instrumentation
+3. Focus on unexplained statistical anomalies in published raw datasets
+4. Map regions of under-researched clinical subpopulations
 
-### Pulp and Sensitivity
-The pulp houses the nerves and blood vessels that keep a tooth vital. When caries approaches the pulp, inflammation produces sharp and lingering pain. Reversible pulpitis can heal once the irritant is removed, but irreversible pulpitis requires root canal therapy.
+### Citations and Plagiarism
+- Always attribute secondary data to original peer-reviewed sources
+- Keep clear separation between researcher commentary and citations
+- Utilize software to track digital object identifiers (DOIs)
+- Maintain a comprehensive bibliography matching in-text markers
 
-## Operative Restoration
-When a lesion has cavitated, operative intervention removes the infected tissue and rebuilds the tooth's form and function with a durable material.
+### Ethics Violations & Fabrication
+- Academic fraud destroys career paths and research institution funding
+- Data fabrication includes manipulating outliers or synthesizing mock numbers
+- Authorship issues: Gift authorships or omitting major researchers
+- Failure to report conflicts of interest or institutional funding sources
 
-### Cavity Classification
-| Class | Location | Typical Restoration
-Class I | Pits and fissures of occlusal surfaces | Composite or amalgam
-Class II | Proximal surfaces of posterior teeth | Composite with a matrix band
-Class III | Proximal surfaces of anterior teeth | Bonded composite resin
-Class V | Cervical third near the gumline | Glass ionomer or composite
+## Quantitative Analysis Methods
+Quantitative research employs numerical measurements and mathematical models to establish statistical truths.
 
-### Cavity Preparation Steps
-1. Administer local anesthesia and isolate the tooth
-2. Access the lesion with a high-speed bur
-3. Excavate the infected dentin completely
-4. Shape and clean the prepared cavity walls
-5. Place, cure, and finish the final restoration
+### Measurement Variables
+| Variable Type | Definition | Statistical Application
+| Independent | The factor manipulated by the researcher | Serves as the causal variable in models
+| Dependent | The outcome measured by the researcher | The effect variable analyzed for shifts
+| Confounding | External factor affecting variables | Must be controlled to prevent skew
+| Categorical | Non-numerical group classification | Evaluated using non-parametric checks
 
-### Material Selection
-Composite resin: Tooth-colored, bonds directly, ideal for visible surfaces
-Amalgam: Durable silver alloy suited to high-load posterior teeth
-Glass ionomer: Releases fluoride and works well in low-stress areas
-Ceramic inlay: Lab-fabricated for large, esthetic restorations
+### Descriptive vs. Inferential
+Descriptive: Highlights properties of the current dataset (mean, median, standard deviation).
+Inferential: Draws mathematical predictions about the wider population from samples.
+Standard Deviation: Outlines the spread of data points from the dataset mean.
+Standard Error: Measures how far the sample mean is from the true population mean.
 
-### Precautions and Contraindications
-- Avoid pulp exposure during deep excavation
-- Do not place composite in a contaminated, moist field
-- Treatment is contraindicated when isolation cannot be achieved
-- Always verify occlusion before dismissing the patient
+### Significance and P-Values
+- The p-value measures the probability of obtaining results by random chance
+- Standard alpha boundaries are traditionally set at p < 0.05 or p < 0.01
+- Low p-values reject the null hypothesis in favor of the alternative
+- A low p-value does not automatically prove high practical importance
+- Sample sizes must be powered correctly to detect actual differences
 
-## Clinical Case Study
-The following case demonstrates how the principles in this module apply to a routine single-visit restoration.
+### Common Analysis Pitfalls
+- Overfitting: Designing mathematical models too specific to a small dataset
+- Selection Bias: Cherry-picking samples that support the hypothesis
+- Correlation Fallacy: Assuming correlation automatically equals causation
+- Multiple Testing: Running tests repeatedly until a p-value falls below 0.05
 
-### Patient Presentation
-A 28-year-old patient reports occlusal sensitivity on the lower left molar when chewing. Clinical examination reveals a shadowed pit on tooth nineteen, and a bitewing radiograph confirms a dentin-level radiolucency.
+### Statistical Test Selection
+| Research Goal | Data Scale | Correct Statistical Test
+| Compare two group means | Continuous | Student's Independent t-test
+| Compare three or more means | Continuous | One-Way Analysis of Variance (ANOVA)
+| Check association of categories | Nominal | Chi-Square Test of Independence
+| Predict outcomes from factors | Continuous | Multiple Linear Regression Model
 
-### Treatment Plan
-1. Confirm the diagnosis with a bitewing radiograph
-2. Select a conservative Class I composite restoration
-3. Prepare and restore the tooth in a single visit
-4. Schedule a six-month recall to monitor the result
+## Qualitative Research Methods
+Qualitative approaches study complex human interactions and contextual behaviors through non-numerical inputs.
 
-### Treatment Outcomes
-The conservative restoration preserved the maximum amount of healthy tooth structure.
-Survival rate: 98% at the five-year mark
-Chair time: 12 minutes in a single visit
-Patient pain: Fully resolved within 24 hours
+### Research Design Types
+- Phenomenology: Studying lived human experiences in particular events
+- Ethnography: Immersive observation of cultural and social behaviors
+- Grounded Theory: Building theories inductively directly from qualitative data
+- Case Study: Narrow, deep analysis of a single subject or community
 
-## Knowledge Assessment
-Q: At which pH does enamel typically begin to demineralize?
-- pH 7.0
-- pH 6.5
-* pH 5.5
-- pH 4.0
-A: Enamel dissolves around the critical pH of 5.5, when the mouth turns acidic.
-Q: Which tooth layer can form reparative tissue in response to caries?
-- Enamel
-* Dentin
-- Cementum
-- Pulp stone
-A: Dentin is living tissue and can lay down reparative dentin to protect the pulp.
-Q: A Class II cavity is located on which surface?
-- Occlusal pits and fissures
-* Proximal surfaces of posterior teeth
-- Cervical area near the gumline
-- Proximal surfaces of anterior teeth
-A: Class II lesions affect the proximal surfaces of premolars and molars.
-Q: What is the first step of cavity preparation?
-* Administer anesthesia and isolate the tooth
-- Excavate the infected dentin
-- Place the final restoration
-- Polish and check the occlusion
-A: Proper anesthesia and isolation must precede any cutting of the tooth.`
+### Semi-Structured Interviews
+1. Outline a set of open-ended discussion questions
+2. Build rapport with subjects while maintaining neutrality
+3. Record interviews digitally for verbatim transcripts
+4. Note non-verbal expressions and environmental contexts
+
+### Grounded Theory Coding
+- Open Coding: Breaking down raw transcript sentences into simple label blocks
+- Axial Coding: Grouping raw labels together into conceptual sub-themes
+- Selective Coding: Building a unified explanatory model from sub-themes
+- Iterative Comparison: Checking new transcripts against established coding models
+
+### Data Trustworthiness
+- Credibility: Performing member checks to verify participant alignment
+- Transferability: Providing thick descriptions of research environments
+- Dependability: Creating clear audit trails of all coding decisions
+- Confirmability: Reflective journaling to document researcher bias
+
+## Writing & Publication Process
+Drafting and publishing papers requires clear formatting to communicate findings to the global community.
+
+### Manuscript Structure
+- Abstract: Concise summary of hypothesis, methods, and key findings
+- Introduction: Background literature review and thesis statement
+- Methods: Explicit details allowing replication by outer researchers
+- Results: Direct numerical and thematic findings without commentary
+- Discussion: Contextual interpretation and limitations of study
+- Conclusion: Future pathways and primary takeaway points
+
+### Abstract and Introduction
+1. State the global problem and target research gap clearly
+2. Frame the study's central hypothesis and scope
+3. Outline the methodology structure and target sample sizing
+4. Conclude with primary findings and institutional impacts
+
+### Visualizing Research Data
+- Ensure all charts, tables, and figures have descriptive captions
+- Present raw data patterns rather than hiding complex variations
+- Avoid color schemes that confuse colorblind peer reviewers
+- Align columns in tables to facilitate horizontal comparisons
+
+### Peer Review Responses
+- Treat reviewer feedback as constructive avenues for improvement
+- Respond to every point in writing with matching manuscript changes
+- Provide statistical justifications if disagreeing with a comment
+- Maintain a professional, collaborative tone in all letters
+
+## Academic Knowledge Assessment
+Q: What does a low p-value (p < 0.05) indicate in statistical testing?
+- The hypothesis is completely proven correct
+- The sample size was too small to detect patterns
+* The null hypothesis is rejected with low probability of random chance
+- Correlation and causation are mathematically equal
+A: A p-value below 0.05 indicates statistical significance, prompting rejection of the null hypothesis.
+
+Q: Which section of a manuscript details the steps to replicate a study?
+- Abstract and Overview
+- Results and Visualizations
+* Methods and Materials
+- Literature Review
+A: The Methods section must contain detailed descriptions of procedures so others can replicate the study.
+
+Q: What is the main purpose of double-blinding in clinical trials?
+- To reduce the cost of participant compensation
+* To eliminate researcher and participant bias
+- To speed up the manuscript writing process
+- To guarantee statistical significance
+A: Double-blinding prevents both participants and researchers from introducing cognitive bias into results.
+
+Q: Which qualitative coding phase groups simple labels into conceptual sub-themes?
+- Open Coding
+* Axial Coding
+- Selective Coding
+- Descriptive Coding
+A: Axial coding links open codes to identify structural relationships and conceptual sub-themes.
+`
