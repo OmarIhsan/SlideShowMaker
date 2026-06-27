@@ -35,18 +35,43 @@ function buildFormattedContent(slide: Slide, primaryHex: string) {
 }
 
 function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(24)
-  doc.setTextColor(theme.hexPrimary)
-  doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), {
-    align: "left",
-    baseline: "middle",
-  })
+  if (typeof doc.text === "function") {
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(24)
+    doc.setTextColor(theme.hexPrimary)
+    doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), {
+      align: "left",
+      baseline: "middle",
+    })
+  } else {
+    doc.addText(slide.title, {
+      x: SLIDE_FRAME.bodyX,
+      y: SLIDE_FRAME.titleY,
+      w: SLIDE_FRAME.bodyW,
+      h: SLIDE_FRAME.titleH,
+      fontSize: 24,
+      bold: true,
+      color: cleanHex(theme.hexPrimary),
+      fontFace: "Arial",
+      valign: "middle",
+    })
+  }
 }
 
 function addSlideDecoration(doc: any, theme: Theme) {
-  doc.setFillColor(theme.hexPrimary)
-  doc.rect(SLIDE_FRAME.accentX, SLIDE_FRAME.accentY, SLIDE_FRAME.accentW, SLIDE_FRAME.accentH, "F")
+  if (typeof doc.rect === "function") {
+    doc.setFillColor(theme.hexPrimary)
+    doc.rect(SLIDE_FRAME.accentX, SLIDE_FRAME.accentY, SLIDE_FRAME.accentW, SLIDE_FRAME.accentH, "F")
+  } else {
+    doc.addShape("rect", {
+      x: SLIDE_FRAME.accentX,
+      y: SLIDE_FRAME.accentY,
+      w: SLIDE_FRAME.accentW,
+      h: SLIDE_FRAME.accentH,
+      fill: { color: cleanHex(theme.hexPrimary) },
+      line: { color: cleanHex(theme.hexPrimary), width: 0 }
+    })
+  }
 }
 
 export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lecturerName }: ExportDeckArgs): Promise<void> {
@@ -104,7 +129,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
           w: SLIDE_FRAME.bodyW,
           h: SLIDE_FRAME.bodyH,
           align: "left",
-          valign: "middle",
+          valign: "top",
           fit: "shrink",
         })
       }
@@ -117,7 +142,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         h: SLIDE_FRAME.bodyH,
         fontSize: 12,
         color: "333333",
-        valign: "middle",
+        valign: "top",
       })
     }
   })

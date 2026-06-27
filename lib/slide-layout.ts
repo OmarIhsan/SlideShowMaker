@@ -4,19 +4,19 @@ export const SLIDE_FRAME = {
   titleY: 0.95,
   titleH: 0.8,
   bodyX: 0.7,
-  bodyY: 1.75,
+  bodyY: 1.4,
   bodyW: 8.6,
   bodyH: 3.2,
   accentX: 0.3,
-  accentY: 1.75,
+  accentY: 1.4,
   accentW: 0.08,
   accentH: 3.2,
   footerY: 5.2,
 }
 
-const BODY_LINE_HEIGHT_IN = 0.24
-const BODY_PARAGRAPH_GAP_IN = 0.1
-const BODY_FONT_SIZE = 14
+export const BODY_LINE_HEIGHT_IN = 0.28
+export const BODY_PARAGRAPH_GAP_IN = 0.12
+export const BODY_FONT_SIZE = 14
 
 export type BodySegment = {
   text: string

@@ -42,33 +42,53 @@ export function SlideRenderer({
 
 function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
   return (
-    <div className="relative flex h-full flex-col justify-center px-10 pb-16 select-text">
-      <div className="absolute left-0 top-[31.1%] h-[56.8%] w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
+    <div className="relative flex h-full w-full flex-col px-10 pt-[10%] pb-16 select-text text-left">
+      {/* Visual Accent bar mirroring coordinates of PowerPoint */}
+      <div 
+        className="absolute left-0 w-1.5 rounded-r" 
+        style={{ 
+          top: "24.8%", 
+          height: "56.8%", 
+          backgroundColor: theme.hexPrimary 
+        }} 
+        aria-hidden="true" 
+      />
 
-      <div className="flex flex-col items-start gap-4">
-        <h2 className="w-full text-left text-2xl font-bold leading-none tracking-tight font-sans sm:text-3xl" style={{ color: theme.hexPrimary }}>
-          {slide.title}
-        </h2>
+      {/* Title box positioned cleanly matching SLIDE_FRAME.titleY */}
+      <h2 
+        className="text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" 
+        style={{ 
+          color: theme.hexPrimary,
+          marginTop: "1.8%"
+        }}
+      >
+        {slide.title}
+      </h2>
 
-        <div className="min-h-[350px] h-[56.8%] max-w-[86%] flex flex-col justify-center space-y-3 overflow-hidden break-words pr-2 text-left">
-          {slide.content.map((text, i) => {
-            const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-            if (isListItem) {
-              return (
-                <div key={i} className="flex items-start gap-2.5 text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
-                  <span>{text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()}</span>
-                </div>
-              )
-            }
-
+      {/* Body text box matched to w: 8.6, h: 3.2, aligned left/top */}
+      <div 
+        className="max-w-[86%] flex flex-col justify-start space-y-3 overflow-hidden break-words pr-2 mt-[6.2%]"
+        style={{
+          height: "56.8%"
+        }}
+      >
+        {slide.content.map((text, i) => {
+          const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
+          if (isListItem) {
             return (
-              <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-                {text}
-              </p>
+              <div key={i} className="flex items-start gap-2.5 text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
+                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
+                <span className="leading-normal">{text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()}</span>
+              </div>
             )
-          })}
-        </div>
+          }
+
+          return (
+            <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
+              {text}
+            </p>
+          )
+        })}
       </div>
     </div>
   )
