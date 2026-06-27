@@ -158,6 +158,15 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       }
     }
 
+    // Convert tab-indented rows to bullets
+    if (/^(\t|\s{2,})/.test(line)) {
+      const trimmed = line.trim()
+      if (trimmed.length > 0) {
+        currentGroup.push(`- ${trimmed}`)
+        continue
+      }
+    }
+
     // Convert colon-delimited list definitions to bullets
     const hasListIndicator = line.startsWith("-") || line.startsWith("*") || line.startsWith("•") || /^\d+[.)]/.test(line)
     if (!hasListIndicator && /^[A-Za-z0-9\s()-]+:\s+.+$/.test(line)) {
@@ -275,7 +284,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
     }
   })
 
-  // Step 2: Compact Content Merging Rule (1/2 Page Threshold: 2.8 inches)
+  // Step 2: Dynamic Merging Enforcer (Consolidate content up to the 4.9 inches limit)
   const step2: Slide[] = []
   let i = 0
   while (i < step1.length) {
@@ -287,51 +296,58 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
     }
 
     const currentBase = currentSlide.title.replace(/\s*-\s*Part\s*\d+$/, "")
-    const currentHeight = getSlideHeight(currentSlide.content)
-
-    // Check if current slide is under-filled (< 2.8 inches)
-    if (currentHeight < 2.8 && i + 1 < step1.length) {
-      const nextSlide = step1[i + 1]
+    
+    // Look ahead to check if we can merge next slides of the same topic
+    let mergedContent = [...currentSlide.content]
+    let nextIndex = i + 1
+    
+    while (nextIndex < step1.length) {
+      const nextSlide = step1[nextIndex]
       const nextBase = nextSlide.title.replace(/\s*-\s*Part\s*\d+$/, "")
-      const nextHeight = getSlideHeight(nextSlide.content)
-
-      // If next slide is from the same sub-topic and is also under-filled
-      if (currentBase === nextBase && nextHeight < 2.8) {
-        // Programmatically merge their content, respecting the split limit (4.9 inches)
-        const mergedContent = [...currentSlide.content]
-        let mergeCount = 0
-
+      
+      if (currentBase !== nextBase) {
+        break
+      }
+      
+      // Try to merge lines of nextSlide into mergedContent
+      let allMerged = true
+      let tempContent = [...mergedContent]
+      
+      for (let j = 0; j < nextSlide.content.length; j++) {
+        const nextLine = nextSlide.content[j]
+        if (getSlideHeight([...tempContent, nextLine]) <= 4.9) {
+          tempContent.push(nextLine)
+        } else {
+          allMerged = false
+          break
+        }
+      }
+      
+      if (allMerged) {
+        // All content of nextSlide was merged successfully!
+        mergedContent = tempContent
+        nextIndex++ // skip this slide as it is fully consolidated
+      } else {
+        // Could not fit all content of nextSlide, merge as many lines as possible and update nextSlide
         for (let j = 0; j < nextSlide.content.length; j++) {
           const nextLine = nextSlide.content[j]
           if (getSlideHeight([...mergedContent, nextLine]) <= 4.9) {
             mergedContent.push(nextLine)
-            mergeCount++
+            nextSlide.content.splice(j, 1)
+            j--
           } else {
             break
           }
         }
-
-        if (mergeCount > 0) {
-          currentSlide.content = mergedContent
-          // If we merged all lines of the next slide, we can skip nextSlide entirely!
-          if (mergeCount === nextSlide.content.length) {
-            i += 2 // skip current and next
-            step2.push(currentSlide)
-            continue
-          } else {
-            // Modify nextSlide to hold the remaining lines
-            nextSlide.content = nextSlide.content.slice(mergeCount)
-            // Push currentSlide, and keep nextSlide in the loop so it can be merged with subsequent slides if possible
-            step2.push(currentSlide)
-            i++
-            continue
-          }
-        }
+        break
       }
     }
-
+    
+    currentSlide.content = mergedContent
     step2.push(currentSlide)
-    i++
+    
+    // Move index to the next unmerged slide
+    i = nextIndex
   }
 
   // Step 3: Re-label slide titles to "Header - Part X" or clean suffixes, and re-index slide IDs

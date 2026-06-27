@@ -12,6 +12,25 @@ const GENERATION_STEPS = [
 
 type Phase = "idle" | "generating" | "ready"
 
+function loadScript(url: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined") {
+      resolve()
+      return
+    }
+    const existing = document.querySelector(`script[src="${url}"]`)
+    if (existing) {
+      resolve()
+      return
+    }
+    const script = document.createElement("script")
+    script.src = url
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error(`Failed to load script: ${url}`))
+    document.head.appendChild(script)
+  })
+}
+
 export function useSlideDeckGeneration() {
   const [rawText, setRawText] = useState("")
   const [fileName, setFileName] = useState<string | null>(null)
@@ -23,28 +42,78 @@ export function useSlideDeckGeneration() {
 
   const canGenerate = rawText.trim().length > 0
 
-  const ingestFile = useCallback((file: File) => {
+  const ingestFile = useCallback(async (file: File) => {
+    setFileName(file.name)
     const nameLower = file.name.toLowerCase()
-    const isBinary = nameLower.endsWith(".pdf") || 
-                     nameLower.endsWith(".docx") || 
-                     nameLower.endsWith(".pptx") || 
-                     nameLower.endsWith(".zip") || 
-                     nameLower.endsWith(".png") || 
-                     nameLower.endsWith(".jpg") || 
-                     nameLower.endsWith(".jpeg") || 
-                     nameLower.endsWith(".gif") ||
-                     nameLower.endsWith(".xlsx") ||
-                     file.type.startsWith("image/") ||
-                     file.type.startsWith("video/") ||
-                     file.type.startsWith("audio/")
 
-    if (!isBinary) {
-      setFileName(file.name)
-      const reader = new FileReader()
-      reader.onload = () => setRawText(String(reader.result ?? ""))
-      reader.readAsText(file)
-    } else {
-      alert("Unsupported file format. Please copy and paste the text instead under the Paste Text tab.")
+    try {
+      if (nameLower.endsWith(".pdf")) {
+        await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js")
+        const pdfjsLib = (window as any).pdfjsLib
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js"
+
+        const arrayBuffer = await file.arrayBuffer()
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise
+        let fullText = ""
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          const textContent = await page.getTextContent()
+          const pageText = textContent.items
+            .map((item: any) => item.str)
+            .join(" ")
+
+          if (pageText.trim()) {
+            fullText += pageText + "\n"
+          }
+        }
+
+        if (fullText.trim().length > 0) {
+          setRawText(fullText)
+        } else {
+          alert("This PDF does not contain a digital text layer (it may be scanned). Please copy and paste raw text outline instead.")
+          setFileName(null)
+          setRawText("")
+        }
+      } else if (nameLower.endsWith(".docx")) {
+        await loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.11.0/mammoth.browser.min.js")
+        const mammoth = (window as any).mammoth
+
+        const arrayBuffer = await file.arrayBuffer()
+        const result = await mammoth.extractRawText({ arrayBuffer })
+        const text = result.value
+
+        if (text.trim().length > 0) {
+          setRawText(text)
+        } else {
+          alert("This document is empty. Please check the file and try again.")
+          setFileName(null)
+          setRawText("")
+        }
+      } else {
+        const isBinary = nameLower.endsWith(".zip") || 
+                         nameLower.endsWith(".png") || 
+                         nameLower.endsWith(".jpg") || 
+                         nameLower.endsWith(".jpeg") || 
+                         nameLower.endsWith(".gif") ||
+                         nameLower.endsWith(".xlsx") ||
+                         file.type.startsWith("image/") ||
+                         file.type.startsWith("video/") ||
+                         file.type.startsWith("audio/")
+
+        if (!isBinary) {
+          const reader = new FileReader()
+          reader.onload = () => setRawText(String(reader.result ?? ""))
+          reader.readAsText(file)
+        } else {
+          alert("Unsupported binary file format. Please upload text outlines or copy-paste text instead.")
+          setFileName(null)
+          setRawText("")
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse document natively", error)
+      alert("Failed to parse document: " + (error instanceof Error ? error.message : String(error)))
       setFileName(null)
       setRawText("")
     }
