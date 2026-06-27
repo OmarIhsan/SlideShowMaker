@@ -54,6 +54,7 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
       color: '115E59',
       fontFace: 'Arial',
       valign: "middle",
+      align: "left",
       margin: 0,
     })
   }
@@ -162,6 +163,10 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
           y: SLIDE_FRAME.bodyY,
           w: SLIDE_FRAME.bodyW,
           h: SLIDE_FRAME.bodyH,
+          fontSize: 18,
+          fontFace: 'Arial',
+          color: '334155',
+          lineSpacing: 24,
           align: "left",
           valign: "middle",
           fit: "shrink",

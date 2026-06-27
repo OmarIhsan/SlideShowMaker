@@ -147,24 +147,29 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       "introduction", "abstract", "literature review", "methodology", "methods", 
       "results", "discussion", "conclusion", "conclusions", "references", "summary",
       "background", "objectives", "aims", "outline", "overview", "definition", "definitions",
-      "measurement variables", "descriptive vs. inferential"
+      "measurement variables", "descriptive vs. inferential", "introduction & structural properties",
+      "properties of enamel: hardness & brittleness", "solubility to acids", "clinical appearance & diagnostic signs"
     ]
+    const hasIndex = /^\d+(\.\d+)*[.)]?\s+/.test(cleanLine)
+    const endsWithPunctuation = /[.!?]$/.test(cleanLine)
+
     const isImplicitHeader = 
       cleanLine.length > 0 && 
-      cleanLine.length <= 50 && 
+      cleanLine.length <= 55 && 
       !cleanLine.startsWith("-") && 
       !cleanLine.startsWith("*") && 
       !cleanLine.startsWith("•") && 
-      !/^\d+[.)]/.test(cleanLine) && 
-      !/^[a-zA-Z][.)]/.test(cleanLine) && 
-      !/[.;:!?]$/.test(cleanLine.slice(0, -1)) &&
+      (!endsWithPunctuation || (hasIndex && cleanLine.endsWith("."))) &&
       (COMMON_HEADERS.includes(cleanLine.toLowerCase()) || 
-       (/^[A-Z][A-Za-z0-9\s()&/-]+$/.test(cleanLine) && !cleanLine.includes(".") && !cleanLine.includes(";")))
+       (hasIndex && /^\d+(\.\d+)*[.)]?\s+[A-Z]/.test(cleanLine)) ||
+       (/^[A-Z][A-Za-z0-9\s()&/,-:]+$/.test(cleanLine)))
 
     if (isImplicitHeader) {
       if (!hasSetDocTitle) {
         docTitle = cleanLine
         hasSetDocTitle = true
+        currentHeader = cleanLine
+        seenFirstHeader = true
       } else {
         flushGroup()
         currentHeader = cleanLine
