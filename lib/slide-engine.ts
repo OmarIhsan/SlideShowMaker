@@ -184,36 +184,122 @@ function splitLongSlides(slides: Slide[]): Slide[] {
       return
     }
 
-    const totalChars = slide.content.reduce((acc, text) => acc + text.length, 0)
+    const wordCount = slide.content.join(" ").split(/\s+/).filter(Boolean).length
     
-    // Split if there are more than 4 lines or total characters exceed 360
-    if (slide.content.length > 4 || totalChars > 360) {
-      const half = Math.ceil(slide.content.length / 2)
-      const firstHalf = slide.content.slice(0, half)
-      const secondHalf = slide.content.slice(half)
+    // Split if there are more than 4 lines or the word count exceeds 45 words
+    if (slide.content.length > 4 || wordCount > 45) {
+      if (slide.content.length > 1) {
+        const half = Math.ceil(slide.content.length / 2)
+        const firstHalf = slide.content.slice(0, half)
+        const secondHalf = slide.content.slice(half)
 
-      const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+        const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
 
-      result.push({
-        id: slideIdCounter++,
-        title: `${baseTitle} (Part 1/2)`,
-        content: firstHalf,
-        layout: slide.layout
-      })
+        const part1 = {
+          id: slideIdCounter++,
+          title: `${baseTitle} (Part 1/2)`,
+          content: firstHalf,
+          layout: slide.layout
+        }
+        const part2 = {
+          id: slideIdCounter++,
+          title: `${baseTitle} (Part 2/2)`,
+          content: secondHalf,
+          layout: slide.layout
+        }
 
-      result.push({
-        id: slideIdCounter++,
-        title: `${baseTitle} (Part 2/2)`,
-        content: secondHalf,
-        layout: slide.layout
-      })
+        // Recursively split the halves if they are still too long
+        const splitResult = splitLongSlides([part1, part2])
+        splitResult.forEach((s) => {
+          s.id = slideIdCounter++
+          result.push(s)
+        })
+      } else {
+        // If there is only 1 line but it exceeds 45 words, split it by sentence boundary
+        const singleLine = slide.content[0]
+        const sentences = singleLine.split(/(?<=\.)\s+/).filter(Boolean)
+
+        if (sentences.length > 1) {
+          const half = Math.ceil(sentences.length / 2)
+          const firstHalf = [sentences.slice(0, half).join(" ")]
+          const secondHalf = [sentences.slice(half).join(" ")]
+
+          const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+
+          const part1 = {
+            id: slideIdCounter++,
+            title: `${baseTitle} (Part 1/2)`,
+            content: firstHalf,
+            layout: slide.layout
+          }
+          const part2 = {
+            id: slideIdCounter++,
+            title: `${baseTitle} (Part 2/2)`,
+            content: secondHalf,
+            layout: slide.layout
+          }
+
+          const splitResult = splitLongSlides([part1, part2])
+          splitResult.forEach((s) => {
+            s.id = slideIdCounter++
+            result.push(s)
+          })
+        } else {
+          // If it has only one sentence and cannot be split further, keep it to prevent infinite loop
+          slide.id = slideIdCounter++
+          result.push(slide)
+        }
+      }
     } else {
       slide.id = slideIdCounter++
       result.push(slide)
     }
   })
 
-  return result
+  // Group split slides by their base title and update part labels dynamically (e.g. Part 1/3)
+  const finalResult: Slide[] = []
+  let currentBaseTitle = ""
+  let matchingSlides: Slide[] = []
+
+  const flushMatching = () => {
+    if (matchingSlides.length > 0) {
+      if (matchingSlides.length === 1) {
+        const s = matchingSlides[0]
+        s.title = s.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+        finalResult.push(s)
+      } else {
+        matchingSlides.forEach((s, idx) => {
+          const base = s.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+          s.title = `${base} (Part ${idx + 1}/${matchingSlides.length})`
+          finalResult.push(s)
+        })
+      }
+      matchingSlides = []
+    }
+  }
+
+  result.forEach((s) => {
+    if (s.id === 1 || s.id === 2) {
+      flushMatching()
+      finalResult.push(s)
+      return
+    }
+
+    const base = s.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+    if (base !== currentBaseTitle) {
+      flushMatching()
+      currentBaseTitle = base
+    }
+    matchingSlides.push(s)
+  })
+  flushMatching()
+
+  // Re-assign consecutive IDs from 1 to N
+  finalResult.forEach((s, idx) => {
+    s.id = idx + 1
+  })
+
+  return finalResult
 }
 
 /* ------------------------------- Sample script ------------------------------ */
