@@ -304,12 +304,12 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
     const numCols = Math.max(...rows.map((r) => r.length))
     const colW = SLIDE_FRAME.bodyW / numCols
     const totalTableH = measurePdfTableHeight(doc, rows, colW)
-    const startY = SLIDE_FRAME.bodyY + Math.max(0, (SLIDE_FRAME.bodyH - totalTableH) / 2)
+    const startY = Math.max(0.5, (5.625 - totalTableH) / 2)
     renderPdfTableGrid(doc, slide, theme, startY)
   } else {
     const bodySegments = buildBodySegments(slide.content)
     const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments)
-    const startY = SLIDE_FRAME.bodyY + Math.max(0, (SLIDE_FRAME.bodyH - centeredBodyHeight) / 2)
+    const startY = Math.max(0.5, (5.625 - centeredBodyHeight) / 2)
     renderCenteredPdfBody(doc, slide, theme, startY)
   }
 }
@@ -320,9 +320,23 @@ function renderFallbackPdfPage(doc: any, slide: Slide, theme: Theme) {
   addSlideDecoration(doc, theme)
   
   if (slide.layout === "TABULAR_DATA") {
-    renderPdfTableGrid(doc, slide, theme, SLIDE_FRAME.bodyY)
+    const rows = slide.content.map((rowText) => {
+      return rowText
+        .replace(/^\|/, "")
+        .replace(/\|$/, "")
+        .split("|")
+        .map((c) => c.trim())
+    })
+    const numCols = Math.max(...rows.map((r) => r.length))
+    const colW = SLIDE_FRAME.bodyW / numCols
+    const totalTableH = measurePdfTableHeight(doc, rows, colW)
+    const startY = Math.max(0.5, (5.625 - totalTableH) / 2)
+    renderPdfTableGrid(doc, slide, theme, startY)
   } else {
-    renderCenteredPdfBody(doc, slide, theme, SLIDE_FRAME.bodyY)
+    const bodySegments = buildBodySegments(slide.content)
+    const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments)
+    const startY = Math.max(0.5, (5.625 - centeredBodyHeight) / 2)
+    renderCenteredPdfBody(doc, slide, theme, startY)
   }
 }
 

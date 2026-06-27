@@ -38,7 +38,7 @@ export function SlideRenderer({
       )}
 
       {/* Main Slide Body Content (maps into an independent, vertically centered middle container box) */}
-      <div className="flex-grow flex flex-col justify-center pb-12 text-left max-w-[86%] overflow-hidden break-words pr-2">
+      <div className="flex-grow flex flex-col justify-center pb-0 text-left max-w-[86%] overflow-hidden break-words pr-2">
         {(() => {
           switch (slide.layout) {
             case "TABULAR_DATA":
