@@ -104,7 +104,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
     addSlideDecoration(pptxSlide, theme)
 
     if (lecturerName) {
-      pptxSlide.addText(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, {
+      pptxSlide.addText(`Lecturer: ${lecturerName}`, {
         x: SLIDE_FRAME.bodyX,
         y: SLIDE_FRAME.footerY,
         w: SLIDE_FRAME.bodyW,
@@ -287,7 +287,7 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
     doc.setFont("helvetica", "italic")
     doc.setFontSize(9)
     doc.setTextColor("#777777")
-    doc.text(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
+    doc.text(`Lecturer: ${lecturerName}`, SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
   }
 
   addSlideTitle(doc, slide, theme)

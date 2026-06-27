@@ -23,7 +23,7 @@ export function SlideRenderer({
         <span>
           Lecturer: <strong>{lecturerName || "Academic Staff"}</strong>
         </span>
-        <span>Academic Lecture Series</span>
+        <span />
       </div>
 
       {(() => {

@@ -91,7 +91,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   }
   const lines = source.replace(/\r\n/g, "\n").split("\n").map(l => l.trim())
 
-  let docTitle = "Academic Lecture Series"
+  let docTitle = "Lecture Slides"
   let currentHeader = "General Concepts"
   let hasSetDocTitle = false
   const bodySlides: Slide[] = []
@@ -243,11 +243,8 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
   flushGroup()
 
-  // Build Outline list dynamically
+  // Build Outline list dynamically (keep uniqueHeaders for chapterCount)
   const uniqueHeaders = Array.from(new Set(bodySlides.map(s => s.title)))
-  const tocItems = uniqueHeaders.slice(0, 10).map((h, index) => {
-    return `${index + 1}. ${h}`
-  })
 
   const titleSlideCombined = titleSlideContent.join("\n");
   const titleSlideLayout = determineLayout(titleSlideCombined);
@@ -263,14 +260,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     layout: titleSlideLayout
   }
 
-  const tocSlide: Slide = {
-    id: 2,
-    title: "Lecture Outline",
-    content: tocItems,
-    layout: "STANDARD_CONTENT"
-  }
-
-  const rawSlides = [titleSlide, tocSlide, ...bodySlides]
+  const rawSlides = [titleSlide, ...bodySlides]
   const finalSlides = applyVerticalThresholds(rawSlides)
 
   return {
@@ -333,7 +323,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
 
   // Step 1: Vertical Axis Splitting Rule (Optimal 3/4 Budget Cap: 5 lines or 450 characters)
   slides.forEach((slide) => {
-    if (slide.id === 1 || slide.id === 2) {
+    if (slide.id === 1) {
       step1.push(slide)
       return
     }
@@ -388,7 +378,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
   let i = 0
   while (i < step1.length) {
     const currentSlide = step1[i]
-    if (currentSlide.id === 1 || currentSlide.id === 2) {
+    if (currentSlide.id === 1) {
       step2.push(currentSlide)
       i++
       continue
@@ -472,7 +462,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
   }
 
   step2.forEach((s) => {
-    if (s.id === 1 || s.id === 2) {
+    if (s.id === 1) {
       flushMatching()
       finalResult.push(s)
       return
