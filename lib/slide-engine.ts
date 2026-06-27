@@ -142,6 +142,37 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       continue
     }
 
+    const cleanLine = line.trim()
+    const COMMON_HEADERS = [
+      "introduction", "abstract", "literature review", "methodology", "methods", 
+      "results", "discussion", "conclusion", "conclusions", "references", "summary",
+      "background", "objectives", "aims", "outline", "overview", "definition", "definitions",
+      "measurement variables", "descriptive vs. inferential"
+    ]
+    const isImplicitHeader = 
+      cleanLine.length > 0 && 
+      cleanLine.length <= 50 && 
+      !cleanLine.startsWith("-") && 
+      !cleanLine.startsWith("*") && 
+      !cleanLine.startsWith("•") && 
+      !/^\d+[.)]/.test(cleanLine) && 
+      !/^[a-zA-Z][.)]/.test(cleanLine) && 
+      !/[.;:!?]$/.test(cleanLine.slice(0, -1)) &&
+      (COMMON_HEADERS.includes(cleanLine.toLowerCase()) || 
+       (/^[A-Z][A-Za-z0-9\s()&/-]+$/.test(cleanLine) && !cleanLine.includes(".") && !cleanLine.includes(";")))
+
+    if (isImplicitHeader) {
+      if (!hasSetDocTitle) {
+        docTitle = cleanLine
+        hasSetDocTitle = true
+      } else {
+        flushGroup()
+        currentHeader = cleanLine
+        seenFirstHeader = true
+      }
+      continue
+    }
+
     if (line.startsWith("# ")) {
       const headerText = line.replace("# ", "").trim()
       if (!hasSetDocTitle) {
