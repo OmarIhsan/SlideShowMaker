@@ -218,14 +218,14 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     }
 
     // Bullet List Conversion for loose paragraph text:
-    // Tokenize sequential sentences separated by periods or implicit breaks,
+    // Tokenize sequential sentences separated by periods or semicolons,
     // stripping inline spaces and wrapping each into a structured bullet list item.
     const sentences = line
-      .split(/[.!?]\s+/)
+      .split(/(?<=[.;])\s+/)
       .map(s => {
         let cleaned = s.trim();
         if (!cleaned) return "";
-        if (!/[.!?]$/.test(cleaned)) {
+        if (!/[.;!?]$/.test(cleaned)) {
           cleaned += ".";
         }
         return cleaned;
@@ -315,7 +315,7 @@ export function getSlideHeight(content: string[]): number {
 
 const isOverBudget = (content: string[]): boolean => {
   const charLength = content.join("\n").length;
-  return content.length > 5 || charLength > 450;
+  return content.length > 4 || charLength > 450;
 };
 
 function applyVerticalThresholds(slides: Slide[]): Slide[] {

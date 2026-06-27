@@ -25,10 +25,10 @@ function buildFormattedContent(slide: Slide, primaryHex: string) {
       text: segment.cleanText + (index < bodySegments.length - 1 ? "\n" : ""),
       options: {
         bullet: segment.isListItem ? { code: "25CF", color: primaryHex } : undefined,
-        color: "444444",
-        fontSize: 14,
-        fontFace: "Arial",
-        paraSpaceBefore: 6,
+        color: '334155',
+        fontSize: 18,
+        fontFace: 'Arial',
+        lineSpacing: 24,
       },
     }
   })
@@ -37,7 +37,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string) {
 function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
   if (typeof doc.text === "function") {
     doc.setFont("helvetica", "bold")
-    doc.setFontSize(24)
+    doc.setFontSize(28)
     doc.setTextColor(theme.hexPrimary)
     doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), {
       align: "left",
@@ -49,10 +49,10 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
       y: SLIDE_FRAME.titleY,
       w: SLIDE_FRAME.bodyW,
       h: SLIDE_FRAME.titleH,
-      fontSize: 24,
+      fontSize: 28,
       bold: true,
-      color: cleanHex(theme.hexPrimary),
-      fontFace: "Arial",
+      color: '115E59',
+      fontFace: 'Arial',
       valign: "middle",
       margin: 0,
     })
@@ -175,8 +175,10 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         y: SLIDE_FRAME.bodyY,
         w: SLIDE_FRAME.bodyW,
         h: SLIDE_FRAME.bodyH,
-        fontSize: 12,
-        color: "333333",
+        fontSize: 18,
+        color: "334155",
+        fontFace: "Arial",
+        lineSpacing: 24,
         valign: "middle",
         margin: 0,
       })

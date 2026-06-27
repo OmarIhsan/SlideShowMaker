@@ -16,7 +16,7 @@ export const SLIDE_FRAME = {
 
 export const BODY_LINE_HEIGHT_IN = 0.28
 export const BODY_PARAGRAPH_GAP_IN = 0.12
-export const BODY_FONT_SIZE = 14
+export const BODY_FONT_SIZE = 18
 
 export type BodySegment = {
   text: string

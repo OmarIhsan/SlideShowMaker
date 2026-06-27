@@ -57,7 +57,7 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
       {/* Isolate the slide header text into a non-absolute top <div> with a hardcoded bottom margin (mb-8) */}
       <div className="mb-8">
         <h2 
-          className="text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" 
+          className="text-3xl md:text-4xl font-bold font-sans tracking-tight leading-none text-teal-800" 
           style={{ color: theme.hexPrimary }}
         >
           {slide.title}
@@ -66,66 +66,25 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
 
       {/* Wrap the description array in an independent flex-grow zone (flex-grow flex flex-col justify-center pb-12 text-left) */}
       <div className="flex-grow flex flex-col justify-center pb-12 text-left max-w-[86%] overflow-hidden break-words pr-2">
-        <div className="w-full flex flex-col space-y-3">
-          {(() => {
-            const elements: React.ReactNode[] = []
-            let currentList: { text: string; isOrdered: boolean }[] = []
-
-            const flushList = (key: string | number) => {
-              if (currentList.length > 0) {
-                const isOrdered = currentList[0].isOrdered
-                const Tag = isOrdered ? "ol" : "ul"
-                const listClass = isOrdered 
-                  ? "list-decimal pl-5 space-y-2 text-slate-600" 
-                  : "list-disc pl-5 space-y-2 text-slate-600"
-
-                elements.push(
-                  <Tag key={`list-${key}`} className={listClass}>
-                    {currentList.map((item, idx) => {
-                      const cleanText = item.text
-                        .replace(/^[-*•]\s*/, "")
-                        .replace(/^\d+[.)]\s*/, "")
-                        .replace(/^[a-zA-Z][.)]\s*/, "")
-                        .trim()
-                      return (
-                        <li 
-                          key={idx} 
-                          className="text-sm sm:text-base leading-normal list-item"
-                          style={{ color: theme.hexPrimary }}
-                        >
-                          <span className="text-slate-600">{cleanText}</span>
-                        </li>
-                      )
-                    })}
-                  </Tag>
-                )
-                currentList = []
-              }
-            }
-
-            slide.content.forEach((text, i) => {
-              const isUnordered = text.startsWith("-") || text.startsWith("*") || text.startsWith("•")
-              const isOrdered = /^\d+[.)]/.test(text) || /^[a-zA-Z][.)]/.test(text)
-              const isListItem = isUnordered || isOrdered
-
-              if (isListItem) {
-                if (currentList.length > 0 && currentList[0].isOrdered !== isOrdered) {
-                  flushList(i)
-                }
-                currentList.push({ text, isOrdered })
-              } else {
-                flushList(i)
-                elements.push(
-                  <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
-                    {text}
-                  </p>
-                )
-              }
-            })
-            flushList("final")
-
-            return elements
-          })()}
+        <div className="w-full">
+          <ul className="list-disc pl-6 space-y-4">
+            {slide.content.map((text, i) => {
+              const cleanText = text
+                .replace(/^[-*•]\s*/, "")
+                .replace(/^\d+[.)]\s*/, "")
+                .replace(/^[a-zA-Z][.)]\s*/, "")
+                .trim()
+              return (
+                <li 
+                  key={i} 
+                  className="text-xl md:text-2xl font-medium leading-relaxed text-slate-700 list-item"
+                  style={{ color: theme.hexPrimary }}
+                >
+                  <span className="text-slate-700">{cleanText}</span>
+                </li>
+              )
+            })}
+          </ul>
         </div>
       </div>
     </div>
