@@ -302,7 +302,7 @@ export default function SlideDeckArchitect() {
           textRuns.push({
             text: cleanText + (i < slide.content.length - 1 ? "\n" : ""),
             options: {
-              bullet: isListItem ? { code: "25CF" } : undefined, // Circle bullet dot matching preview
+              bullet: isListItem ? { code: "25CF", color: primaryHex } : undefined, // Circle bullet dot matching preview
               color: "444444",
               fontSize: 14,
               fontFace: "Arial",

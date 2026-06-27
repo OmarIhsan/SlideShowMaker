@@ -163,10 +163,57 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     layout: "STANDARD_CONTENT"
   }
 
+  const rawSlides = [titleSlide, tocSlide, ...bodySlides]
+  const finalSlides = splitLongSlides(rawSlides)
+
   return {
-    slides: [titleSlide, tocSlide, ...bodySlides],
+    slides: finalSlides,
     chapterCount: uniqueHeaders.length
   }
+}
+
+function splitLongSlides(slides: Slide[]): Slide[] {
+  const result: Slide[] = []
+  let slideIdCounter = 1
+
+  slides.forEach((slide) => {
+    // Keep Title slide (ID 1) and TOC slide (ID 2) intact
+    if (slide.id === 1 || slide.id === 2) {
+      slide.id = slideIdCounter++
+      result.push(slide)
+      return
+    }
+
+    const totalChars = slide.content.reduce((acc, text) => acc + text.length, 0)
+    
+    // Split if there are more than 4 lines or total characters exceed 360
+    if (slide.content.length > 4 || totalChars > 360) {
+      const half = Math.ceil(slide.content.length / 2)
+      const firstHalf = slide.content.slice(0, half)
+      const secondHalf = slide.content.slice(half)
+
+      const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\/\d+\)\s*$/, "")
+
+      result.push({
+        id: slideIdCounter++,
+        title: `${baseTitle} (Part 1/2)`,
+        content: firstHalf,
+        layout: slide.layout
+      })
+
+      result.push({
+        id: slideIdCounter++,
+        title: `${baseTitle} (Part 2/2)`,
+        content: secondHalf,
+        layout: slide.layout
+      })
+    } else {
+      slide.id = slideIdCounter++
+      result.push(slide)
+    }
+  })
+
+  return result
 }
 
 /* ------------------------------- Sample script ------------------------------ */
