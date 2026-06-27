@@ -97,6 +97,8 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
   let slideIdCounter = 3
   let currentGroup: string[] = []
+  const titleSlideContent: string[] = []
+  let seenFirstHeader = false
 
   const flushGroup = () => {
     if (currentGroup.length > 0) {
@@ -117,24 +119,27 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     }
 
     if (line.startsWith("# ")) {
-      flushGroup()
       docTitle = line.replace("# ", "").trim()
       continue
     }
     if (line.startsWith("## ")) {
       flushGroup()
       currentHeader = line.replace("## ", "").trim()
+      seenFirstHeader = true
       continue
     }
     if (line.startsWith("### ")) {
       flushGroup()
       currentHeader = line.replace("### ", "").trim()
+      seenFirstHeader = true
       continue
     }
 
     // Regex cleaners for structural delimiters
     const pipeRegex = /\|/;
     const tabIndentRegex = /^(\t+|\s{2,})/;
+
+    let processedLine = line;
 
     // Delimiter Processing & List Mapping
     if (pipeRegex.test(line)) {
@@ -148,36 +153,33 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
       const cells = line.split("|").map(c => c.trim()).filter(Boolean)
       if (cells.length > 0) {
-        let formatted = ""
         if (cells.length === 1) {
-          formatted = `- ${cells[0]}`
+          processedLine = `- ${cells[0]}`
         } else if (cells.length === 2) {
-          formatted = `- ${cells[0]}: ${cells[1]}`
+          processedLine = `- ${cells[0]}: ${cells[1]}`
         } else {
           const extra = cells.slice(2).join(", ")
-          formatted = `- ${cells[0]}: ${cells[1]} (${extra})`
+          processedLine = `- ${cells[0]}: ${cells[1]} (${extra})`
         }
-        currentGroup.push(formatted)
-        continue
       }
-    }
-
-    if (tabIndentRegex.test(line)) {
+    } else if (tabIndentRegex.test(line)) {
       const trimmed = line.replace(tabIndentRegex, "").trim()
       if (trimmed.length > 0) {
-        currentGroup.push(`- ${trimmed}`)
-        continue
+        processedLine = `- ${trimmed}`
+      }
+    } else {
+      // Convert colon-delimited list definitions to bullets
+      const hasListIndicator = line.startsWith("-") || line.startsWith("*") || line.startsWith("•") || /^\d+[.)]/.test(line)
+      if (!hasListIndicator && /^[A-Za-z0-9\s()-]+:\s+.+$/.test(line)) {
+        processedLine = `- ${line}`
       }
     }
 
-    // Convert colon-delimited list definitions to bullets
-    const hasListIndicator = line.startsWith("-") || line.startsWith("*") || line.startsWith("•") || /^\d+[.)]/.test(line)
-    if (!hasListIndicator && /^[A-Za-z0-9\s()-]+:\s+.+$/.test(line)) {
-      currentGroup.push(`- ${line}`)
-      continue
+    if (!seenFirstHeader) {
+      titleSlideContent.push(processedLine)
+    } else {
+      currentGroup.push(processedLine)
     }
-
-    currentGroup.push(line)
   }
 
   flushGroup()
@@ -191,7 +193,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   const titleSlide: Slide = {
     id: 1,
     title: docTitle,
-    content: [
+    content: titleSlideContent.length > 0 ? titleSlideContent : [
       "Verbatim Academic Presentation Courseware",
       "Presented by: Dr. Faisal Alhuwaizi",
       "This deck contains verbatim syllabus details compiled from raw content outlines."
