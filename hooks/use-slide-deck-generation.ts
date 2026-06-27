@@ -25,7 +25,21 @@ export function useSlideDeckGeneration() {
 
   const ingestFile = useCallback((file: File) => {
     setFileName(file.name)
-    if (file.type === "text/plain" || file.name.toLowerCase().endsWith(".txt")) {
+    const nameLower = file.name.toLowerCase()
+    const isBinary = nameLower.endsWith(".pdf") || 
+                     nameLower.endsWith(".docx") || 
+                     nameLower.endsWith(".pptx") || 
+                     nameLower.endsWith(".zip") || 
+                     nameLower.endsWith(".png") || 
+                     nameLower.endsWith(".jpg") || 
+                     nameLower.endsWith(".jpeg") || 
+                     nameLower.endsWith(".gif") ||
+                     nameLower.endsWith(".xlsx") ||
+                     file.type.startsWith("image/") ||
+                     file.type.startsWith("video/") ||
+                     file.type.startsWith("audio/")
+
+    if (!isBinary) {
       const reader = new FileReader()
       reader.onload = () => setRawText(String(reader.result ?? ""))
       reader.readAsText(file)
