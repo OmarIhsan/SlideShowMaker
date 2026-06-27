@@ -180,19 +180,19 @@ export function getSlideHeight(content: string[]): number {
     subLines.forEach((subLine) => {
       const words = subLine.split(/\s+/).filter(Boolean).length
       if (words === 0) return
-      // Estimate visual line wrapping (10 words per line, 0.24 inches height per line)
+      // Estimate visual line wrapping (10 words per line, 0.28 inches height per line)
       const visualLines = Math.max(1, Math.ceil(words / 10))
-      bodyHeight += (visualLines * 0.24) + 0.1
+      bodyHeight += (visualLines * 0.28) + 0.12
     })
   })
-  // TotalHeight = 1.0 (title at Y=0.5, h=0.8, gap=0.2) + bodyHeight
-  return 1.0 + bodyHeight
+  // TotalHeight = 1.4 (Title Y=0.5, body starts at Y=1.4) + bodyHeight
+  return 1.4 + bodyHeight
 }
 
 function applyVerticalThresholds(slides: Slide[]): Slide[] {
   const step1: Slide[] = []
 
-  // Step 1: Vertical Axis Splitting Rule (3/4 Page Threshold: 4.2 inches)
+  // Step 1: Vertical Axis Splitting Rule (Calibrated Threshold: 4.6 inches)
   slides.forEach((slide) => {
     if (slide.id === 1 || slide.id === 2) {
       step1.push(slide)
@@ -200,7 +200,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
     }
 
     const height = getSlideHeight(slide.content)
-    if (height > 4.2) {
+    if (height > 4.6) {
       // Split lines one-by-one
       let currentChunk: string[] = []
       let partIndex = 1
@@ -209,7 +209,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
       for (let i = 0; i < slide.content.length; i++) {
         const line = slide.content[i]
         const tempChunk = [...currentChunk, line]
-        if (getSlideHeight(tempChunk) > 4.2) {
+        if (getSlideHeight(tempChunk) > 4.6) {
           // If currentChunk is empty, push the single line anyway to prevent infinite loop.
           if (currentChunk.length === 0) {
             step1.push({
@@ -266,13 +266,13 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
 
       // If next slide is from the same sub-topic and is also under-filled
       if (currentBase === nextBase && nextHeight < 2.8) {
-        // Programmatically merge their content, respecting the 3/4 limit (4.2 inches)
+        // Programmatically merge their content, respecting the split limit (4.6 inches)
         const mergedContent = [...currentSlide.content]
         let mergeCount = 0
 
         for (let j = 0; j < nextSlide.content.length; j++) {
           const nextLine = nextSlide.content[j]
-          if (getSlideHeight([...mergedContent, nextLine]) <= 4.2) {
+          if (getSlideHeight([...mergedContent, nextLine]) <= 4.6) {
             mergedContent.push(nextLine)
             mergeCount++
           } else {

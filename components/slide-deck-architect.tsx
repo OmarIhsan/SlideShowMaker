@@ -259,9 +259,9 @@ export default function SlideDeckArchitect() {
         // Draw vertical primary-colored accent bar on the left margin (mirroring preview)
         pptxSlide.addShape("rect", {
           x: 0.3,
-          y: 1.5,
+          y: 1.4,
           w: 0.08,
-          h: 2.7,
+          h: 3.2,
           fill: { color: primaryHex },
           line: { color: primaryHex, width: 0 }
         });
@@ -305,14 +305,14 @@ export default function SlideDeckArchitect() {
           if (slide.layout === 'TABULAR_DATA') {
             // Execute standard table generation assuming content rows match table matrix arrays
             let tableRows = slide.content.map(rowText => [ { text: rowText } ]);
-            pptxSlide.addTable(tableRows, { x: 0.7, y: 1.5, w: 8.6 });
+            pptxSlide.addTable(tableRows, { x: 0.7, y: 1.4, w: 8.6 });
           } else {
             // CRITICAL FALLBACK SAFEGUARD: Force all content into a locked vertical textbox with font auto-shrink
             pptxSlide.addText(formattedContent, {
               x: 0.7,
-              y: 1.5,
+              y: 1.4,
               w: 8.6,
-              h: 2.7,
+              h: 3.2,
               align: 'left',
               valign: 'top',
               fit: 'shrink'
@@ -321,7 +321,7 @@ export default function SlideDeckArchitect() {
         } catch (error) {
           // Global item fallback: guarantee that processing never crashes with an unhandled exception modal
           console.error("Safeguard applied for slide compile exception:", error);
-          pptxSlide.addText(slide.content.join(' '), { x: 0.7, y: 1.5, w: 8.6, h: 2.7, fontSize: 12, color: "333333" });
+          pptxSlide.addText(slide.content.join(' '), { x: 0.7, y: 1.4, w: 8.6, h: 3.2, fontSize: 12, color: "333333" });
         }
       });
 
@@ -373,7 +373,7 @@ export default function SlideDeckArchitect() {
 
         // 3. Draw vertical primary-colored accent bar on the left margin (mirroring preview)
         doc.setFillColor(theme.hexPrimary)
-        doc.rect(0.3, 1.5, 0.08, 2.7, "F")
+        doc.rect(0.3, 1.4, 0.08, 3.2, "F")
 
         // 4. Embed lecturer footer
         if (lecturerName) {
@@ -389,12 +389,12 @@ export default function SlideDeckArchitect() {
         doc.setTextColor(theme.hexPrimary)
         doc.text(slide.title, 0.7, 0.9)
 
-        // 6. Draw body content starting at Y = 1.5 inches
+        // 6. Draw body content starting at Y = 1.4 inches
         doc.setFont("helvetica", "normal")
         doc.setFontSize(14)
         doc.setTextColor("#444444")
 
-        let currentY = 1.5
+        let currentY = 1.4
         slide.content.forEach((text) => {
           const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
           
@@ -1029,29 +1029,29 @@ function SlideRenderer({
 
 function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
   return (
-    <div className="relative flex h-full flex-col px-10 pt-[8.8%] pb-8 select-text">
+    <div className="relative flex h-full flex-col px-10 pt-[8.8%] pb-16 select-text">
       {/* Visual Accent bar mirroring coordinates of PowerPoint */}
-      <div className="absolute left-0 top-[26.6%] h-[48%] w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
+      <div className="absolute left-0 top-[24.8%] h-[56.8%] w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
       
       {/* Title box positioned cleanly at top-left */}
       <h2 className="text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" style={{ color: theme.hexPrimary }}>
         {slide.title}
       </h2>
       
-      {/* Body text box matched to w: 8.6, h: 2.7, aligned left/top */}
-      <div className="mt-[3.5%] max-w-[86%] h-[48%] flex flex-col justify-start space-y-3 overflow-hidden break-words text-left pr-2">
+      {/* Body text box matched to w: 8.6, h: 3.2, aligned left/top */}
+      <div className="mt-[3.5%] max-w-[86%] h-[56.8%] flex flex-col justify-start space-y-3 overflow-hidden break-words text-left pr-2">
         {slide.content.map((text, i) => {
           const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
           if (isListItem) {
             return (
-              <div key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-600 sm:text-base">
+              <div key={i} className="flex items-start gap-2.5 text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
                 <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
                 <span>{text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()}</span>
               </div>
             )
           }
           return (
-            <p key={i} className="text-pretty text-sm leading-relaxed text-slate-600 sm:text-base">
+            <p key={i} className="text-pretty text-sm leading-normal text-slate-600 sm:text-base sm:leading-normal">
               {text}
             </p>
           )
