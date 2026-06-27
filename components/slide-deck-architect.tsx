@@ -71,6 +71,7 @@ export default function SlideDeckArchitect() {
   const [slides, setSlides] = useState<Slide[]>([])
   const [[current, direction], setPage] = useState<[number, number]>([0, 0])
   const [isExporting, setIsExporting] = useState(false)
+  const [isExportingPDF, setIsExportingPDF] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
@@ -255,24 +256,22 @@ export default function SlideDeckArchitect() {
           });
         }
 
-        // Draw vertical primary-colored accent bar on the left (except for Slide 1/Title slide)
-        if (slide.id !== 1) {
-          pptxSlide.addShape("rect", {
-            x: 0.25,
-            y: 2.0,
-            w: 0.08,
-            h: 2.0,
-            fill: { color: primaryHex },
-            line: { color: primaryHex, width: 0 }
-          });
-        }
+        // Draw vertical primary-colored accent bar on the left margin (mirroring preview)
+        pptxSlide.addShape("rect", {
+          x: 0.3,
+          y: 1.81,
+          w: 0.08,
+          h: 2.0,
+          fill: { color: primaryHex },
+          line: { color: primaryHex, width: 0 }
+        });
 
-        // Embed lecturer footer (except for title slide)
-        if (lecturerName && slide.id !== 1) {
+        // Embed lecturer footer
+        if (lecturerName) {
           pptxSlide.addText(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, {
-            x: 0.5,
+            x: 0.8,
             y: 5.2,
-            w: 9.0,
+            w: 8.4,
             h: 0.3,
             fontSize: 9,
             color: "777777",
@@ -282,7 +281,7 @@ export default function SlideDeckArchitect() {
         }
         
         // 1. Always write the Slide Title uniformly (styled like preview)
-        pptxSlide.addText(slide.title, { x: 0.5, y: 0.5, w: 9.0, h: 0.8, fontSize: 24, bold: true, color: primaryHex });
+        pptxSlide.addText(slide.title, { x: 0.8, y: 0.6, w: 8.4, h: 0.8, fontSize: 24, bold: true, color: primaryHex });
 
         // 2. Strict Layout Type Evaluation
         try {
@@ -290,7 +289,7 @@ export default function SlideDeckArchitect() {
             // Execute standard table generation assuming content rows match table matrix arrays
             // Format strings safely into table cells
             let tableRows = slide.content.map(rowText => [ { text: rowText } ]);
-            pptxSlide.addTable(tableRows, { x: 0.5, y: 1.5, w: 9.0 });
+            pptxSlide.addTable(tableRows, { x: 0.8, y: 1.6, w: 8.4 });
           } else {
             // CRITICAL FALLBACK SAFEGUARD: Force all content (including 'STANDARD_CONTENT' 
             // or any unexpected runtime variant) into a standard master vertical textbox
@@ -310,17 +309,17 @@ export default function SlideDeckArchitect() {
             });
             
             pptxSlide.addText(formattedContent, {
-              x: 0.5,
-              y: 1.5,
-              w: 9.0,
-              h: 5.5,
+              x: 0.8,
+              y: 1.6,
+              w: 8.4,
+              h: 3.2,
               valign: 'top'
             });
           }
         } catch (error) {
           // Global item fallback: guarantee that processing never crashes with an unhandled exception modal
           console.error("Safeguard applied for slide compile exception:", error);
-          pptxSlide.addText(slide.content.join(' '), { x: 0.5, y: 1.5, w: 9.0, h: 5.5, fontSize: 12, color: "333333" });
+          pptxSlide.addText(slide.content.join(' '), { x: 0.8, y: 1.6, w: 8.4, h: 3.2, fontSize: 12, color: "333333" });
         }
       });
 
@@ -330,6 +329,100 @@ export default function SlideDeckArchitect() {
       alert("Failed to export PowerPoint: " + (err instanceof Error ? err.message : String(err)))
     } finally {
       setIsExporting(false)
+    }
+  }, [slides, theme, logoBase64, lecturerName])
+
+  // ---- PDF Compiler --------------------------------------------------------
+  const exportToPDF = useCallback(async () => {
+    if (typeof window === "undefined" || slides.length === 0) return
+    setIsExportingPDF(true)
+    try {
+      const { jsPDF } = await import("jspdf")
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "in",
+        format: [10, 5.625] // Match the 16:9 widescreen ratio exactly
+      })
+
+      // Loop through slides array during export execution
+      slides.forEach((slide, index) => {
+        if (index > 0) {
+          doc.addPage([10, 5.625], "landscape")
+        }
+
+        // 1. Draw uniform background color
+        doc.setFillColor(theme.hexBg)
+        doc.rect(0, 0, 10, 5.625, "F")
+
+        // 2. Embed watermark logo in the center of the page background, larger and with low opacity
+        if (logoBase64) {
+          try {
+            // Set opacity state in jsPDF for transparency effect (10% opacity)
+            doc.saveGraphicsState()
+            const gState = new (doc as any).GState({ opacity: 0.1 })
+            doc.setGState(gState)
+            doc.addImage(logoBase64, "PNG", 2.0, 1.31, 6.0, 3.0)
+            doc.restoreGraphicsState()
+          } catch (e) {
+            console.warn("Failed to apply watermark transparency, fallback to standard image", e)
+            doc.addImage(logoBase64, "PNG", 2.0, 1.31, 6.0, 3.0)
+          }
+        }
+
+        // 3. Draw vertical primary-colored accent bar on the left margin (mirroring preview)
+        doc.setFillColor(theme.hexPrimary)
+        doc.rect(0.3, 1.81, 0.08, 2.0, "F")
+
+        // 4. Embed lecturer footer
+        if (lecturerName) {
+          doc.setFont("helvetica", "italic")
+          doc.setFontSize(9)
+          doc.setTextColor("#777777")
+          doc.text(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, 0.8, 5.2)
+        }
+
+        // 5. Always write the Slide Title uniformly (styled like preview)
+        doc.setFont("helvetica", "bold")
+        doc.setFontSize(24)
+        doc.setTextColor(theme.hexPrimary)
+        doc.text(slide.title, 0.8, 0.9)
+
+        // 6. Write body content verbatim (matching the preview list items and paragraphs)
+        doc.setFont("helvetica", "normal")
+        doc.setFontSize(14)
+        doc.setTextColor("#444444")
+
+        let currentY = 1.6
+        slide.content.forEach((text) => {
+          const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
+          
+          if (isListItem) {
+            // Draw bullet dot matching preview
+            doc.setFillColor(theme.hexPrimary)
+            doc.circle(0.85, currentY - 0.05, 0.03, "F")
+            
+            // Draw list item text
+            doc.setFont("helvetica", "normal")
+            const cleanText = text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim()
+            
+            // Wrap text nicely to fit slide width
+            const lines = doc.splitTextToSize(cleanText, 8.0)
+            doc.text(lines, 1.0, currentY)
+            currentY += (lines.length * 0.24) + 0.1
+          } else {
+            const lines = doc.splitTextToSize(text, 8.2)
+            doc.text(lines, 0.8, currentY)
+            currentY += (lines.length * 0.24) + 0.1
+          }
+        })
+      })
+
+      doc.save(`Academic_Lecture_${Date.now()}.pdf`)
+    } catch (err) {
+      console.error("Failed to generate PDF document", err)
+      alert("Failed to export PDF: " + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setIsExportingPDF(false)
     }
   }, [slides, theme, logoBase64, lecturerName])
 
@@ -595,6 +688,24 @@ export default function SlideDeckArchitect() {
                     <>
                       <Presentation className="h-4 w-4 text-teal-600" aria-hidden="true" />
                       Export to PowerPoint (.pptx)
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={exportToPDF}
+                  disabled={isExportingPDF}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isExportingPDF ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-teal-600" aria-hidden="true" />
+                      Compiling PDF…
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="h-4 w-4 text-teal-600" aria-hidden="true" />
+                      Export to PDF (.pdf)
                     </>
                   )}
                 </button>
