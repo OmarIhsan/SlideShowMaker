@@ -100,13 +100,22 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   const titleSlideContent: string[] = []
   let seenFirstHeader = false
 
+  const determineLayout = (contentString: string): 'STANDARD_CONTENT' | 'TABULAR_DATA' => {
+    if (contentString.includes('|') || contentString.includes('\t')) {
+      return 'TABULAR_DATA';
+    }
+    return 'STANDARD_CONTENT';
+  };
+
   const flushGroup = () => {
     if (currentGroup.length > 0) {
+      const combined = currentGroup.join("\n");
+      const layout = determineLayout(combined);
       bodySlides.push({
         id: slideIdCounter++,
         title: currentHeader,
         content: [...currentGroup],
-        layout: "STANDARD_CONTENT"
+        layout: layout
       })
       currentGroup = []
     }
@@ -135,50 +144,58 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       continue
     }
 
-    // Regex cleaners for structural delimiters
-    const pipeRegex = /\|/;
-    const tabIndentRegex = /^(\t+|\s{2,})/;
-
-    let processedLine = line;
-
-    // Delimiter Processing & List Mapping
-    if (pipeRegex.test(line)) {
-      // Skip separator lines in markdown tables
+    // Table Detection: Vertical separators | or explicit tabs \t
+    if (line.includes("|") || line.includes("\t")) {
       if (line.includes("-")) {
         const cleanCheck = line.replace(/[|\s-]/g, "")
         if (cleanCheck.length === 0) {
-          continue
+          continue // skip markdown separator row
         }
       }
 
-      const cells = line.split("|").map(c => c.trim()).filter(Boolean)
-      if (cells.length > 0) {
-        if (cells.length === 1) {
-          processedLine = `- ${cells[0]}`
-        } else if (cells.length === 2) {
-          processedLine = `- ${cells[0]}: ${cells[1]}`
-        } else {
-          const extra = cells.slice(2).join(", ")
-          processedLine = `- ${cells[0]}: ${cells[1]} (${extra})`
-        }
+      // Convert sequential tab characters into pipe separators to unify downstream processing
+      let processedTableLine = line;
+      if (line.includes("\t")) {
+        processedTableLine = line.replace(/\t+/g, " | ");
       }
-    } else if (tabIndentRegex.test(line)) {
-      const trimmed = line.replace(tabIndentRegex, "").trim()
-      if (trimmed.length > 0) {
-        processedLine = `- ${trimmed}`
+
+      if (!seenFirstHeader) {
+        titleSlideContent.push(processedTableLine)
+      } else {
+        currentGroup.push(processedTableLine)
       }
-    } else {
-      // Convert colon-delimited list definitions to bullets
-      const hasListIndicator = line.startsWith("-") || line.startsWith("*") || line.startsWith("•") || /^\d+[.)]/.test(line)
-      if (!hasListIndicator && /^[A-Za-z0-9\s()-]+:\s+.+$/.test(line)) {
-        processedLine = `- ${line}`
-      }
+      continue
     }
 
+    // Bullet List Detection: prefixed with dashes, bullet characters, or index tags (1., a., etc.)
+    const isBullet = line.startsWith("-") || line.startsWith("*") || line.startsWith("•");
+    const isOrdered = /^\d+[.)]/.test(line) || /^[a-zA-Z][.)]/.test(line);
+
+    if (isBullet || isOrdered) {
+      if (!seenFirstHeader) {
+        titleSlideContent.push(line)
+      } else {
+        currentGroup.push(line)
+      }
+      continue
+    }
+
+    // Fallback: Convert colon-delimited list definitions to bullets
+    if (/^[A-Za-z0-9\s()-]+:\s+.+$/.test(line)) {
+      const lineWithPrefix = `- ${line}`;
+      if (!seenFirstHeader) {
+        titleSlideContent.push(lineWithPrefix)
+      } else {
+        currentGroup.push(lineWithPrefix)
+      }
+      continue
+    }
+
+    // Default loose paragraph text
     if (!seenFirstHeader) {
-      titleSlideContent.push(processedLine)
+      titleSlideContent.push(line)
     } else {
-      currentGroup.push(processedLine)
+      currentGroup.push(line)
     }
   }
 
@@ -190,6 +207,9 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     return `${index + 1}. ${h}`
   })
 
+  const titleSlideCombined = titleSlideContent.join("\n");
+  const titleSlideLayout = determineLayout(titleSlideCombined);
+
   const titleSlide: Slide = {
     id: 1,
     title: docTitle,
@@ -198,7 +218,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       "Presented by: Dr. Faisal Alhuwaizi",
       "This deck contains verbatim syllabus details compiled from raw content outlines."
     ],
-    layout: "STANDARD_CONTENT"
+    layout: titleSlideLayout
   }
 
   const tocSlide: Slide = {
@@ -218,6 +238,33 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 }
 
 export function getSlideHeight(content: string[]): number {
+  const hasTable = content.some(line => line.includes("|") || line.includes("\t"));
+  if (hasTable) {
+    let bodyHeight = 0
+    content.forEach((line) => {
+      const cells = line
+        .replace(/^\|/, "")
+        .replace(/\|$/, "")
+        .split("|")
+        .map(c => c.trim())
+      
+      const numCols = Math.max(1, cells.length)
+      let maxLines = 1
+      cells.forEach((cellText) => {
+        const words = cellText.split(/\s+/).filter(Boolean).length
+        if (words === 0) return
+        // Narrower columns lead to tighter wrapping (estimate 4 words per line)
+        const colLines = Math.max(1, Math.ceil(words / 4))
+        if (colLines > maxLines) {
+          maxLines = colLines
+        }
+      })
+      // Height per line inside visual grid cell + padding
+      bodyHeight += (maxLines * 0.2) + 0.15
+    })
+    return 1.4 + bodyHeight
+  }
+
   let bodyHeight = 0
   content.forEach((text) => {
     // Split by manual newlines

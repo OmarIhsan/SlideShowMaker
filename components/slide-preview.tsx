@@ -75,16 +75,23 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
         <div className="my-auto w-full flex flex-col space-y-3">
           {(() => {
             const elements: React.ReactNode[] = []
-            let currentList: string[] = []
+            let currentList: { text: string; isOrdered: boolean }[] = []
 
             const flushList = (key: string | number) => {
               if (currentList.length > 0) {
+                const isOrdered = currentList[0].isOrdered
+                const Tag = isOrdered ? "ol" : "ul"
+                const listClass = isOrdered 
+                  ? "list-decimal pl-5 space-y-2 text-slate-600" 
+                  : "list-disc pl-5 space-y-2 text-slate-600"
+
                 elements.push(
-                  <ul key={`ul-${key}`} className="list-disc pl-5 space-y-2 text-slate-600">
+                  <Tag key={`list-${key}`} className={listClass}>
                     {currentList.map((item, idx) => {
-                      const cleanText = item
+                      const cleanText = item.text
                         .replace(/^[-*•]\s*/, "")
                         .replace(/^\d+[.)]\s*/, "")
+                        .replace(/^[a-zA-Z][.)]\s*/, "")
                         .trim()
                       return (
                         <li 
@@ -96,16 +103,22 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
                         </li>
                       )
                     })}
-                  </ul>
+                  </Tag>
                 )
                 currentList = []
               }
             }
 
             slide.content.forEach((text, i) => {
-              const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
+              const isUnordered = text.startsWith("-") || text.startsWith("*") || text.startsWith("•")
+              const isOrdered = /^\d+[.)]/.test(text) || /^[a-zA-Z][.)]/.test(text)
+              const isListItem = isUnordered || isOrdered
+
               if (isListItem) {
-                currentList.push(text)
+                if (currentList.length > 0 && currentList[0].isOrdered !== isOrdered) {
+                  flushList(i)
+                }
+                currentList.push({ text, isOrdered })
               } else {
                 flushList(i)
                 elements.push(

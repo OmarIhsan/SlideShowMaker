@@ -186,6 +186,84 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
   await pptx.writeFile({ fileName: `Academic_Lecture_${Date.now()}.pptx` })
 }
 
+function measurePdfTableHeight(doc: any, rows: string[][], colW: number): number {
+  return rows.reduce((totalH, row) => {
+    let maxLines = 1
+    row.forEach((cellText) => {
+      const lines = doc.splitTextToSize(cellText, colW - 0.1)
+      if (lines.length > maxLines) {
+        maxLines = lines.length
+      }
+    })
+    return totalH + (maxLines * 0.2 + 0.15)
+  }, 0)
+}
+
+function renderPdfTableGrid(doc: any, slide: Slide, theme: Theme, startY: number) {
+  const rows = slide.content.map((rowText) => {
+    return rowText
+      .replace(/^\|/, "")
+      .replace(/\|$/, "")
+      .split("|")
+      .map((c) => c.trim())
+  })
+
+  if (rows.length === 0) return
+
+  const numCols = Math.max(...rows.map((r) => r.length))
+  const tableX = SLIDE_FRAME.bodyX
+  const tableW = SLIDE_FRAME.bodyW
+  const colW = tableW / numCols
+
+  let currentY = startY
+
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(10)
+
+  rows.forEach((row, rowIndex) => {
+    let maxLines = 1
+    row.forEach((cellText) => {
+      const lines = doc.splitTextToSize(cellText, colW - 0.1)
+      if (lines.length > maxLines) {
+        maxLines = lines.length
+      }
+    })
+
+    const rowH = maxLines * 0.2 + 0.15
+
+    if (rowIndex === 0) {
+      doc.setFillColor(theme.hexPrimary)
+      doc.rect(tableX, currentY, tableW, rowH, "F")
+      doc.setTextColor("#FFFFFF")
+      doc.setFont("helvetica", "bold")
+    } else {
+      doc.setFillColor(rowIndex % 2 === 1 ? "#FFFFFF" : "#F8FAFC")
+      doc.rect(tableX, currentY, tableW, rowH, "F")
+      doc.setTextColor("#444444")
+      doc.setFont("helvetica", "normal")
+    }
+
+    row.forEach((cellText, colIndex) => {
+      const x = tableX + colIndex * colW + 0.05
+      const lines = doc.splitTextToSize(cellText, colW - 0.1)
+      const textY = currentY + (rowH / 2) + (lines.length * 0.08) - 0.05
+      doc.text(lines, x, textY)
+    })
+
+    doc.setDrawColor("#E2E8F0")
+    doc.setLineWidth(0.01)
+    doc.line(tableX, currentY, tableX + tableW, currentY)
+    doc.line(tableX, currentY + rowH, tableX + tableW, currentY + rowH)
+
+    for (let colIndex = 0; colIndex <= numCols; colIndex++) {
+      const x = tableX + colIndex * colW
+      doc.line(x, currentY, x, currentY + rowH)
+    }
+
+    currentY += rowH
+  })
+}
+
 function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: string, logoBase64: string | null) {
   doc.setFillColor(theme.hexBg)
   doc.rect(0, 0, 10, 5.625, "F")
@@ -214,10 +292,25 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
 
   addSlideTitle(doc, slide, theme)
 
-  const bodySegments = buildBodySegments(slide.content)
-  const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments)
-  const startY = SLIDE_FRAME.bodyY + Math.max(0, (SLIDE_FRAME.bodyH - centeredBodyHeight) / 2)
-  renderCenteredPdfBody(doc, slide, theme, startY)
+  if (slide.layout === "TABULAR_DATA") {
+    const rows = slide.content.map((rowText) => {
+      return rowText
+        .replace(/^\|/, "")
+        .replace(/\|$/, "")
+        .split("|")
+        .map((c) => c.trim())
+    })
+    const numCols = Math.max(...rows.map((r) => r.length))
+    const colW = SLIDE_FRAME.bodyW / numCols
+    const totalTableH = measurePdfTableHeight(doc, rows, colW)
+    const startY = SLIDE_FRAME.bodyY + Math.max(0, (SLIDE_FRAME.bodyH - totalTableH) / 2)
+    renderPdfTableGrid(doc, slide, theme, startY)
+  } else {
+    const bodySegments = buildBodySegments(slide.content)
+    const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments)
+    const startY = SLIDE_FRAME.bodyY + Math.max(0, (SLIDE_FRAME.bodyH - centeredBodyHeight) / 2)
+    renderCenteredPdfBody(doc, slide, theme, startY)
+  }
 }
 
 function renderFallbackPdfPage(doc: any, slide: Slide, theme: Theme) {
@@ -225,7 +318,12 @@ function renderFallbackPdfPage(doc: any, slide: Slide, theme: Theme) {
   doc.rect(0, 0, 10, 5.625, "F")
   addSlideDecoration(doc, theme)
   addSlideTitle(doc, slide, theme)
-  renderCenteredPdfBody(doc, slide, theme, SLIDE_FRAME.bodyY)
+  
+  if (slide.layout === "TABULAR_DATA") {
+    renderPdfTableGrid(doc, slide, theme, SLIDE_FRAME.bodyY)
+  } else {
+    renderCenteredPdfBody(doc, slide, theme, SLIDE_FRAME.bodyY)
+  }
 }
 
 export async function exportSlidesToPDF({ slides, theme, logoBase64, lecturerName }: ExportDeckArgs): Promise<void> {

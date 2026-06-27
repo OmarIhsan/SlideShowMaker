@@ -22,14 +22,24 @@ export type BodySegment = {
   text: string
   cleanText: string
   isListItem: boolean
+  isOrdered: boolean
+  isUnordered: boolean
 }
 
 export function buildBodySegments(content: string[]): BodySegment[] {
   return content.map((text) => {
-    const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-    const cleanText = isListItem ? text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim() : text
+    const isUnordered = text.startsWith("-") || text.startsWith("*") || text.startsWith("•")
+    const isOrdered = /^\d+[.)]/.test(text) || /^[a-zA-Z][.)]/.test(text)
+    const isListItem = isUnordered || isOrdered
 
-    return { text, cleanText, isListItem }
+    let cleanText = text
+    if (isUnordered) {
+      cleanText = text.replace(/^[-*•]\s*/, "").trim()
+    } else if (isOrdered) {
+      cleanText = text.replace(/^\d+[.)]\s*/, "").replace(/^[a-zA-Z][.)]\s*/, "").trim()
+    }
+
+    return { text, cleanText, isListItem, isOrdered, isUnordered }
   })
 }
 
