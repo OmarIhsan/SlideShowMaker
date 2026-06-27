@@ -54,6 +54,7 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
       color: cleanHex(theme.hexPrimary),
       fontFace: "Arial",
       valign: "middle",
+      margin: 0,
     })
   }
 }
@@ -131,6 +132,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
           align: "left",
           valign: "top",
           fit: "shrink",
+          margin: 0,
         })
       }
     } catch (error) {
@@ -143,6 +145,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         fontSize: 12,
         color: "333333",
         valign: "top",
+        margin: 0,
       })
     }
   })

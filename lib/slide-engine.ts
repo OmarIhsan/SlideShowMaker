@@ -200,7 +200,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
     }
 
     const height = getSlideHeight(slide.content)
-    if (height > 4.6) {
+    if (height > 4.9) {
       // Split lines one-by-one
       let currentChunk: string[] = []
       let partIndex = 1
@@ -209,7 +209,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
       for (let i = 0; i < slide.content.length; i++) {
         const line = slide.content[i]
         const tempChunk = [...currentChunk, line]
-        if (getSlideHeight(tempChunk) > 4.6) {
+        if (getSlideHeight(tempChunk) > 4.9) {
           // If currentChunk is empty, push the single line anyway to prevent infinite loop.
           if (currentChunk.length === 0) {
             step1.push({
@@ -266,13 +266,13 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
 
       // If next slide is from the same sub-topic and is also under-filled
       if (currentBase === nextBase && nextHeight < 2.8) {
-        // Programmatically merge their content, respecting the split limit (4.6 inches)
+        // Programmatically merge their content, respecting the split limit (4.9 inches)
         const mergedContent = [...currentSlide.content]
         let mergeCount = 0
 
         for (let j = 0; j < nextSlide.content.length; j++) {
           const nextLine = nextSlide.content[j]
-          if (getSlideHeight([...mergedContent, nextLine]) <= 4.6) {
+          if (getSlideHeight([...mergedContent, nextLine]) <= 4.9) {
             mergedContent.push(nextLine)
             mergeCount++
           } else {

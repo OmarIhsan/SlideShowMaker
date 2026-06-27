@@ -48,7 +48,7 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
         className="absolute left-0 w-1.5 rounded-r" 
         style={{ 
           top: "24.8%", 
-          height: "56.8%", 
+          height: "62.2%", 
           backgroundColor: theme.hexPrimary 
         }} 
         aria-hidden="true" 
@@ -65,11 +65,11 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
         {slide.title}
       </h2>
 
-      {/* Body text box matched to w: 8.6, h: 3.2, aligned left/top */}
+      {/* Body text box matched to w: 8.6, h: 3.5, aligned left/top */}
       <div 
         className="max-w-[86%] flex flex-col justify-start space-y-3 overflow-hidden break-words pr-2 mt-[6.2%]"
         style={{
-          height: "56.8%"
+          height: "62.2%"
         }}
       >
         {slide.content.map((text, i) => {
