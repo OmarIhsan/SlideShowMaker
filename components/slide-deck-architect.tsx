@@ -233,8 +233,9 @@ export default function SlideDeckArchitect() {
     if (typeof window === "undefined" || slides.length === 0) return
     setIsExporting(true)
     try {
-      const pptxgen = (await import("pptxgenjs")).default
-      const pres = new pptxgen()
+      const pptxgenModule = await import("pptxgenjs")
+      const PptxGen = (pptxgenModule as any).default || pptxgenModule
+      const pres = new PptxGen()
 
       // 16:9 Aspect Ratio
       pres.layout = "LAYOUT_169"
@@ -473,7 +474,7 @@ export default function SlideDeckArchitect() {
             }
             slide.callouts.forEach((c, idx) => {
               const cardY = 1.4 + idx * 1.1
-              pptSlide.addShape(pres.ShapeType.rect, {
+              pptSlide.addShape("rect", {
                 x: 5.2,
                 y: cardY,
                 w: 4.0,
@@ -522,7 +523,7 @@ export default function SlideDeckArchitect() {
 
             slide.steps.forEach((step, idx) => {
               const stepX = 0.8 + idx * (stepW + gap)
-              pptSlide.addShape(pres.ShapeType.rect, {
+              pptSlide.addShape("rect", {
                 x: stepX,
                 y: 1.6,
                 w: stepW,
@@ -590,7 +591,7 @@ export default function SlideDeckArchitect() {
               const cardX = 0.8 + colIdx * (cardW + gap)
               const cardY = 1.5 + rowIdx * (cardH + gap)
 
-              pptSlide.addShape(pres.ShapeType.rect, {
+              pptSlide.addShape("rect", {
                 x: cardX,
                 y: cardY,
                 w: cardW,
@@ -695,7 +696,7 @@ export default function SlideDeckArchitect() {
             const fillCol = isDanger ? "FEF2F2" : "FFFBEB"
             const textCol = isDanger ? "991B1B" : "92400E"
 
-            pptSlide.addShape(pres.ShapeType.rect, {
+            pptSlide.addShape("rect", {
               x: 0.8,
               y: 1.3,
               w: 8.4,
@@ -770,7 +771,7 @@ export default function SlideDeckArchitect() {
               const cardX = 0.8 + col * 4.3
               const cardY = 2.0 + row * 1.1
 
-              pptSlide.addShape(pres.ShapeType.rect, {
+              pptSlide.addShape("rect", {
                 x: cardX,
                 y: cardY,
                 w: 4.0,
@@ -809,6 +810,7 @@ export default function SlideDeckArchitect() {
       await pres.writeFile({ fileName: `Academic_Lecture_${Date.now()}.pptx` })
     } catch (err) {
       console.error("Failed to generate PowerPoint deck", err)
+      alert("Failed to export PowerPoint: " + (err instanceof Error ? err.message : String(err)))
     } finally {
       setIsExporting(false)
     }
