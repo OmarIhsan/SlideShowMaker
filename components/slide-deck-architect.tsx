@@ -20,9 +20,7 @@ import {
 } from "lucide-react"
 import {
   type ChangeEvent,
-  type DragEvent,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -38,98 +36,13 @@ import {
   parseDocumentToSlides,
   SAMPLE_SCRIPT,
 } from "@/lib/slide-engine"
-
-const GENERATION_STEPS = [
-  "Parsing academic script...",
-  "Formatting module dividers...",
-  "Applying layout templates...",
-  "Compiling self-assessment banks...",
-  "Configuring branding metadata...",
-]
-
-const SLIDE_FRAME = {
-  titleY: 0.95,
-  titleH: 0.8,
-  bodyX: 0.7,
-  bodyY: 1.75,
-  bodyW: 8.6,
-  bodyH: 3.2,
-  accentX: 0.3,
-  accentY: 1.75,
-  accentW: 0.08,
-  accentH: 3.2,
-  footerY: 5.2,
-}
-
-const BODY_LINE_HEIGHT_IN = 0.24
-const BODY_PARAGRAPH_GAP_IN = 0.1
-const BODY_FONT_SIZE = 14
-
-type BodySegment = {
-  text: string
-  cleanText: string
-  isListItem: boolean
-}
-
-function buildBodySegments(content: string[]): BodySegment[] {
-  return content.map((text) => {
-    const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
-    const cleanText = isListItem ? text.replace(/^[-*•]\s*/, "").replace(/^\d+[.)]\s*/, "").trim() : text
-
-    return { text, cleanText, isListItem }
-  })
-}
-
-function measurePdfBodyHeight(doc: { splitTextToSize: (text: string, size: number) => string[] }, segments: BodySegment[]): number {
-  return segments.reduce((height, segment) => {
-    const wrapWidth = segment.isListItem ? 7.8 : 8.2
-    const lineCount = doc.splitTextToSize(segment.cleanText, wrapWidth).length
-    return height + (lineCount * BODY_LINE_HEIGHT_IN) + BODY_PARAGRAPH_GAP_IN
-  }, 0)
-}
-
-function renderCenteredPdfBody(doc: any, slide: Slide, theme: Theme, startY: number) {
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(BODY_FONT_SIZE)
-  doc.setTextColor("#444444")
-
-  let currentY = startY
-  buildBodySegments(slide.content).forEach((segment) => {
-    if (segment.isListItem) {
-      doc.setFillColor(theme.hexPrimary)
-      doc.circle(0.75, currentY - 0.05, 0.03, "F")
-
-      const lines = doc.splitTextToSize(segment.cleanText, 7.8)
-      doc.text(lines, 0.9, currentY)
-      currentY += (lines.length * BODY_LINE_HEIGHT_IN) + BODY_PARAGRAPH_GAP_IN
-      return
-    }
-
-    const lines = doc.splitTextToSize(segment.cleanText, 8.2)
-    doc.text(lines, 0.7, currentY)
-    currentY += (lines.length * BODY_LINE_HEIGHT_IN) + BODY_PARAGRAPH_GAP_IN
-  })
-}
-
-function renderFallbackPdfSlide(doc: any, slide: Slide, theme: Theme) {
-  doc.setFillColor(theme.hexBg)
-  doc.rect(0, 0, 10, 5.625, "F")
-  doc.setFillColor(theme.hexPrimary)
-  doc.rect(SLIDE_FRAME.accentX, SLIDE_FRAME.accentY, SLIDE_FRAME.accentW, SLIDE_FRAME.accentH, "F")
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(24)
-  doc.setTextColor(theme.hexPrimary)
-  doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), { align: "left", baseline: "middle" })
-  renderCenteredPdfBody(doc, slide, theme, SLIDE_FRAME.bodyY)
-}
-
-type Phase = "idle" | "generating" | "ready"
+import {
+  exportSlidesToPDFWithFallback,
+  exportSlidesToPowerPoint,
+} from "@/lib/presentation-exporters"
+import { useSlideDeckGeneration } from "@/hooks/use-slide-deck-generation"
 
 export default function SlideDeckArchitect() {
-  const [rawText, setRawText] = useState("")
-  const [fileName, setFileName] = useState<string | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  
   // Branding States
   const [lecturerName, setLecturerName] = useState("Dr. Faisal Alhuwaizi")
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
@@ -141,13 +54,31 @@ export default function SlideDeckArchitect() {
   const [customPrimary, setCustomPrimary] = useState("#0D9488")
   const [customSecondary, setCustomSecondary] = useState("#0F766E")
   const [customBg, setCustomBg] = useState("#F8FAFC")
-
-  const [phase, setPhase] = useState<Phase>("idle")
-  const [stepIndex, setStepIndex] = useState(0)
-  const [slides, setSlides] = useState<Slide[]>([])
-  const [[current, direction], setPage] = useState<[number, number]>([0, 0])
   const [isExporting, setIsExporting] = useState(false)
   const [isExportingPDF, setIsExportingPDF] = useState(false)
+
+  const {
+    rawText,
+    setRawText,
+    fileName,
+    isDragging,
+    setIsDragging,
+    phase,
+    stepIndex,
+    slides,
+    current,
+    direction,
+    canGenerate,
+    handleDrop,
+    handleFileSelect,
+    handleGenerate,
+    reset,
+    paginate,
+    goNext,
+    goPrev,
+    percent,
+    outline,
+  } = useSlideDeckGeneration()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
@@ -173,41 +104,11 @@ export default function SlideDeckArchitect() {
 
   const total = slides.length
 
-  // ---- File Ingestion ------------------------------------------------------
-  const ingestFile = useCallback((file: File) => {
-    setFileName(file.name)
-    if (file.type === "text/plain" || file.name.toLowerCase().endsWith(".txt")) {
-      const reader = new FileReader()
-      reader.onload = () => setRawText(String(reader.result ?? ""))
-      reader.readAsText(file)
-    } else {
-      setRawText(SAMPLE_SCRIPT)
-    }
-  }, [])
-
-  const handleDrop = useCallback(
-    (e: DragEvent<HTMLDivElement>) => {
-      e.preventDefault()
-      setIsDragging(false)
-      const file = e.dataTransfer.files?.[0]
-      if (file) ingestFile(file)
-    },
-    [ingestFile],
-  )
-
-  const handleFileSelect = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (file) ingestFile(file)
-    },
-    [ingestFile],
-  )
-
   const handleLogoSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       setLogoUrl(URL.createObjectURL(file))
-      
+
       const reader = new FileReader()
       reader.onload = (event) => {
         if (event.target?.result) {
@@ -218,188 +119,12 @@ export default function SlideDeckArchitect() {
     }
   }, [])
 
-  // ---- Generation ----------------------------------------------------------
-  const canGenerate = rawText.trim().length > 0 || fileName !== null
-
-  const handleGenerate = useCallback(() => {
-    if (!canGenerate || phase === "generating") return
-    setPhase("generating")
-    setStepIndex(0)
-
-    const source = rawText.trim().length > 0 ? rawText : SAMPLE_SCRIPT
-    const result = parseDocumentToSlides(source)
-
-    let step = 0
-    const interval = setInterval(() => {
-      step += 1
-      if (step >= GENERATION_STEPS.length) {
-        clearInterval(interval)
-        setSlides(result.slides)
-        setPage([0, 0])
-        setPhase("ready")
-        
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        })
-      } else {
-        setStepIndex(step)
-      }
-    }, 600)
-  }, [canGenerate, phase, rawText])
-
-  const reset = useCallback(() => {
-    setPhase("idle")
-    setSlides([])
-    setPage([0, 0])
-    setStepIndex(0)
-  }, [])
-
-  // ---- Navigation ----------------------------------------------------------
-  const paginate = useCallback(
-    (next: number) => {
-      setPage(([cur]) => {
-        const clamped = Math.max(0, Math.min(next, slides.length - 1))
-        return [clamped, clamped > cur ? 1 : clamped < cur ? -1 : 0]
-      })
-    },
-    [slides.length],
-  )
-
-  const goNext = useCallback(() => paginate(current + 1), [paginate, current])
-  const goPrev = useCallback(() => paginate(current - 1), [paginate, current])
-
-  useEffect(() => {
-    if (phase !== "ready") return
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (e.target as HTMLElement)?.isContentEditable) return
-      if (e.key === "ArrowRight" || e.key === " ") {
-        e.preventDefault()
-        goNext()
-      } else if (e.key === "ArrowLeft") {
-        goPrev()
-      } else if (e.key === "Home") {
-        paginate(0)
-      } else if (e.key === "End") {
-        paginate(slides.length - 1)
-      }
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [phase, goNext, goPrev, paginate, slides.length])
-
-  const percent = total > 1 ? Math.round((current / (total - 1)) * 100) : 100
-
-  const outline = useMemo(
-    () => slides.map((s, i) => ({ index: i, title: getSlideTitle(s), layout: s.layout })),
-    [slides],
-  )
-
-  // ---- PowerPoint Compiler -------------------------------------------------
+  // ---- Export Compilers ----------------------------------------------------
   const exportToPowerPoint = useCallback(async () => {
     if (typeof window === "undefined" || slides.length === 0) return
     setIsExporting(true)
     try {
-      const pptxgenModule = await import("pptxgenjs")
-      const PptxGen = (pptxgenModule as any).default || pptxgenModule
-      const pptx = new PptxGen()
-
-      // Widescreen ratio
-      pptx.layout = "LAYOUT_16x9"
-
-      const cleanHex = (hex: string) => hex.replace("#", "")
-      const primaryHex = cleanHex(theme.hexPrimary)
-      const bgHex = cleanHex(theme.hexBg)
-
-      // Loop through slides array during export execution
-      slides.forEach((slide) => {
-        const pptxSlide = pptx.addSlide();
-
-        // Set uniform slide background color matching the theme
-        pptxSlide.background = { color: bgHex };
-
-        // Embed watermark logo in the center of the page, larger and with low opacity
-        if (logoBase64) {
-          pptxSlide.addImage({
-            data: logoBase64,
-            x: 2.0,
-            y: 1.31,
-            w: 6.0,
-            h: 3.0,
-            transparency: 90 // 90% transparent (10% opacity)
-          });
-        }
-
-        // Draw vertical primary-colored accent bar on the left margin (mirroring preview)
-        pptxSlide.addShape("rect", {
-          x: SLIDE_FRAME.accentX,
-          y: SLIDE_FRAME.accentY,
-          w: SLIDE_FRAME.accentW,
-          h: SLIDE_FRAME.accentH,
-          fill: { color: primaryHex },
-          line: { color: primaryHex, width: 0 }
-        });
-
-        // Embed lecturer footer
-        if (lecturerName) {
-          pptxSlide.addText(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, {
-            x: SLIDE_FRAME.bodyX,
-            y: SLIDE_FRAME.footerY,
-            w: SLIDE_FRAME.bodyW,
-            h: 0.3,
-            fontSize: 9,
-            color: "777777",
-            fontFace: "Arial",
-            italic: true,
-          });
-        }
-        
-        // 1. Write the Slide Title (styled like preview)
-        pptxSlide.addText(slide.title, { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.titleY, w: SLIDE_FRAME.bodyW, h: SLIDE_FRAME.titleH, fontSize: 24, bold: true, color: primaryHex, align: "left", valign: "middle" });
-
-        // 2. Map body content paragraphs and bullets
-        const bodySegments = buildBodySegments(slide.content)
-        const formattedContent = bodySegments.map((segment, i) => {
-          return {
-            text: segment.cleanText + (i < bodySegments.length - 1 ? "\n" : ""),
-            options: {
-              bullet: segment.isListItem ? { code: "25CF", color: primaryHex } : undefined, // Circle bullet dot matching preview
-              color: "444444",
-              fontSize: BODY_FONT_SIZE,
-              fontFace: "Arial",
-              paraSpaceBefore: 6
-            }
-          };
-        });
-
-        // 3. Strict Layout Type Evaluation
-        try {
-          if (slide.layout === 'TABULAR_DATA') {
-            // Execute standard table generation assuming content rows match table matrix arrays
-            let tableRows = slide.content.map(rowText => [ { text: rowText } ]);
-            pptxSlide.addTable(tableRows, { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.bodyY, w: SLIDE_FRAME.bodyW });
-          } else {
-            // CRITICAL FALLBACK SAFEGUARD: Force all content into a locked vertical textbox with font auto-shrink
-            pptxSlide.addText(formattedContent, {
-              x: SLIDE_FRAME.bodyX,
-              y: SLIDE_FRAME.bodyY,
-              w: SLIDE_FRAME.bodyW,
-              h: SLIDE_FRAME.bodyH,
-              align: 'left',
-              valign: 'middle',
-              fit: 'shrink'
-            });
-          }
-        } catch (error) {
-          // Global item fallback: guarantee that processing never crashes with an unhandled exception modal
-          console.error("Safeguard applied for slide compile exception:", error);
-          pptxSlide.addText(slide.content.join(' '), { x: SLIDE_FRAME.bodyX, y: SLIDE_FRAME.bodyY, w: SLIDE_FRAME.bodyW, h: SLIDE_FRAME.bodyH, fontSize: 12, color: "333333", valign: 'middle' });
-        }
-      });
-
-      await pptx.writeFile({ fileName: `Academic_Lecture_${Date.now()}.pptx` })
+      await exportSlidesToPowerPoint({ slides, theme, logoBase64, lecturerName })
     } catch (err) {
       console.error("Failed to generate PowerPoint deck", err)
       alert("Failed to export PowerPoint: " + (err instanceof Error ? err.message : String(err)))
@@ -408,91 +133,14 @@ export default function SlideDeckArchitect() {
     }
   }, [slides, theme, logoBase64, lecturerName])
 
-  // ---- PDF Compiler --------------------------------------------------------
   const exportToPDF = useCallback(async () => {
     if (typeof window === "undefined" || slides.length === 0) return
     setIsExportingPDF(true)
     try {
-      const { jsPDF } = await import("jspdf")
-      const doc = new jsPDF({
-        orientation: "landscape",
-        unit: "in",
-        format: [10, 5.625] // Match the 16:9 widescreen ratio exactly
-      })
-
-      // Loop through slides array during export execution
-      slides.forEach((slide, index) => {
-        if (index > 0) {
-          doc.addPage([10, 5.625], "landscape")
-        }
-
-        // 1. Draw uniform background color
-        doc.setFillColor(theme.hexBg)
-        doc.rect(0, 0, 10, 5.625, "F")
-
-        // 2. Embed watermark logo in the center of the page background, larger and with low opacity
-        if (logoBase64) {
-          try {
-            // Set opacity state in jsPDF for transparency effect (10% opacity)
-            doc.saveGraphicsState()
-            const gState = new (doc as any).GState({ opacity: 0.1 })
-            doc.setGState(gState)
-            doc.addImage(logoBase64, "PNG", 2.0, 1.31, 6.0, 3.0)
-            doc.restoreGraphicsState()
-          } catch (e) {
-            console.warn("Failed to apply watermark transparency, fallback to standard image", e)
-            doc.addImage(logoBase64, "PNG", 2.0, 1.31, 6.0, 3.0)
-          }
-        }
-
-        // 3. Draw vertical primary-colored accent bar on the left margin (mirroring preview)
-        doc.setFillColor(theme.hexPrimary)
-        doc.rect(SLIDE_FRAME.accentX, SLIDE_FRAME.accentY, SLIDE_FRAME.accentW, SLIDE_FRAME.accentH, "F")
-
-        // 4. Embed lecturer footer
-        if (lecturerName) {
-          doc.setFont("helvetica", "italic")
-          doc.setFontSize(9)
-          doc.setTextColor("#777777")
-          doc.text(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
-        }
-
-        // 5. Draw Slide Title
-        doc.setFont("helvetica", "bold")
-        doc.setFontSize(24)
-        doc.setTextColor(theme.hexPrimary)
-        doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), { align: "left", baseline: "middle" })
-
-        // 6. Draw centered body content inside the safe text frame
-        const bodySegments = buildBodySegments(slide.content)
-        const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments)
-        const startY = SLIDE_FRAME.bodyY + Math.max(0, (SLIDE_FRAME.bodyH - centeredBodyHeight) / 2)
-        renderCenteredPdfBody(doc, slide, theme, startY)
-      })
-
-      doc.save(`Academic_Lecture_${Date.now()}.pdf`)
+      await exportSlidesToPDFWithFallback({ slides, theme, logoBase64, lecturerName })
     } catch (err) {
       console.error("Failed to generate PDF document", err)
-      try {
-        const { jsPDF } = await import("jspdf")
-        const fallbackDoc = new jsPDF({
-          orientation: "landscape",
-          unit: "in",
-          format: [10, 5.625]
-        })
-
-        slides.forEach((slide, index) => {
-          if (index > 0) {
-            fallbackDoc.addPage([10, 5.625], "landscape")
-          }
-          renderFallbackPdfSlide(fallbackDoc, slide, theme)
-        })
-
-        fallbackDoc.save(`Academic_Lecture_${Date.now()}.pdf`)
-      } catch (fallbackErr) {
-        console.error("Failed to generate fallback PDF document", fallbackErr)
-        alert("Failed to export PDF: " + (fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr)))
-      }
+      alert("Failed to export PDF: " + (err instanceof Error ? err.message : String(err)))
     } finally {
       setIsExportingPDF(false)
     }
