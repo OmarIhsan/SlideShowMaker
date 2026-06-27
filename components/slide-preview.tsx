@@ -67,7 +67,7 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
 
       {/* Body text box matched to w: 8.6, h: 3.5, aligned left/top */}
       <div 
-        className="max-w-[86%] flex flex-col justify-start space-y-3 overflow-hidden break-words pr-2 mt-[6.2%]"
+        className="max-w-[86%] flex flex-col justify-center space-y-3 overflow-hidden break-words pr-2 mt-[6.2%]"
         style={{
           height: "62.2%"
         }}

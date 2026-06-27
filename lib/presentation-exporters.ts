@@ -130,7 +130,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
           w: SLIDE_FRAME.bodyW,
           h: SLIDE_FRAME.bodyH,
           align: "left",
-          valign: "top",
+          valign: "middle",
           fit: "shrink",
           margin: 0,
         })
@@ -144,7 +144,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         h: SLIDE_FRAME.bodyH,
         fontSize: 12,
         color: "333333",
-        valign: "top",
+        valign: "middle",
         margin: 0,
       })
     }
