@@ -1,5 +1,5 @@
 // Content-agnostic academic document-to-presentation translation engine.
-// Programmed to strictly parse text verbatim and split content into 30-45 slides.
+// Programmed to strictly parse text verbatim and group contents to target ~30 slides.
 
 export type ThemeId = "clinical" | "midnight" | "warm"
 
@@ -60,18 +60,14 @@ export const THEMES: Record<ThemeId, Theme> = {
 }
 
 export type Slide =
-  | { id: string; layout: "title"; kicker: string; title: string; subtitle: string }
-  | { id: string; layout: "toc"; title: string; items: { n: number; label: string; target: number }[] }
-  | { id: string; layout: "content"; title: string; paragraphs: string[]; bullets: string[] }
-  | { id: string; layout: "table"; title: string; intro: string; columns: string[]; rows: string[][] }
+  | { id: string; layout: "STANDARD_CONTENT"; title: string; paragraphs: string[]; bullets: string[] }
+  | { id: string; layout: "TABULAR_DATA"; title: string; columns: string[]; rows: string[][] }
 
 export type LayoutTag = Slide["layout"]
 
 export const LAYOUT_LABELS: Record<LayoutTag, string> = {
-  title: "Title Slide",
-  toc: "Table of Contents",
-  content: "Template A (Verbatim Text)",
-  table: "Template B (Verbatim Table)",
+  STANDARD_CONTENT: "STANDARD_CONTENT",
+  TABULAR_DATA: "TABULAR_DATA",
 }
 
 export function getSlideTitle(slide: Slide): string {
@@ -96,7 +92,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   let counter = 0
   const nextId = (p: string) => `${p}-${counter++}`
 
-  // Parse lines into logical paragraph blocks, tables, and lists.
+  // Parse lines into logical blocks
   type Block =
     | { type: "heading"; text: string }
     | { type: "paragraph"; text: string; header: string }
@@ -168,12 +164,12 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     i++
   }
 
-  // Translate blocks to slides verbatim
+  // Translate blocks to slides verbatim, using optimized capacity chunking (3 to 5 items)
   blocks.forEach((block) => {
     if (block.type === "paragraph") {
       bodySlides.push({
         id: nextId("cnt-para"),
-        layout: "content",
+        layout: "STANDARD_CONTENT",
         title: block.header,
         paragraphs: [block.text],
         bullets: []
@@ -181,15 +177,14 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     } else if (block.type === "table") {
       bodySlides.push({
         id: nextId("tbl"),
-        layout: "table",
+        layout: "TABULAR_DATA",
         title: block.header,
-        intro: "",
         columns: block.columns,
         rows: block.rows
       })
     } else if (block.type === "list") {
-      // Chunk lists into 2 items max per slide to avoid crowded canvases.
-      const chunkSize = 2
+      // Group related list points: chunk into slides of 4 items max
+      const chunkSize = 4
       for (let c = 0; c < block.items.length; c += chunkSize) {
         const chunk = block.items.slice(c, c + chunkSize)
         const partNo = Math.floor(c / chunkSize) + 1
@@ -197,7 +192,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
         
         bodySlides.push({
           id: nextId("cnt-list"),
-          layout: "content",
+          layout: "STANDARD_CONTENT",
           title: totalParts > 1 ? `${block.header} (Part ${partNo}/${totalParts})` : block.header,
           paragraphs: [],
           bullets: chunk
@@ -208,28 +203,24 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
   // Build the Table of Contents dynamically based on unique slide headers
   const uniqueHeaders = Array.from(new Set(bodySlides.map(s => s.title)))
-  const tocItems = uniqueHeaders.slice(0, 12).map((h, index) => {
-    const targetIdx = bodySlides.findIndex(s => s.title === h)
-    return {
-      n: index + 1,
-      label: h.length > 30 ? h.slice(0, 27) + "..." : h,
-      target: targetIdx + 2
-    }
+  const tocItems = uniqueHeaders.slice(0, 10).map((h, index) => {
+    return `${index + 1}. ${h}`
   })
 
   const titleSlide: Slide = {
     id: nextId("title"),
-    layout: "title",
-    kicker: `${uniqueHeaders.length} Lecture Areas`,
+    layout: "STANDARD_CONTENT",
     title: docTitle,
-    subtitle: "Verbatim Academic Presentation Courseware"
+    paragraphs: ["Verbatim Academic Presentation Courseware", "Presented by: Dr. Faisal Alhuwaizi"],
+    bullets: []
   }
 
   const tocSlide: Slide = {
     id: nextId("toc"),
-    layout: "toc",
+    layout: "STANDARD_CONTENT",
     title: "Lecture Outline",
-    items: tocItems
+    paragraphs: ["Table of Contents Outline:"],
+    bullets: tocItems
   }
 
   const allSlides = [titleSlide, tocSlide, ...bodySlides]

@@ -229,158 +229,107 @@ export default function SlideDeckArchitect() {
       const PptxGen = (pptxgenModule as any).default || pptxgenModule
       const pres = new PptxGen()
 
-      // 16:9 Aspect Ratio
+      // 16:9 Widescreen Aspect Ratio
       pres.layout = "LAYOUT_169"
 
       const cleanHex = (hex: string) => hex.replace("#", "")
       const primaryHex = cleanHex(theme.hexPrimary)
       const bgHex = cleanHex(theme.hexBg)
 
-      slides.forEach((slide) => {
-        const pptSlide = pres.addSlide()
+      // Global compilation try/catch wrap
+      try {
+        slides.forEach((slide) => {
+          const pptSlide = pres.addSlide()
 
-        // Apply slide backdrop color
-        if (slide.layout === "title") {
-          pptSlide.background = { color: "0F172A" } // Dark blue theme for Title Slide
-        } else {
+          // Set uniform slide backdrop color
           pptSlide.background = { color: bgHex }
-        }
 
-        // Embed branding logo
-        if (logoBase64) {
-          if (slide.layout === "title") {
-            pptSlide.addImage({ data: logoBase64, x: 8.2, y: 0.5, w: 1.2, h: 0.6 })
-          } else {
+          // Embed branding logo if uploaded
+          if (logoBase64) {
             pptSlide.addImage({ data: logoBase64, x: 8.5, y: 0.3, w: 1.0, h: 0.5 })
           }
-        }
 
-        // Embed lecturer footer (except for Title slide)
-        if (lecturerName && slide.layout !== "title") {
-          pptSlide.addText(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, {
-            x: 0.8,
-            y: 5.2,
-            w: 8.4,
-            h: 0.3,
-            fontSize: 9,
-            color: "777777",
-            fontFace: "Arial",
-            italic: true,
-          })
-        }
+          // Embed standard academic lecturer footer
+          if (lecturerName) {
+            pptSlide.addText(`Lecturer: ${lecturerName}  |  Academic Lecture Series`, {
+              x: 0.8,
+              y: 5.2,
+              w: 8.4,
+              h: 0.3,
+              fontSize: 9,
+              color: "777777",
+              fontFace: "Arial",
+              italic: true,
+            })
+          }
 
-        // Try-Catch Fail-Safe Processing per slide
-        try {
-          switch (slide.layout) {
-            case "title": {
-              pptSlide.addText(slide.kicker, {
+          // Try/catch safety block per individual slide card
+          try {
+            // Binary layout switcher
+            if (slide && slide.layout === "TABULAR_DATA") {
+              // Title box at the top
+              pptSlide.addText(slide.title || "Academic Data", {
                 x: 0.8,
-                y: 1.2,
+                y: 0.5,
                 w: 8.4,
-                h: 0.4,
-                fontSize: 12,
+                h: 0.6,
+                fontSize: 24,
                 color: primaryHex,
                 fontFace: "Arial",
                 bold: true,
               })
-              pptSlide.addText(slide.title, {
-                x: 0.8,
-                y: 1.8,
-                w: 8.4,
-                h: 1.6,
-                fontSize: 38,
-                color: "FFFFFF",
-                fontFace: "Arial",
-                bold: true,
-              })
-              pptSlide.addText(slide.subtitle, {
-                x: 0.8,
-                y: 3.6,
-                w: 8.4,
-                h: 0.8,
-                fontSize: 16,
-                color: "CCCCCC",
-                fontFace: "Arial",
-              })
-              if (lecturerName) {
-                pptSlide.addText(`Presented by: ${lecturerName}`, {
-                  x: 0.8,
-                  y: 4.5,
-                  w: 8.4,
-                  h: 0.4,
-                  fontSize: 12,
-                  color: "999999",
-                  fontFace: "Arial",
-                  bold: true,
+
+              const tableData: any[][] = []
+
+              // Table header row
+              if (slide.columns && slide.columns.length > 0) {
+                tableData.push(
+                  slide.columns.map((colName) => ({
+                    text: colName,
+                    options: {
+                      fill: { color: primaryHex },
+                      color: "FFFFFF",
+                      bold: true,
+                      align: "left",
+                      fontSize: 10,
+                      fontFace: "Arial",
+                    },
+                  }))
+                )
+              }
+
+              // Table data rows
+              if (slide.rows && slide.rows.length > 0) {
+                slide.rows.forEach((row, rIdx) => {
+                  const bg = rIdx % 2 === 0 ? "FFFFFF" : "F9FAFB"
+                  tableData.push(
+                    row.map((cellText, cIdx) => ({
+                      text: cellText,
+                      options: {
+                        fill: { color: bg },
+                        color: cIdx === 0 ? primaryHex : "333333",
+                        bold: cIdx === 0,
+                        align: "left",
+                        fontSize: 9,
+                        fontFace: "Arial",
+                      },
+                    }))
+                  )
                 })
               }
-              break
-            }
 
-            case "toc": {
-              // Header
-              pptSlide.addText(slide.title, {
-                x: 0.8,
-                y: 0.5,
-                w: 8.4,
-                h: 0.6,
-                fontSize: 24,
-                color: primaryHex,
-                fontFace: "Arial",
-                bold: true,
-              })
-              pptSlide.addText("Lecture Outline", {
-                x: 0.8,
-                y: 1.0,
-                w: 8.4,
-                h: 0.3,
-                fontSize: 12,
-                color: "666666",
-                fontFace: "Arial",
-                bold: true,
-              })
-
-              // Outline list
-              slide.items.forEach((item, idx) => {
-                const colIdx = idx % 2
-                const rowIdx = Math.floor(idx / 2)
-                const itemX = 0.8 + colIdx * 4.3
-                const itemY = 1.6 + rowIdx * 0.55
-                
-                // Number block
-                pptSlide.addText(String(item.n).padStart(2, "0"), {
-                  x: itemX,
-                  y: itemY,
-                  w: 0.4,
-                  h: 0.35,
-                  fontSize: 11,
-                  color: "FFFFFF",
-                  fontFace: "Arial",
-                  bold: true,
-                  fill: { color: primaryHex },
-                  align: "center",
-                  valign: "middle",
+              if (tableData.length > 0) {
+                pptSlide.addTable(tableData, {
+                  x: 0.8,
+                  y: 1.4,
+                  w: 8.4,
+                  h: 3.2,
                 })
-                
-                // Text label
-                pptSlide.addText(item.label, {
-                  x: itemX + 0.5,
-                  y: itemY,
-                  w: 3.5,
-                  h: 0.35,
-                  fontSize: 11,
-                  color: "333333",
-                  fontFace: "Arial",
-                  bold: true,
-                  valign: "middle",
-                })
-              })
-              break
-            }
-
-            case "content": {
-              // Header
-              pptSlide.addText(slide.title, {
+              }
+            } else {
+              // Default to standard content layout (STANDARD_CONTENT)
+              // Title box at the top
+              pptSlide.addText(slide.title || "Academic Lecture", {
                 x: 0.8,
                 y: 0.5,
                 w: 8.4,
@@ -391,7 +340,7 @@ export default function SlideDeckArchitect() {
                 bold: true,
               })
 
-              // Verbatim contents (Template A: Standard vertical layout)
+              // Verbatim contents (paragraphs and bullets)
               let verticalOffset = 1.3
               
               if (slide.paragraphs && slide.paragraphs.length > 0) {
@@ -400,13 +349,13 @@ export default function SlideDeckArchitect() {
                     x: 0.8,
                     y: verticalOffset,
                     w: 8.4,
-                    h: 1.5,
+                    h: 1.2,
                     fontSize: 15,
                     color: "444444",
                     fontFace: "Arial",
                     lineSpacing: 22,
                   })
-                  verticalOffset += 1.6
+                  verticalOffset += 1.3
                 })
               }
 
@@ -416,125 +365,47 @@ export default function SlideDeckArchitect() {
                     x: 0.8,
                     y: verticalOffset,
                     w: 8.4,
-                    h: 0.7,
+                    h: 0.6,
                     fontSize: 14,
                     color: "444444",
                     fontFace: "Arial",
                     valign: "middle",
                   })
-                  verticalOffset += 0.8
+                  verticalOffset += 0.7
                 })
               }
-              break
             }
-
-            case "table": {
-              // Header
-              pptSlide.addText(slide.title, {
-                x: 0.8,
-                y: 0.5,
-                w: 8.4,
-                h: 0.6,
-                fontSize: 24,
-                color: primaryHex,
-                fontFace: "Arial",
-                bold: true,
-              })
-
-              // Render comparison grid table (Template B)
-              const tableData: any[][] = []
-
-              // Table header row
-              tableData.push(
-                slide.columns.map((colName) => ({
-                  text: colName,
-                  options: {
-                    fill: { color: primaryHex },
-                    color: "FFFFFF",
-                    bold: true,
-                    align: "left",
-                    fontSize: 10,
-                    fontFace: "Arial",
-                  },
-                }))
-              )
-
-              // Table data rows
-              slide.rows.forEach((row, rIdx) => {
-                const bg = rIdx % 2 === 0 ? "FFFFFF" : "F9FAFB"
-                tableData.push(
-                  row.map((cellText, cIdx) => ({
-                    text: cellText,
-                    options: {
-                      fill: { color: bg },
-                      color: cIdx === 0 ? primaryHex : "333333",
-                      bold: cIdx === 0,
-                      align: "left",
-                      fontSize: 9,
-                      fontFace: "Arial",
-                    },
-                  }))
-                )
-              })
-
-              pptSlide.addTable(tableData, {
-                x: 0.8,
-                y: 1.4,
-                w: 8.4,
-                h: 3.2,
-              })
-              break
-            }
-
-            default:
-              break
-          }
-        } catch (slideErr) {
-          console.error("Failed to compile slide layout, invoking fail-safe fallback:", slideErr)
-          // Fail-Safe Fallback: Title and safe text frame
-          try {
-            pptSlide.addShape("rect", {
-              x: 0.7,
-              y: 0.4,
-              w: 8.6,
-              h: 4.6,
-              fill: { color: bgHex },
-              line: { color: primaryHex, width: 2 }
-            })
-            pptSlide.addText(slide.title || "Academic Lecture", {
-              x: 0.9,
-              y: 0.6,
-              w: 8.2,
+          } catch (slideErr) {
+            console.error("Individual slide compile conflict, applying fallback format:", slideErr)
+            // Substitute blank standard slide format with the text payload
+            pptSlide.addText(slide?.title || "Academic Slide Fallback", {
+              x: 0.8,
+              y: 0.5,
+              w: 8.4,
               h: 0.6,
               fontSize: 24,
               color: primaryHex,
               fontFace: "Arial",
               bold: true,
             })
-            
-            let fallbackBody = ""
-            if (slide.layout === "content") {
-              fallbackBody = [...(slide.paragraphs || []), ...(slide.bullets || [])].join("\n\n")
-            } else if (slide.layout === "table") {
-              fallbackBody = (slide.rows || []).map(r => r.join(" | ")).join("\n")
-            } else {
-              fallbackBody = "Verbatim academic slide content."
-            }
-
-            pptSlide.addText(fallbackBody, {
-              x: 0.9,
-              y: 1.4,
-              w: 8.2,
-              h: 3.2,
-              fontSize: 13,
+            const textPayload = [
+              ...(slide?.paragraphs || []),
+              ...(slide?.bullets || [])
+            ].join("\n\n")
+            pptSlide.addText(textPayload || "Verbatim slide text payload.", {
+              x: 0.8,
+              y: 1.3,
+              w: 8.4,
+              h: 3.5,
+              fontSize: 14,
               color: "333333",
               fontFace: "Arial",
             })
-          } catch (fallbackErr) {
-            console.error("Fatal failure in slide compiler fallback:", fallbackErr)
           }
-        }
-      })
+        })
+      } catch (globalErr) {
+        console.error("Global slide compilation execution chain failed:", globalErr)
+      }
 
       await pres.writeFile({ fileName: `Academic_Lecture_${Date.now()}.pptx` })
     } catch (err) {
@@ -563,7 +434,7 @@ export default function SlideDeckArchitect() {
                 </span>
                 <div>
                   <h1 className="text-sm font-bold text-slate-900 leading-tight">AI SlideDeck Architect</h1>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Verbatim Compiler</p>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Rigid Layouts</p>
                 </div>
               </div>
             </header>
@@ -785,7 +656,7 @@ export default function SlideDeckArchitect() {
               ) : (
                 <>
                   <Sparkles className="h-4 w-4" aria-hidden="true" />
-                  {phase === "ready" ? "Regenerate 30+ Slide Lecture" : "Generate 30+ Slide Lecture"}
+                  {phase === "ready" ? "Regenerate ~30 Slide Lecture" : "Generate ~30 Slide Lecture"}
                 </>
               )}
             </button>
@@ -978,10 +849,10 @@ function OutlineDrawer({
                   </span>
                   <span className="truncate">{o.title}</span>
                   <span
-                    className="ml-auto shrink-0 text-[9px] uppercase tracking-wide opacity-75"
+                    className="ml-auto shrink-0 text-[9px] uppercase tracking-wide opacity-75 font-bold"
                     style={active ? { color: "#FFFFFF" } : { color: theme.hexSecondary }}
                   >
-                    {o.layout === "title" ? "Title" : o.layout === "toc" ? "Outline" : o.layout === "table" ? "Table" : "Text"}
+                    {o.layout}
                   </span>
                 </button>
               </li>
@@ -1091,7 +962,6 @@ function SlideRenderer({
   theme,
   logoUrl,
   lecturerName,
-  onJump,
 }: {
   slide: Slide
   theme: Theme
@@ -1102,119 +972,33 @@ function SlideRenderer({
   return (
     <div className="relative h-full w-full overflow-hidden select-none" style={{ backgroundColor: theme.hexBg }}>
       {/* Global Logo Placement */}
-      {logoUrl && slide.layout !== "title" && (
+      {logoUrl && (
         <div className="absolute right-8 top-6 z-10">
           <img src={logoUrl} alt="Branding Logo" className="h-8 w-auto object-contain" />
         </div>
       )}
 
       {/* Global Academic Footer */}
-      {slide.layout !== "title" && (
-        <div className="absolute bottom-4 left-8 right-8 flex items-center justify-between border-t border-slate-200/60 pt-2 text-[10px] text-slate-400">
-          <span>Lecturer: <strong>{lecturerName || "Academic Staff"}</strong></span>
-          <span>Academic Lecture Series</span>
-        </div>
-      )}
+      <div className="absolute bottom-4 left-8 right-8 flex items-center justify-between border-t border-slate-200/60 pt-2 text-[10px] text-slate-400">
+        <span>Lecturer: <strong>{lecturerName || "Academic Staff"}</strong></span>
+        <span>Academic Lecture Series</span>
+      </div>
 
       {(() => {
         switch (slide.layout) {
-          case "title":
-            return <TitleSlide slide={slide} theme={theme} logoUrl={logoUrl} lecturerName={lecturerName} />
-          case "toc":
-            return <TocSlide slide={slide} theme={theme} onJump={onJump} />
-          case "content":
+          case "STANDARD_CONTENT":
             return <ContentSlide slide={slide} theme={theme} />
-          case "table":
+          case "TABULAR_DATA":
             return <TableSlide slide={slide} theme={theme} />
           default:
-            return null
+            return <ContentSlide slide={slide as any} theme={theme} />
         }
       })()}
     </div>
   )
 }
 
-function TitleSlide({
-  slide,
-  theme,
-  logoUrl,
-  lecturerName,
-}: {
-  slide: Extract<Slide, { layout: "title" }>
-  theme: Theme
-  logoUrl: string | null
-  lecturerName: string
-}) {
-  return (
-    <div className="relative flex h-full flex-col justify-center overflow-hidden px-10 py-12 sm:px-16" style={{ backgroundColor: "#0F172A" }}>
-      <div className="absolute left-0 top-0 h-full w-2" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
-      <div
-        className="absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-20 blur-3xl"
-        style={{ backgroundColor: theme.hexPrimary }}
-        aria-hidden="true"
-      />
-
-      {logoUrl && (
-        <div className="absolute right-10 top-10">
-          <img src={logoUrl} alt="Presentation logo" className="h-12 w-auto object-contain" />
-        </div>
-      )}
-
-      <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: theme.hexPrimary }}>{slide.kicker}</p>
-      <h2 className="mt-4 max-w-3xl text-balance text-3xl font-bold leading-tight text-white sm:text-5xl">
-        {slide.title}
-      </h2>
-      <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-slate-300 sm:text-lg">{slide.subtitle}</p>
-
-      {lecturerName && (
-        <div className="mt-8 border-t border-slate-800/80 pt-4 text-xs text-slate-400">
-          Presented by: <strong className="text-white">{lecturerName}</strong>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function TocSlide({
-  slide,
-  theme,
-  onJump,
-}: {
-  slide: Extract<Slide, { layout: "toc" }>
-  theme: Theme
-  onJump: (i: number) => void
-}) {
-  return (
-    <div className="flex h-full flex-col justify-center px-8 py-10 sm:px-14">
-      <h2 className="text-2xl font-bold sm:text-3xl" style={{ color: theme.hexPrimary }}>{slide.title}</h2>
-      <p className="mt-1 text-sm text-slate-500 font-medium">Lecture Table of Contents</p>
-      <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2 overflow-y-auto max-h-[60%] pr-2">
-        {slide.items.map((item) => (
-          <button
-            key={item.n}
-            type="button"
-            onClick={() => onJump(item.target)}
-            className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition-colors hover:border-slate-300 hover:bg-slate-50"
-          >
-            <span
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
-              style={{ backgroundColor: theme.hexPrimary }}
-            >
-              {String(item.n).padStart(2, "0")}
-            </span>
-            <span className="truncate text-sm font-semibold text-slate-700">{item.label}</span>
-            <ChevronRight
-              className="ml-auto h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ContentSlide({ slide, theme }: { slide: Extract<Slide, { layout: "content" }>; theme: Theme }) {
+function ContentSlide({ slide, theme }: { slide: Extract<Slide, { layout: "STANDARD_CONTENT" }>; theme: Theme }) {
   return (
     <div className="relative flex h-full flex-col justify-center px-8 py-10 sm:px-14">
       <div className="absolute left-0 top-1/2 h-24 w-1.5 -translate-y-1/2 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
@@ -1226,7 +1010,7 @@ function ContentSlide({ slide, theme }: { slide: Extract<Slide, { layout: "conte
           </p>
         ))}
         {slide.bullets.length > 0 && (
-          <ul className="space-y-3 pt-1">
+          <ul className="space-y-2.5 pt-1">
             {slide.bullets.map((b) => (
               <li key={b} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-600 sm:text-base">
                 <span className="mt-2 h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: theme.hexPrimary }} />
@@ -1240,7 +1024,7 @@ function ContentSlide({ slide, theme }: { slide: Extract<Slide, { layout: "conte
   )
 }
 
-function TableSlide({ slide, theme }: { slide: Extract<Slide, { layout: "table" }>; theme: Theme }) {
+function TableSlide({ slide, theme }: { slide: Extract<Slide, { layout: "TABULAR_DATA" }>; theme: Theme }) {
   return (
     <div className="flex h-full flex-col justify-center px-8 py-10 sm:px-12">
       <h2 className="text-2xl font-bold sm:text-3xl" style={{ color: theme.hexPrimary }}>{slide.title}</h2>
