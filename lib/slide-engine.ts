@@ -203,8 +203,8 @@ function splitLongSlides(slides: Slide[]): Slide[] {
     const wordCount = slide.content.join(" ").split(/\s+/).filter(Boolean).length
     const estLines = getEstimatedVisualLines(slide.content)
     
-    // Split if there are more than 4 lines, more than 45 words, or estimated visual lines exceed 4
-    if (slide.content.length > 4 || wordCount > 45 || estLines > 4) {
+    // Split if there are more than 3 lines, more than 80 words, or estimated visual lines exceed 3
+    if (slide.content.length > 3 || wordCount > 80 || estLines > 3) {
       if (slide.content.length > 1) {
         const half = Math.ceil(slide.content.length / 2)
         const firstHalf = slide.content.slice(0, half)
