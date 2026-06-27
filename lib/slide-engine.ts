@@ -172,6 +172,22 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   }
 }
 
+function getEstimatedVisualLines(content: string[]): number {
+  let totalLines = 0
+  content.forEach((text) => {
+    // Split by manual newlines
+    const subLines = text.split("\n")
+    subLines.forEach((subLine) => {
+      const words = subLine.split(/\s+/).filter(Boolean).length
+      if (words === 0) return
+      // Estimate that about 10 words fit in a single visual line in the slide canvas at 14pt
+      const visualLines = Math.max(1, Math.ceil(words / 10))
+      totalLines += visualLines
+    })
+  })
+  return totalLines
+}
+
 function splitLongSlides(slides: Slide[]): Slide[] {
   const result: Slide[] = []
   let slideIdCounter = 1
@@ -185,9 +201,10 @@ function splitLongSlides(slides: Slide[]): Slide[] {
     }
 
     const wordCount = slide.content.join(" ").split(/\s+/).filter(Boolean).length
+    const estLines = getEstimatedVisualLines(slide.content)
     
-    // Split if there are more than 4 lines or the word count exceeds 45 words
-    if (slide.content.length > 4 || wordCount > 45) {
+    // Split if there are more than 4 lines, more than 45 words, or estimated visual lines exceed 4
+    if (slide.content.length > 4 || wordCount > 45 || estLines > 4) {
       if (slide.content.length > 1) {
         const half = Math.ceil(slide.content.length / 2)
         const firstHalf = slide.content.slice(0, half)
@@ -215,7 +232,7 @@ function splitLongSlides(slides: Slide[]): Slide[] {
           result.push(s)
         })
       } else {
-        // If there is only 1 line but it exceeds 45 words, split it by sentence boundary
+        // If there is only 1 line but it exceeds 45 words or 4 estimated lines, split it by sentence boundary
         const singleLine = slide.content[0]
         const sentences = singleLine.split(/(?<=\.)\s+/).filter(Boolean)
 
