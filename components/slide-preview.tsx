@@ -12,7 +12,7 @@ export function SlideRenderer({
   lecturerName: string
 }) {
   return (
-    <div className="relative h-full w-full overflow-hidden select-none" style={{ backgroundColor: theme.hexBg }}>
+    <div className="relative flex flex-col h-full w-full justify-between overflow-hidden select-none" style={{ backgroundColor: theme.hexBg }}>
       {logoUrl && (
         <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-10">
           <img src={logoUrl} alt="Watermark Logo" className="h-[55%] w-[60%] object-contain" />
@@ -42,7 +42,7 @@ export function SlideRenderer({
 
 function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
   return (
-    <div className="relative flex h-full w-full flex-col px-10 pt-[10%] pb-16 select-text text-left">
+    <div className="relative flex h-full w-full flex-col px-10 pt-10 pb-16 select-text text-left">
       {/* Visual Accent bar mirroring coordinates of PowerPoint */}
       <div 
         className="absolute left-0 w-1.5 rounded-r" 
@@ -54,25 +54,19 @@ function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
         aria-hidden="true" 
       />
 
-      {/* Title box positioned cleanly matching SLIDE_FRAME.titleY */}
-      <h2 
-        className="text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" 
-        style={{ 
-          color: theme.hexPrimary,
-          marginTop: "1.8%"
-        }}
-      >
-        {slide.title}
-      </h2>
+      {/* Isolate the slide header text into a non-absolute top <div> with a hardcoded bottom margin (mb-8) */}
+      <div className="mb-8">
+        <h2 
+          className="text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" 
+          style={{ color: theme.hexPrimary }}
+        >
+          {slide.title}
+        </h2>
+      </div>
 
-      {/* Body text box matched to w: 8.6, h: 3.5, aligned left/top */}
-      <div 
-        className="max-w-[86%] flex flex-col overflow-hidden break-words pr-2 mt-[6.2%]"
-        style={{
-          height: "62.2%"
-        }}
-      >
-        <div className="my-auto w-full flex flex-col space-y-3">
+      {/* Wrap the description array in an independent flex-grow zone (flex-grow flex flex-col justify-center pb-12 text-left) */}
+      <div className="flex-grow flex flex-col justify-center pb-12 text-left max-w-[86%] overflow-hidden break-words pr-2">
+        <div className="w-full flex flex-col space-y-3">
           {(() => {
             const elements: React.ReactNode[] = []
             let currentList: { text: string; isOrdered: boolean }[] = []

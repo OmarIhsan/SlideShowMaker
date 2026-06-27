@@ -93,6 +93,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
   let docTitle = "Academic Lecture Series"
   let currentHeader = "General Concepts"
+  let hasSetDocTitle = false
   const bodySlides: Slide[] = []
 
   let slideIdCounter = 3
@@ -121,6 +122,20 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     }
   }
 
+  const pushContent = (text: string) => {
+    if (!seenFirstHeader) {
+      if (titleSlideContent.length < 3) {
+        titleSlideContent.push(text)
+      } else {
+        seenFirstHeader = true
+        currentHeader = "Introduction"
+        currentGroup.push(text)
+      }
+    } else {
+      currentGroup.push(text)
+    }
+  }
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     if (!line) {
@@ -128,7 +143,15 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     }
 
     if (line.startsWith("# ")) {
-      docTitle = line.replace("# ", "").trim()
+      const headerText = line.replace("# ", "").trim()
+      if (!hasSetDocTitle) {
+        docTitle = headerText
+        hasSetDocTitle = true
+      } else {
+        flushGroup()
+        currentHeader = headerText
+        seenFirstHeader = true
+      }
       continue
     }
     if (line.startsWith("## ")) {
@@ -156,11 +179,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
         return col
       }).join(" | ") + " |"
 
-      if (!seenFirstHeader) {
-        titleSlideContent.push(pipeRow)
-      } else {
-        currentGroup.push(pipeRow)
-      }
+      pushContent(pipeRow)
       continue
     }
 
@@ -179,11 +198,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
         processedTableLine = line.replace(/\t+/g, " | ");
       }
 
-      if (!seenFirstHeader) {
-        titleSlideContent.push(processedTableLine)
-      } else {
-        currentGroup.push(processedTableLine)
-      }
+      pushContent(processedTableLine)
       continue
     }
 
@@ -192,22 +207,13 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     const isOrdered = /^\d+[.)]/.test(line) || /^[a-zA-Z][.)]/.test(line);
 
     if (isBullet || isOrdered) {
-      if (!seenFirstHeader) {
-        titleSlideContent.push(line)
-      } else {
-        currentGroup.push(line)
-      }
+      pushContent(line)
       continue
     }
 
     // Fallback: Convert colon-delimited list definitions to bullets
     if (/^[A-Za-z0-9\s()-]+:\s+.+$/.test(line)) {
-      const lineWithPrefix = `- ${line}`;
-      if (!seenFirstHeader) {
-        titleSlideContent.push(lineWithPrefix)
-      } else {
-        currentGroup.push(lineWithPrefix)
-      }
+      pushContent(`- ${line}`)
       continue
     }
 
@@ -228,19 +234,10 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
     if (sentences.length > 0) {
       sentences.forEach(sentence => {
-        const bulletLine = `- ${sentence}`;
-        if (!seenFirstHeader) {
-          titleSlideContent.push(bulletLine)
-        } else {
-          currentGroup.push(bulletLine)
-        }
+        pushContent(`- ${sentence}`)
       });
     } else {
-      if (!seenFirstHeader) {
-        titleSlideContent.push(line)
-      } else {
-        currentGroup.push(line)
-      }
+      pushContent(line)
     }
   }
 
@@ -326,18 +323,22 @@ export function getSlideHeight(content: string[]): number {
   return 1.4 + bodyHeight
 }
 
+const isOverBudget = (content: string[]): boolean => {
+  const charLength = content.join("\n").length;
+  return content.length > 5 || charLength > 450;
+};
+
 function applyVerticalThresholds(slides: Slide[]): Slide[] {
   const step1: Slide[] = []
 
-  // Step 1: Vertical Axis Splitting Rule (Calibrated Threshold: 3.675 inches, 75% of 4.9 inches budget)
+  // Step 1: Vertical Axis Splitting Rule (Optimal 3/4 Budget Cap: 5 lines or 450 characters)
   slides.forEach((slide) => {
     if (slide.id === 1 || slide.id === 2) {
       step1.push(slide)
       return
     }
 
-    const height = getSlideHeight(slide.content)
-    if (height > 3.675) {
+    if (isOverBudget(slide.content)) {
       // Split lines one-by-one
       let currentChunk: string[] = []
       let partIndex = 1
@@ -347,7 +348,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
         const line = slide.content[i]
         const tempChunk = [...currentChunk, line]
         
-        if (getSlideHeight(tempChunk) > 3.675) {
+        if (isOverBudget(tempChunk)) {
           // Truncate and split
           if (currentChunk.length === 0) {
             step1.push({
@@ -382,7 +383,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
     }
   })
 
-  // Step 2: Dynamic Merging Enforcer (Consolidate content up to the 3.675 inches limit)
+  // Step 2: Dynamic Merging Enforcer (Consolidate sequential chunks up to optimal 3/4 budget cap)
   const step2: Slide[] = []
   let i = 0
   while (i < step1.length) {
@@ -413,7 +414,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
       
       for (let j = 0; j < nextSlide.content.length; j++) {
         const nextLine = nextSlide.content[j]
-        if (getSlideHeight([...tempContent, nextLine]) <= 3.675) {
+        if (!isOverBudget([...tempContent, nextLine])) {
           tempContent.push(nextLine)
         } else {
           allMerged = false
@@ -429,7 +430,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
         // Could not fit all content of nextSlide, merge as many lines as possible and update nextSlide
         for (let j = 0; j < nextSlide.content.length; j++) {
           const nextLine = nextSlide.content[j]
-          if (getSlideHeight([...mergedContent, nextLine]) <= 3.675) {
+          if (!isOverBudget([...mergedContent, nextLine])) {
             mergedContent.push(nextLine)
             nextSlide.content.splice(j, 1)
             j--
