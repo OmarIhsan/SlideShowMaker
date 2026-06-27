@@ -261,7 +261,7 @@ export default function SlideDeckArchitect() {
           x: 0.3,
           y: 1.5,
           w: 0.08,
-          h: 2.2,
+          h: 2.7,
           fill: { color: primaryHex },
           line: { color: primaryHex, width: 0 }
         });
@@ -312,7 +312,7 @@ export default function SlideDeckArchitect() {
               x: 0.7,
               y: 1.5,
               w: 8.6,
-              h: 3.6,
+              h: 2.7,
               align: 'left',
               valign: 'top',
               fit: 'shrink'
@@ -321,7 +321,7 @@ export default function SlideDeckArchitect() {
         } catch (error) {
           // Global item fallback: guarantee that processing never crashes with an unhandled exception modal
           console.error("Safeguard applied for slide compile exception:", error);
-          pptxSlide.addText(slide.content.join(' '), { x: 0.7, y: 1.5, w: 8.6, h: 3.6, fontSize: 12, color: "333333" });
+          pptxSlide.addText(slide.content.join(' '), { x: 0.7, y: 1.5, w: 8.6, h: 2.7, fontSize: 12, color: "333333" });
         }
       });
 
@@ -373,7 +373,7 @@ export default function SlideDeckArchitect() {
 
         // 3. Draw vertical primary-colored accent bar on the left margin (mirroring preview)
         doc.setFillColor(theme.hexPrimary)
-        doc.rect(0.3, 1.5, 0.08, 2.2, "F")
+        doc.rect(0.3, 1.5, 0.08, 2.7, "F")
 
         // 4. Embed lecturer footer
         if (lecturerName) {
@@ -1029,17 +1029,17 @@ function SlideRenderer({
 
 function ContentSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
   return (
-    <div className="relative flex h-full flex-col px-10 py-8 select-text">
+    <div className="relative flex h-full flex-col px-10 pt-[8.8%] pb-8 select-text">
       {/* Visual Accent bar mirroring coordinates of PowerPoint */}
-      <div className="absolute left-0 top-24 h-24 w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
+      <div className="absolute left-0 top-[26.6%] h-[48%] w-1.5 rounded-r" style={{ backgroundColor: theme.hexPrimary }} aria-hidden="true" />
       
       {/* Title box positioned cleanly at top-left */}
-      <h2 className="text-2xl font-bold sm:text-3xl font-sans tracking-tight" style={{ color: theme.hexPrimary }}>
+      <h2 className="text-2xl font-bold sm:text-3xl font-sans tracking-tight leading-none" style={{ color: theme.hexPrimary }}>
         {slide.title}
       </h2>
       
-      {/* Body text box matched to w: 8.6, h: 3.6, aligned left/top */}
-      <div className="mt-5 max-w-[86%] h-[60%] flex-1 flex flex-col justify-start space-y-3 overflow-hidden break-words text-left pr-2">
+      {/* Body text box matched to w: 8.6, h: 2.7, aligned left/top */}
+      <div className="mt-[3.5%] max-w-[86%] h-[48%] flex flex-col justify-start space-y-3 overflow-hidden break-words text-left pr-2">
         {slide.content.map((text, i) => {
           const isListItem = text.startsWith("-") || text.startsWith("*") || text.startsWith("•") || /^\d+[.)]/.test(text)
           if (isListItem) {

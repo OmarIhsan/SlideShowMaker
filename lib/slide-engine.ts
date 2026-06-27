@@ -164,7 +164,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   }
 
   const rawSlides = [titleSlide, tocSlide, ...bodySlides]
-  const finalSlides = splitLongSlides(rawSlides)
+  const finalSlides = applyVerticalThresholds(rawSlides)
 
   return {
     slides: finalSlides,
@@ -172,108 +172,138 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   }
 }
 
-function getEstimatedVisualLines(content: string[]): number {
-  let totalLines = 0
+export function getSlideHeight(content: string[]): number {
+  let bodyHeight = 0
   content.forEach((text) => {
     // Split by manual newlines
     const subLines = text.split("\n")
     subLines.forEach((subLine) => {
       const words = subLine.split(/\s+/).filter(Boolean).length
       if (words === 0) return
-      // Estimate that about 10 words fit in a single visual line in the slide canvas at 14pt
+      // Estimate visual line wrapping (10 words per line, 0.24 inches height per line)
       const visualLines = Math.max(1, Math.ceil(words / 10))
-      totalLines += visualLines
+      bodyHeight += (visualLines * 0.24) + 0.1
     })
   })
-  return totalLines
+  // TotalHeight = 1.0 (title at Y=0.5, h=0.8, gap=0.2) + bodyHeight
+  return 1.0 + bodyHeight
 }
 
-function splitLongSlides(slides: Slide[]): Slide[] {
-  const result: Slide[] = []
-  let slideIdCounter = 1
+function applyVerticalThresholds(slides: Slide[]): Slide[] {
+  const step1: Slide[] = []
 
+  // Step 1: Vertical Axis Splitting Rule (3/4 Page Threshold: 4.2 inches)
   slides.forEach((slide) => {
-    // Keep Title slide (ID 1) and TOC slide (ID 2) intact
     if (slide.id === 1 || slide.id === 2) {
-      slide.id = slideIdCounter++
-      result.push(slide)
+      step1.push(slide)
       return
     }
 
-    const totalChars = slide.content.reduce((acc, text) => acc + text.length, 0)
-    const estLines = getEstimatedVisualLines(slide.content)
-    
-    // Split if there are more than 4 lines, more than 450 characters total, or estimated visual lines exceed 4
-    if (slide.content.length > 4 || totalChars > 450 || estLines > 4) {
-      if (slide.content.length > 1) {
-        const half = Math.ceil(slide.content.length / 2)
-        const firstHalf = slide.content.slice(0, half)
-        const secondHalf = slide.content.slice(half)
+    const height = getSlideHeight(slide.content)
+    if (height > 4.2) {
+      // Split lines one-by-one
+      let currentChunk: string[] = []
+      let partIndex = 1
+      const baseTitle = slide.title.replace(/\s*-\s*Part\s*\d+$/, "")
 
-        const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
-
-        const part1 = {
-          id: slideIdCounter++,
-          title: `${baseTitle} (Part 1)`,
-          content: firstHalf,
-          layout: slide.layout
-        }
-        const part2 = {
-          id: slideIdCounter++,
-          title: `${baseTitle} (Part 2)`,
-          content: secondHalf,
-          layout: slide.layout
-        }
-
-        // Recursively split the halves if they are still too long
-        const splitResult = splitLongSlides([part1, part2])
-        splitResult.forEach((s) => {
-          s.id = slideIdCounter++
-          result.push(s)
-        })
-      } else {
-        // If there is only 1 line but it exceeds character or line limits, split it by sentence boundary
-        const singleLine = slide.content[0]
-        const sentences = singleLine.split(/(?<=\.)\s+/).filter(Boolean)
-
-        if (sentences.length > 1) {
-          const half = Math.ceil(sentences.length / 2)
-          const firstHalf = [sentences.slice(0, half).join(" ")]
-          const secondHalf = [sentences.slice(half).join(" ")]
-
-          const baseTitle = slide.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
-
-          const part1 = {
-            id: slideIdCounter++,
-            title: `${baseTitle} (Part 1)`,
-            content: firstHalf,
-            layout: slide.layout
+      for (let i = 0; i < slide.content.length; i++) {
+        const line = slide.content[i]
+        const tempChunk = [...currentChunk, line]
+        if (getSlideHeight(tempChunk) > 4.2) {
+          // If currentChunk is empty, push the single line anyway to prevent infinite loop.
+          if (currentChunk.length === 0) {
+            step1.push({
+              id: 0,
+              title: `${baseTitle} - Part ${partIndex++}`,
+              content: [line],
+              layout: slide.layout
+            })
+          } else {
+            step1.push({
+              id: 0,
+              title: `${baseTitle} - Part ${partIndex++}`,
+              content: currentChunk,
+              layout: slide.layout
+            })
+            currentChunk = [line]
           }
-          const part2 = {
-            id: slideIdCounter++,
-            title: `${baseTitle} (Part 2)`,
-            content: secondHalf,
-            layout: slide.layout
-          }
-
-          const splitResult = splitLongSlides([part1, part2])
-          splitResult.forEach((s) => {
-            s.id = slideIdCounter++
-            result.push(s)
-          })
         } else {
-          // If it has only one sentence and cannot be split further, keep it to prevent infinite loop
-          slide.id = slideIdCounter++
-          result.push(slide)
+          currentChunk.push(line)
         }
       }
+      if (currentChunk.length > 0) {
+        step1.push({
+          id: 0,
+          title: `${baseTitle} - Part ${partIndex++}`,
+          content: currentChunk,
+          layout: slide.layout
+        })
+      }
     } else {
-      slide.id = slideIdCounter++
-      result.push(slide)
+      step1.push(slide)
     }
   })
 
-  // Group split slides by their base title and update part labels dynamically (e.g. Part 1, Part 2)
+  // Step 2: Compact Content Merging Rule (1/2 Page Threshold: 2.8 inches)
+  const step2: Slide[] = []
+  let i = 0
+  while (i < step1.length) {
+    const currentSlide = step1[i]
+    if (currentSlide.id === 1 || currentSlide.id === 2) {
+      step2.push(currentSlide)
+      i++
+      continue
+    }
+
+    const currentBase = currentSlide.title.replace(/\s*-\s*Part\s*\d+$/, "")
+    const currentHeight = getSlideHeight(currentSlide.content)
+
+    // Check if current slide is under-filled (< 2.8 inches)
+    if (currentHeight < 2.8 && i + 1 < step1.length) {
+      const nextSlide = step1[i + 1]
+      const nextBase = nextSlide.title.replace(/\s*-\s*Part\s*\d+$/, "")
+      const nextHeight = getSlideHeight(nextSlide.content)
+
+      // If next slide is from the same sub-topic and is also under-filled
+      if (currentBase === nextBase && nextHeight < 2.8) {
+        // Programmatically merge their content, respecting the 3/4 limit (4.2 inches)
+        const mergedContent = [...currentSlide.content]
+        let mergeCount = 0
+
+        for (let j = 0; j < nextSlide.content.length; j++) {
+          const nextLine = nextSlide.content[j]
+          if (getSlideHeight([...mergedContent, nextLine]) <= 4.2) {
+            mergedContent.push(nextLine)
+            mergeCount++
+          } else {
+            break
+          }
+        }
+
+        if (mergeCount > 0) {
+          currentSlide.content = mergedContent
+          // If we merged all lines of the next slide, we can skip nextSlide entirely!
+          if (mergeCount === nextSlide.content.length) {
+            i += 2 // skip current and next
+            step2.push(currentSlide)
+            continue
+          } else {
+            // Modify nextSlide to hold the remaining lines
+            nextSlide.content = nextSlide.content.slice(mergeCount)
+            // Push currentSlide, and keep nextSlide in the loop so it can be merged with subsequent slides if possible
+            step2.push(currentSlide)
+            i++
+            continue
+          }
+        }
+      }
+    }
+
+    step2.push(currentSlide)
+    i++
+  }
+
+  // Step 3: Re-label slide titles to "Header - Part X" or clean suffixes, and re-index slide IDs
   const finalResult: Slide[] = []
   let currentBaseTitle = ""
   let matchingSlides: Slide[] = []
@@ -282,12 +312,12 @@ function splitLongSlides(slides: Slide[]): Slide[] {
     if (matchingSlides.length > 0) {
       if (matchingSlides.length === 1) {
         const s = matchingSlides[0]
-        s.title = s.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
+        s.title = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
         finalResult.push(s)
       } else {
         matchingSlides.forEach((s, idx) => {
-          const base = s.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
-          s.title = `${base} (Part ${idx + 1})`
+          const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
+          s.title = `${base} - Part ${idx + 1}`
           finalResult.push(s)
         })
       }
@@ -295,14 +325,14 @@ function splitLongSlides(slides: Slide[]): Slide[] {
     }
   }
 
-  result.forEach((s) => {
+  step2.forEach((s) => {
     if (s.id === 1 || s.id === 2) {
       flushMatching()
       finalResult.push(s)
       return
     }
 
-    const base = s.title.replace(/\s*\(Part\s*\d+\)\s*$/, "")
+    const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
     if (base !== currentBaseTitle) {
       flushMatching()
       currentBaseTitle = base
@@ -311,7 +341,7 @@ function splitLongSlides(slides: Slide[]): Slide[] {
   })
   flushMatching()
 
-  // Re-assign consecutive IDs from 1 to N
+  // Assign sequential IDs
   finalResult.forEach((s, idx) => {
     s.id = idx + 1
   })
