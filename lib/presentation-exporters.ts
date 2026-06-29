@@ -28,23 +28,25 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
 
   return bodySegments.map((segment, index) => {
     const warning = isWarning(segment.cleanText)
-    const textColor = "1E293B" // Deep Enamel – strictly enforced
-    const fontSize = theme.bodyFontSizePptx || 18
+    const fontSize = theme.bodyFontSizePptx || 22
+
+    // Alternating color: odd segments (0,2,4…) → Deep Enamel; even (1,3,5…) → Ceramic Cobalt
+    const textColor = warning ? "1E293B" : (index % 2 === 0 ? "1E293B" : "0F4C81")
+    const bulletColor = index % 2 === 0 ? "1E293B" : "0F4C81"
 
     return {
       text: segment.cleanText + (index < bodySegments.length - 1 ? "\n" : ""),
       options: {
-        // Square bullet (■ U+25A0) for Avant-Garde; round disc (●) for others
         bullet: warning ? undefined : {
-          code: isAvantGarde ? "25A0" : "25CF",
-          color: "0F4C81"   // Ceramic Cobalt
+          code: "25A0",   // ■ square glyph — mirrors line text color
+          color: bulletColor
         },
         color: textColor,
         fontSize: warning ? fontSize + 2 : fontSize,
         fontFace: "Inter",
-        lineSpacing: isAvantGarde ? 28 : 24,
+        lineSpacing: 28,
         fill: warning ? { color: "C5A059", transparency: 90 } : undefined,
-        bold: true,
+        bold: false,
       },
     }
   })
@@ -226,12 +228,12 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         // Standard content body — applies to ALL slides including Slide 1
         const formattedContent = buildFormattedContent(slide, primaryHex, theme)
 
-        // === PPTX BOUNDING FRAME (§5): x:0.7 (clears 0.25" gold column), y:1.2, w:8.0, h:3.2
+        // === PPTX BOUNDING FRAME (§5): x:0.8, y:1.2, w:8.4, h:3.2
         // valign:middle, zero title header rendered above
         pptxSlide.addText(formattedContent, {
-          x: 0.7,
+          x: 0.8,
           y: 1.2,
-          w: 8.0,
+          w: 8.4,
           h: 3.2,
           align: "left",
           valign: "middle",
@@ -394,46 +396,44 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
     const startY = Math.max(0.5, (5.625 - centeredBodyHeight) / 2)
     
     let currentY = startY
-    bodySegments.forEach((segment) => {
+    bodySegments.forEach((segment, segmentIndex) => {
       const lower = segment.cleanText.toLowerCase()
       const isWarning = ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(w => lower.includes(w))
-      const isAvantGarde = theme.id === "contrast_avant_garde"
 
       if (isWarning) {
-        const startX = isAvantGarde ? 1.4 : 0.7
-        const textWidth = isAvantGarde ? 7.6 : 8.4
-        const lines = doc.splitTextToSize(segment.cleanText, textWidth - 0.4)
+        const lines = doc.splitTextToSize(segment.cleanText, 8.4 - 0.4)
         doc.setFillColor(248, 245, 237)
-        doc.rect(startX, currentY - 0.2, textWidth, (lines.length * 0.28) + 0.2, "F")
+        doc.rect(0.8, currentY - 0.2, 8.4, (lines.length * 0.28) + 0.2, "F")
         doc.setDrawColor("#C5A059")
         doc.setLineWidth(0.04)
-        doc.line(startX, currentY - 0.2, startX, currentY - 0.2 + (lines.length * 0.28) + 0.2)
+        doc.line(0.8, currentY - 0.2, 0.8, currentY - 0.2 + (lines.length * 0.28) + 0.2)
         doc.setFont("Inter", "bold")
         doc.setTextColor("#1E293B")
-        doc.text(lines, startX + 0.2, currentY)
+        doc.text(lines, 1.0, currentY)
         currentY += (lines.length * 0.28) + 0.3
         doc.setFont("Inter", "normal")
         return
       }
 
-      doc.setFont("Inter", "bold")
+      // Alternating color: odd segments (0,2,4…) → Deep Enamel; even (1,3,5…) → Ceramic Cobalt
+      const lineColor = segmentIndex % 2 === 0 ? "#1E293B" : "#0F4C81"
+      doc.setFont("Inter", "normal")
       doc.setFontSize(14)
-      doc.setTextColor("#1E293B")
-      
+      doc.setTextColor(lineColor)
+
       if (segment.isListItem) {
-        // === PDF SQUARE BULLET (Ceramic Cobalt #0F4C81) ===
-        doc.setFillColor("#0F4C81")
-        // Square glyph: 0.07" × 0.07" positioned left of text
-        doc.rect(1.45, currentY - 0.09, 0.07, 0.07, "F")
-        const lines = doc.splitTextToSize(segment.cleanText, 7.0)
-        doc.text(lines, 1.62, currentY)
+        // Square bullet — color mirrors line text color
+        doc.setFillColor(lineColor)
+        doc.rect(0.85, currentY - 0.09, 0.07, 0.07, "F")
+        const lines = doc.splitTextToSize(segment.cleanText, 7.8)
+        doc.text(lines, 1.02, currentY)
         currentY += (lines.length * 0.3) + 0.16
         return
       }
-      
-      // Non-list paragraph: starts at x:1.4 to clear the 0.25" gold column
-      const lines = doc.splitTextToSize(segment.cleanText, 7.6)
-      doc.text(lines, 1.4, currentY)
+
+      // Non-list paragraph
+      const lines = doc.splitTextToSize(segment.cleanText, 8.4)
+      doc.text(lines, 0.8, currentY)
       currentY += (lines.length * 0.3) + 0.12
     })
   }

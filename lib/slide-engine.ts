@@ -441,11 +441,11 @@ export function getSlideHeight(content: string[]): number {
 }
 
 // === HARD CHUNKING BUDGET (§4) ===
-// Maximum 4 bullet points OR 350 characters per slide frame.
-// The moment either threshold is crossed the array is split immediately.
+// Maximum 4 bullet points OR 480 characters per slide frame.
+// Higher char budget compresses total slide count toward 20–25 target range.
 const isOverBudget = (content: string[]): boolean => {
   const charLength = content.join("\n").length;
-  return content.length > 4 || charLength > 350;
+  return content.length > 4 || charLength > 480;
 };
 
 function applyVerticalThresholds(slides: Slide[]): Slide[] {

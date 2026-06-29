@@ -102,10 +102,10 @@ export function SlideRenderer({
 
 // ──────────────────────────────────────────────────────────────
 // ContentSlide
-// Typography template (§2) — UNIFORM across ALL slides including Slide 1:
+// Typography template (§2) — UNIFORM across ALL slides:
 //   Body text: text-2xl md:text-3xl font-medium tracking-wide leading-relaxed
-//   Bullet spacing: space-y-6
-//   Bullet glyph: solid #0F4C81 square (■) — no default disc marker
+//   Alternating color: Odd lines → #1E293B (Deep Enamel) | Even lines → #0F4C81 (Ceramic Cobalt)
+//   Bullet glyph: solid square — color mirrors line text color
 //   Font: Open Sans, Arial
 // ──────────────────────────────────────────────────────────────
 function ContentSlide({ slide }: { slide: Slide }) {
@@ -155,24 +155,27 @@ function ContentSlide({ slide }: { slide: Slide }) {
             )
           }
 
-          // Standard bullet item
+          // Standard bullet item — alternating color per line index
+          // Odd lines (0,2,4… zero-based) → Deep Enamel #1E293B
+          // Even lines (1,3,5… zero-based) → Ceramic Cobalt #0F4C81
+          const lineColor = i % 2 === 0 ? TOKEN.enamel : TOKEN.cobalt
           return (
             <li
               key={i}
               className="flex items-start text-2xl md:text-3xl font-medium tracking-wide leading-relaxed"
             >
-              {/* Square bullet glyph — Ceramic Cobalt #0F4C81 */}
+              {/* Square bullet glyph — mirrors line text color */}
               <span
                 className="shrink-0 mt-2 mr-4"
                 style={{
                   display: "inline-block",
                   width: "10px",
                   height: "10px",
-                  backgroundColor: TOKEN.cobalt,
+                  backgroundColor: lineColor,
                 }}
                 aria-hidden="true"
               />
-              <span style={{ color: TOKEN.enamel }}>{cleanText}</span>
+              <span style={{ color: lineColor }}>{cleanText}</span>
             </li>
           )
         })}
