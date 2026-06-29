@@ -28,7 +28,7 @@ export function SlideRenderer({
   logoUrl: string | null
   lecturerName: string
 }) {
-  const isTitleSlide = slide.id === 1
+  // All slides use the uniform standard layout — no distinct title slide template.
 
   // ── CHAPTER DIVIDER ─────────────────────────────────────────
   // Full-bleed #1E293B canvas (left 60%) + solid #C5A059 block (right 40%).
@@ -62,45 +62,28 @@ export function SlideRenderer({
   return (
     <div
       className="relative flex flex-col h-full w-full justify-between overflow-hidden select-none pb-14 text-left pl-14 pr-10 pt-8"
-      style={{ backgroundColor: TOKEN.canvas, fontFamily: "Inter, sans-serif" }}
+      style={{ backgroundColor: TOKEN.canvas, fontFamily: "'Open Sans', Arial, sans-serif" }}
     >
       {/* === STRUCTURAL ARCHITECTURAL BLOCK ===
           Solid 24px (#C5A059) Dentin Gold anchoring column.
-          Stretches from absolute top to absolute bottom of every standard slide.
+          Stretches from absolute top to absolute bottom of every slide — including Slide 1.
           Completely replaces all floating line dividers. */}
-      {!isTitleSlide && (
-        <div
-          className="absolute left-0 top-0 bottom-0 z-10"
-          style={{ width: "24px", backgroundColor: TOKEN.gold }}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* ── TITLE SLIDE header (id === 1 only) ── */}
-      {isTitleSlide && (
-        <div className="z-10 w-full mb-6">
-          <div className="mt-10 mb-6">
-            <h1
-              className="text-4xl md:text-5xl font-bold tracking-tight leading-tight"
-              style={{ color: TOKEN.cobalt }}
-            >
-              {slide.title}
-            </h1>
-            <div className="mt-5 h-0.5 w-32" style={{ backgroundColor: TOKEN.cobalt }} />
-          </div>
-        </div>
-      )}
-
-      {/* ── MAIN BODY ── */}
       <div
-        className={`flex-grow flex flex-col ${isTitleSlide ? "justify-start" : "justify-center"} w-full overflow-hidden break-words z-10`}
+        className="absolute left-0 top-0 bottom-0 z-10"
+        style={{ width: "24px", backgroundColor: TOKEN.gold }}
+        aria-hidden="true"
+      />
+
+      {/* ── MAIN BODY — vertically centered on all slides ── */}
+      <div
+        className="flex-grow flex flex-col justify-center w-full overflow-hidden break-words z-10"
       >
         {(() => {
           switch (slide.layout) {
             case "TABULAR_DATA":
               return <TableSlide slide={slide} theme={theme} />
             default:
-              return <ContentSlide slide={slide} isTitleSlide={isTitleSlide} />
+              return <ContentSlide slide={slide} />
           }
         })()}
       </div>
@@ -108,7 +91,7 @@ export function SlideRenderer({
       {/* ── FOOTER ── */}
       <div className="absolute bottom-3 left-10 right-8 flex items-center justify-between border-t pt-2 z-10"
            style={{ borderColor: "rgba(100,116,139,0.25)" }}>
-        <span className="text-[10px]" style={{ color: TOKEN.caption, fontFamily: "Inter, sans-serif" }}>
+        <span className="text-[10px]" style={{ color: TOKEN.caption, fontFamily: "'Open Sans', Arial, sans-serif" }}>
           Lecturer: <strong>{lecturerName || "Academic Staff"}</strong>
         </span>
         <span />
@@ -119,12 +102,13 @@ export function SlideRenderer({
 
 // ──────────────────────────────────────────────────────────────
 // ContentSlide
-// Typography template (§2):
-//   Standard slide text: text-2xl md:text-3xl font-medium tracking-wide leading-relaxed
-//   Bullet spacing: space-y-6 (matches 28pt PPTX line-spacing)
+// Typography template (§2) — UNIFORM across ALL slides including Slide 1:
+//   Body text: text-2xl md:text-3xl font-medium tracking-wide leading-relaxed
+//   Bullet spacing: space-y-6
 //   Bullet glyph: solid #0F4C81 square (■) — no default disc marker
+//   Font: Open Sans, Arial
 // ──────────────────────────────────────────────────────────────
-function ContentSlide({ slide, isTitleSlide }: { slide: Slide; isTitleSlide?: boolean }) {
+function ContentSlide({ slide }: { slide: Slide }) {
   const isWarning = (text: string) => {
     const lower = text.toLowerCase()
     return ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(
@@ -175,11 +159,7 @@ function ContentSlide({ slide, isTitleSlide }: { slide: Slide; isTitleSlide?: bo
           return (
             <li
               key={i}
-              className={`flex items-start ${
-                isTitleSlide
-                  ? "text-xl font-semibold tracking-normal leading-relaxed"
-                  : "text-xl md:text-2xl font-semibold tracking-normal leading-relaxed"
-              }`}
+              className="flex items-start text-2xl md:text-3xl font-medium tracking-wide leading-relaxed"
             >
               {/* Square bullet glyph — Ceramic Cobalt #0F4C81 */}
               <span

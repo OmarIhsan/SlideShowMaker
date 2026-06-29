@@ -163,9 +163,8 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
 
     pptxSlide.background = { color: bgHex }
 
-    if (slide.id !== 1) {
-      addSlideDecoration(pptxSlide, theme)
-    }
+    // Add gold anchor column to ALL slides (including slide 1)
+    addSlideDecoration(pptxSlide, theme)
 
     if (lecturerName) {
       const isAvantGarde = theme.id === "contrast_avant_garde"
@@ -181,34 +180,8 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
       })
     }
 
-    // Slide title logic
-    if (slide.id === 1) {
-      pptxSlide.addText(slide.title, {
-        x: 0.7,
-        y: 1.5,
-        w: 8.6,
-        h: 1.5,
-        fontSize: 48,
-        bold: true,
-        color: "0F4C81",
-        fontFace: "Inter",
-        valign: "middle",
-        align: "center"
-      })
-      if (theme.id === "academic_artisan") {
-        pptxSlide.addShape("line", {
-          x: 4.0,
-          y: 3.2,
-          w: 2.0,
-          h: 0,
-          line: { color: cleanHex(theme.hexPrimary), width: 2 }
-        })
-      }
-    } else {
-      if (theme.id !== "academic_artisan_titleless" && theme.id !== "contrast_avant_garde") {
-        addSlideTitle(pptxSlide, slide, theme)
-      }
-    }
+    // No slide title rendered on any slide — uniform titleless layout.
+    // Content is rendered through the standard body text box for all slides.
 
     try {
       if (slide.layout === "TABULAR_DATA") {
@@ -249,15 +222,16 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
           w: theme.id === "contrast_avant_garde" ? 7.6 : 8.6,
           border: { type: "solid", color: "E2E8F0", width: 1 },
         })
-      } else if (slide.id !== 1) {
+      } else {
+        // Standard content body — applies to ALL slides including Slide 1
         const formattedContent = buildFormattedContent(slide, primaryHex, theme)
 
-        // === PPTX BOUNDING FRAME (§5): mandatory rightward shift to clear the 0.25" gold anchor column
-        // All standard slides: x:1.4 y:1.2 w:7.6 h:3.2 valign:middle
+        // === PPTX BOUNDING FRAME (§5): x:0.7 (clears 0.25" gold column), y:1.2, w:8.0, h:3.2
+        // valign:middle, zero title header rendered above
         pptxSlide.addText(formattedContent, {
-          x: 1.4,
+          x: 0.7,
           y: 1.2,
-          w: 7.6,
+          w: 8.0,
           h: 3.2,
           align: "left",
           valign: "middle",
@@ -387,17 +361,9 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
   doc.setFillColor(theme.hexBg)
   doc.rect(0, 0, 10, 5.625, "F")
 
-  if (slide.id !== 1) {
-    addSlideDecoration(doc, theme)
-    if (theme.id !== "academic_artisan_titleless" && theme.id !== "contrast_avant_garde") {
-      addSlideTitle(doc, slide, theme)
-    }
-  } else {
-    doc.setFont("Inter", "bold")
-    doc.setFontSize(36)
-    doc.setTextColor("#0F4C81")
-    doc.text(slide.title, 5.0, 2.0, { align: "center" })
-  }
+  // Gold anchor column on ALL slides (including Slide 1) — uniform titleless layout
+  addSlideDecoration(doc, theme)
+  // No title is rendered on any slide.
 
   if (lecturerName) {
     const isAvantGarde = theme.id === "contrast_avant_garde"
@@ -421,11 +387,11 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
     const totalTableH = measurePdfTableHeight(doc, rows, colW)
     const startY = Math.max(1.5, (5.625 - totalTableH) / 2)
     renderPdfTableGrid(doc, slide, theme, startY)
-  } else if (slide.id !== 1) {
+  } else {
+    // Standard body renderer — ALL slides including Slide 1
     const bodySegments = buildBodySegments(slide.content)
     const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments, theme)
-    const minStartY = (theme.id === "academic_artisan_titleless" || theme.id === "contrast_avant_garde") ? 0.5 : 1.5
-    const startY = Math.max(minStartY, (5.625 - centeredBodyHeight) / 2)
+    const startY = Math.max(0.5, (5.625 - centeredBodyHeight) / 2)
     
     let currentY = startY
     bodySegments.forEach((segment) => {

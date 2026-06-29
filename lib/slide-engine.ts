@@ -82,7 +82,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     bodyFont: "Inter",
     captionFont: "Inter",
     titleFontSizePptx: 36,
-    bodyFontSizePptx: 18,
+    bodyFontSizePptx: 22,
     captionFontSizePptx: 14,
     titleColor: "#0F4C81",
     bodyColor: "#1E293B",
