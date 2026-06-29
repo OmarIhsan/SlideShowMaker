@@ -183,216 +183,92 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   if (source.trim().length === 0) {
     return { slides: [], chapterCount: 0 }
   }
-  const lines = source.replace(/\r\n/g, "\n").split("\n").map(l => l.trim())
 
-  let docTitle = "Lecture Slides"
-  let currentHeader = "General Concepts"
-  let hasSetDocTitle = false
-  const bodySlides: Slide[] = []
+  let currentTopicContext = "General Concepts";
 
-  let slideIdCounter = 3
-  let currentGroup: string[] = []
-  const titleSlideContent: string[] = []
-  let seenFirstHeader = false
-
-  const determineLayout = (contentString: string, headerText: string): 'STANDARD_CONTENT' | 'TABULAR_DATA' => {
-    if (contentString.includes('|') || contentString.includes('\t')) {
-      return 'TABULAR_DATA';
-    }
-    return 'STANDARD_CONTENT';
-  };
-
-  const flushGroup = () => {
-    if (currentGroup.length > 0) {
-      const combined = currentGroup.join("\n");
-      const layout = determineLayout(combined, currentHeader);
-      bodySlides.push({
-        id: slideIdCounter++,
-        title: currentHeader,
-        content: [...currentGroup],
-        layout: layout
-      })
-      currentGroup = []
-    }
+  function determineActiveTopicContext(text: string): string {
+    if (/histolog/i.test(text)) return "Histological View & Cap Architecture";
+    if (/struct|prism/i.test(text)) return "Enamel Rod Matrix Structure";
+    if (/acid|etch|dissol/i.test(text)) return "Acid-Etch Demineralization Dynamics";
+    if (/hard|britt|perme/i.test(text)) return "Physical Properties & Biomechanics";
+    if (/color|translu|shad/i.test(text)) return "Optical Transmission & Shade Analysis";
+    if (/clinic|diagnos|cavit|wear/i.test(text)) return "Clinical Appearance & Trauma Pathologies";
+    if (/mcq|question/i.test(text)) return "Evaluation: Lecture Assessment MCQs";
+    return currentTopicContext; 
   }
 
-  const pushContent = (text: string) => {
-    if (!seenFirstHeader) {
-      if (titleSlideContent.length < 3) {
-        titleSlideContent.push(text)
-      } else {
-        seenFirstHeader = true
-        currentHeader = "Introduction"
-        currentGroup.push(text)
-      }
-    } else {
-      currentGroup.push(text)
-    }
+  function isMatrixStructure(chunk: string[]): boolean {
+    return chunk.some(line => line.includes("|") || line.includes("\t"));
   }
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    if (!line) {
-      continue
-    }
+  // Hard-Coded Sentence Tokenizer Override
+  const rawTokens = source
+    .split(/(?<=\.|\:)\s+|\n+/)
+    .map(token => token.replace(/[\/\\]/gi, '').trim())
+    .filter(token => token.length > 0 && !/^(DCD|DR\.\s*CUBE.*)$/i.test(token));
 
-    if (line.startsWith("# ")) {
-      const headerText = line.replace("# ", "").trim()
-      if (!hasSetDocTitle) {
-        docTitle = headerText
-        hasSetDocTitle = true
-      } else {
-        flushGroup()
-        currentHeader = headerText
-        seenFirstHeader = true
-        
-        // Insert Chapter Divider
-        bodySlides.push({
-          id: slideIdCounter++,
-          title: currentHeader,
-          content: [],
-          layout: "CHAPTER_DIVIDER"
-        })
-      }
-      continue
-    }
-    if (line.startsWith("## ")) {
-      flushGroup()
-      currentHeader = line.replace("## ", "").trim()
-      seenFirstHeader = true
-      
-      // Insert Chapter Divider
-      bodySlides.push({
-        id: slideIdCounter++,
-        title: currentHeader,
-        content: [],
-        layout: "CHAPTER_DIVIDER"
-      })
-      continue
-    }
-    if (line.startsWith("### ")) {
-      flushGroup()
-      currentHeader = line.replace("### ", "").trim()
-      seenFirstHeader = true
-      continue
-    }
+  const bodySlides: Slide[] = [];
+  let slideIdCounter = 2;
 
-    const topicHeader = isTopicHeader(line)
-    if (topicHeader) {
-      if (!hasSetDocTitle) {
-        docTitle = topicHeader
-        hasSetDocTitle = true
-        currentHeader = topicHeader
-        seenFirstHeader = true
-      } else {
-        flushGroup()
-        currentHeader = topicHeader
-        seenFirstHeader = true
-      }
-      continue
-    }
+  let currentChunk: string[] = [];
+  const maxCharacters = 400;
+  const maxLines = 4;
 
-    // Tabular Data Identification: numerical comparison indicators (e.g. 1 Hardness, 2 Brittleness, 3 Permeability)
-    const matrixRegex = /\b\d+\s+[A-Za-z0-9\s()-]+(,\s*\d+\s+[A-Za-z0-9\s()-]+)+/;
-    if (matrixRegex.test(line)) {
-      const columns = line.split(",").map(c => c.trim()).filter(Boolean)
-      const pipeRow = "| " + columns.map(col => {
-        const parts = col.match(/^(\d+)\s+(.+)$/)
-        if (parts) {
-          return `${parts[1]}: ${parts[2].trim()}`
-        }
-        return col
-      }).join(" | ") + " |"
+  const pushNewSlide = (data: { title: string, content: string[], layout: "STANDARD_CONTENT" | "TABULAR_DATA" }) => {
+    bodySlides.push({
+      id: slideIdCounter++,
+      title: data.title,
+      content: data.content,
+      layout: data.layout
+    });
+  }
 
-      pushContent(pipeRow)
-      continue
-    }
-
-    // Table Detection: Vertical separators | or explicit tabs \t
-    if (line.includes("|") || line.includes("\t")) {
-      if (line.includes("-")) {
-        const cleanCheck = line.replace(/[|\s-]/g, "")
-        if (cleanCheck.length === 0) {
-          continue // skip markdown separator row
-        }
-      }
-
-      // Convert sequential tab characters into pipe separators to unify downstream processing
-      let processedTableLine = line;
-      if (line.includes("\t")) {
-        processedTableLine = line.replace(/\t+/g, " | ");
-      }
-
-      pushContent(processedTableLine)
-      continue
-    }
-
-    // Bullet List Detection: prefixed with dashes, bullet characters, or index tags (1., a., etc.)
-    const isBullet = line.startsWith("-") || line.startsWith("*") || line.startsWith("•");
-    const isOrdered = /^\d+[.)]/.test(line) || /^[a-zA-Z][.)]/.test(line);
-
-    if (isBullet || isOrdered) {
-      pushContent(line)
-      continue
-    }
-
-    // Fallback: Convert colon-delimited list definitions to bullets
-    if (/^[A-Za-z0-9\s()-]+:\s+.+$/.test(line)) {
-      pushContent(`- ${line}`)
-      continue
-    }
-
-    // === EXPLICIT LIST TOKENIZATION ENGINE ===
-    // Programmatically split every loose paragraph at period (.) and semicolon (;)
-    // boundaries, producing one distinct bullet item per extracted sentence.
-    // This prevents large flat paragraph blocks from collapsing onto a single canvas.
-    const rawSentences = line
-      .split(/(?<=[.;])\s+/)
-      .map(s => s.trim())
-      .filter(Boolean);
-
-    // Only treat as multi-sentence if we actually extracted more than one fragment
-    if (rawSentences.length > 1) {
-      rawSentences.forEach(sentence => {
-        let cleaned = sentence;
-        if (!/[.;!?]$/.test(cleaned)) cleaned += ".";
-        pushContent(`- ${cleaned}`);
+  rawTokens.forEach((token) => {
+    const currentLen = currentChunk.join(' ').length;
+    currentTopicContext = determineActiveTopicContext(token);
+    
+    if (currentChunk.length >= maxLines || (currentLen + token.length) > maxCharacters) {
+      // Force a hard slide break natively
+      pushNewSlide({
+        title: currentTopicContext || "Biologic Matrix",
+        content: [...currentChunk],
+        layout: isMatrixStructure(currentChunk) ? "TABULAR_DATA" : "STANDARD_CONTENT"
       });
-    } else if (rawSentences.length === 1) {
-      // Single sentence – still wrap as a bullet so it lands in an <li>
-      let cleaned = rawSentences[0];
-      if (!/[.;!?]$/.test(cleaned)) cleaned += ".";
-      pushContent(`- ${cleaned}`);
-    } else {
-      pushContent(line);
+      currentChunk = [];
     }
+    // format as bullet if not already
+    const formattedToken = token.startsWith("-") || token.startsWith("•") || /^\d+\./.test(token) 
+      ? token 
+      : `- ${token}`;
+    currentChunk.push(formattedToken);
+  });
+
+  // Flush outstanding lines
+  if (currentChunk.length > 0) {
+    pushNewSlide({
+      title: currentTopicContext,
+      content: [...currentChunk],
+      layout: isMatrixStructure(currentChunk) ? "TABULAR_DATA" : "STANDARD_CONTENT"
+    });
   }
-
-  flushGroup()
-
-  // Build Outline list dynamically (keep uniqueHeaders for chapterCount)
-  const uniqueHeaders = Array.from(new Set(bodySlides.map(s => s.title)))
-
-  const titleSlideCombined = titleSlideContent.join("\n");
-  const titleSlideLayout = determineLayout(titleSlideCombined, docTitle);
 
   const titleSlide: Slide = {
     id: 1,
-    title: docTitle,
-    content: titleSlideContent.length > 0 ? titleSlideContent : [
+    title: "Lecture Slides",
+    content: [
       "Verbatim Academic Presentation Courseware",
       "Presented by: Dr. Faisal Alhuwaizi",
       "This deck contains verbatim syllabus details compiled from raw content outlines."
     ],
-    layout: titleSlideLayout
+    layout: "STANDARD_CONTENT"
   }
 
-  const rawSlides = [titleSlide, ...bodySlides]
-  const finalSlides = applyVerticalThresholds(rawSlides)
+  const finalSlides = [titleSlide, ...bodySlides];
+  const uniqueHeaders = Array.from(new Set(finalSlides.map(s => s.title)));
 
   return {
     slides: finalSlides,
-    chapterCount: uniqueHeaders.length
+    chapterCount: Math.max(uniqueHeaders.length - 1, 1) // exclude title slide from count
   }
 }
 

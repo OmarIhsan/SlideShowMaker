@@ -100,6 +100,17 @@ export function SlideRenderer({
   )
 }
 
+export function parseAndHighlightMetrics(text: string) {
+  // Highlight clinical finish lines, percentages, numbers cleanly in Dentin Gold
+  const metricRegex = /(\b\d+%\b|\b\d+-\d+\s*nm\b|\bHV\s*=\s*\d+\b|\b\d+,\d+\s*rods\b|\b\d+(?:\.\d+)?\s*(?:µm|mm)\b)/gi;
+  if (!metricRegex.test(text)) return text;
+  
+  const parts = text.split(metricRegex);
+  return parts.map((part, i) => 
+    metricRegex.test(part) ? <strong key={i} style={{ color: TOKEN.gold, fontWeight: 'bold' }}>{part}</strong> : part
+  );
+}
+
 // ──────────────────────────────────────────────────────────────
 // ContentSlide
 // Typography template (§2) — UNIFORM across ALL slides:
@@ -116,11 +127,12 @@ function ContentSlide({ slide }: { slide: Slide }) {
     )
   }
 
+  // Apply the unified layout geometry
   return (
     <div className="w-full">
-      <ul className="list-none space-y-6 pl-0">
-        {slide.content.map((text, i) => {
-          const cleanText = text
+      <ul className="space-y-6 pl-0">
+        {slide.content.map((lineText: string, index: number) => {
+          const cleanText = lineText
             .replace(/^[-*•]\s*/, "")
             .replace(/^\d+[.)]\s*/, "")
             .replace(/^[a-zA-Z][.)]\s*/, "")
@@ -131,7 +143,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
           // Warning / callout item
           if (isWarning(cleanText)) {
             return (
-              <li key={i} className="list-none">
+              <li key={index} className="list-none">
                 <div
                   className="flex items-start p-4 border-l-4"
                   style={{
@@ -155,18 +167,18 @@ function ContentSlide({ slide }: { slide: Slide }) {
             )
           }
 
-          // Standard bullet item — alternating color per line index
-          // Odd lines (0,2,4… zero-based) → Deep Enamel #1E293B
-          // Even lines (1,3,5… zero-based) → Ceramic Cobalt #0F4C81
-          const lineColor = i % 2 === 0 ? TOKEN.enamel : TOKEN.cobalt
+          // Programmatic line-by-line color alternation rotation
+          const isOdd = index % 2 === 0;
+          const lineColor = isOdd ? TOKEN.enamel : TOKEN.cobalt;
+          
           return (
-            <li
-              key={i}
-              className="flex items-start text-2xl md:text-3xl font-medium tracking-wide leading-relaxed"
+            <li 
+              key={index} 
+              className="flex items-start text-2xl md:text-3xl font-medium leading-relaxed tracking-wide transition-colors duration-150"
+              style={{ color: lineColor }}
             >
-              {/* Square bullet glyph — mirrors line text color */}
-              <span
-                className="shrink-0 mt-2 mr-4"
+              {/* Precision highlight parser for critical metrics */}
+              <span className="shrink-0 mt-2 mr-4"
                 style={{
                   display: "inline-block",
                   width: "10px",
