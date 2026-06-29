@@ -1,7 +1,7 @@
 // Content-agnostic academic document-to-presentation translation engine.
 // Strictly uses the rigid Slide layout schema and groups contents verbatim.
 
-export type ThemeId = "clinical" | "midnight" | "warm"
+export type ThemeId = "clinical" | "midnight" | "warm" | "academic_artisan" | "academic_artisan_titleless" | "contrast_avant_garde"
 
 export type Theme = {
   id: ThemeId
@@ -15,6 +15,15 @@ export type Theme = {
   hexPrimary: string
   hexSecondary: string
   hexBg: string
+  titleFont?: string
+  bodyFont?: string
+  captionFont?: string
+  titleFontSizePptx?: number
+  bodyFontSizePptx?: number
+  captionFontSizePptx?: number
+  titleColor?: string
+  bodyColor?: string
+  captionColor?: string
 }
 
 export const THEMES: Record<ThemeId, Theme> = {
@@ -57,9 +66,76 @@ export const THEMES: Record<ThemeId, Theme> = {
     hexSecondary: "#047857",
     hexBg: "#F8FAFC",
   },
+  academic_artisan: {
+    id: "academic_artisan",
+    label: "The Academic Artisan",
+    accentBg: "bg-[#0F4C81]",
+    accentText: "text-[#0F4C81]",
+    chipBg: "bg-[#F8F9FA]",
+    chipText: "text-[#0F4C81]",
+    ring: "ring-[#0F4C81]",
+    border: "border-[#0F4C81]",
+    hexPrimary: "#0F4C81",
+    hexSecondary: "#C5A059",
+    hexBg: "#F8F9FA",
+    titleFont: "Inter",
+    bodyFont: "Inter",
+    captionFont: "Inter",
+    titleFontSizePptx: 36,
+    bodyFontSizePptx: 18,
+    captionFontSizePptx: 14,
+    titleColor: "#0F4C81",
+    bodyColor: "#1E293B",
+    captionColor: "#64748B"
+  },
+  academic_artisan_titleless: {
+    id: "academic_artisan_titleless",
+    label: "The Academic Artisan (Titleless)",
+    accentBg: "bg-[#0F4C81]",
+    accentText: "text-[#0F4C81]",
+    chipBg: "bg-[#F8F9FA]",
+    chipText: "text-[#0F4C81]",
+    ring: "ring-[#0F4C81]",
+    border: "border-[#0F4C81]",
+    hexPrimary: "#0F4C81",
+    hexSecondary: "#C5A059",
+    hexBg: "#F8F9FA",
+    titleFont: "Inter",
+    bodyFont: "Inter",
+    captionFont: "Inter",
+    titleFontSizePptx: 36,
+    bodyFontSizePptx: 22,
+    captionFontSizePptx: 14,
+    titleColor: "#0F4C81",
+    bodyColor: "#1E293B",
+    captionColor: "#64748B"
+  },
+  contrast_avant_garde: {
+    id: "contrast_avant_garde",
+    label: "The Contrast Avant-Garde",
+    accentBg: "bg-[#C5A059]",
+    accentText: "text-[#C5A059]",
+    chipBg: "bg-[#F8F9FA]",
+    chipText: "text-[#C5A059]",
+    ring: "ring-[#C5A059]",
+    border: "border-[#C5A059]",
+    // === GLOBAL DESIGN TOKENS (Contrast Avant-Garde) ===
+    hexPrimary: "#0F4C81",   // Ceramic Cobalt – bullet glyphs & structural accents
+    hexSecondary: "#C5A059", // Dentin Gold – left anchor column + chapter blocks
+    hexBg: "#F8F9FA",        // Clinical Base – solid canvas, zero textures
+    titleFont: "Inter",
+    bodyFont: "Inter",
+    captionFont: "Inter",
+    titleFontSizePptx: 40,
+    bodyFontSizePptx: 22,
+    captionFontSizePptx: 12,
+    titleColor: "#0F4C81",
+    bodyColor: "#1E293B",    // Deep Enamel – all body text
+    captionColor: "#64748B"
+  }
 }
 
-export type SlideLayout = "STANDARD_CONTENT" | "TABULAR_DATA";
+export type SlideLayout = "STANDARD_CONTENT" | "TABULAR_DATA" | "CHAPTER_DIVIDER";
 
 export interface Slide {
   id: number;
@@ -73,6 +149,7 @@ export type LayoutTag = Slide["layout"]
 export const LAYOUT_LABELS: Record<LayoutTag, string> = {
   STANDARD_CONTENT: "STANDARD_CONTENT",
   TABULAR_DATA: "TABULAR_DATA",
+  CHAPTER_DIVIDER: "CHAPTER_DIVIDER",
 }
 
 export function getSlideTitle(slide: Slide): string {
@@ -90,19 +167,12 @@ export function isTopicHeader(line: string): string | null {
     return indexMatch[1].trim();
   }
 
-  // 2. Short non-bullet title-cased lines:
-  // e.g. "Properties of Enamel: Hardness & Brittleness"
-  if (!line.startsWith("-") && !line.startsWith("*") && !line.startsWith("•") && !line.includes("|") && line.length < 60) {
-    const words = line.split(/\s+/).filter(Boolean);
-    if (words.length >= 2) {
-      const allowedLowercase = ["of", "to", "and", "with", "in", "the", "a", "or", "for", "by", "on", "is", "are", "at", "&"];
-      const capitalizedCount = words.filter(w => 
-        /^[A-Z0-9]/.test(w) || allowedLowercase.includes(w.toLowerCase())
-      ).length;
-      
-      if (capitalizedCount === words.length) {
-        return line.trim();
-      }
+  // 2. Short non-bullet title-cased lines or localized text dividers
+  if (!line.startsWith("-") && !line.startsWith("*") && !line.startsWith("•") && !line.includes("|") && line.length > 2 && line.length < 70) {
+    // If line doesn't end with a typical sentence-ending punctuation (and it's not a bullet)
+    if (!/[.;!?]$/.test(line.trim())) {
+      // Return it as a valid header
+      return line.trim();
     }
   }
   return null;
@@ -125,7 +195,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   const titleSlideContent: string[] = []
   let seenFirstHeader = false
 
-  const determineLayout = (contentString: string): 'STANDARD_CONTENT' | 'TABULAR_DATA' => {
+  const determineLayout = (contentString: string, headerText: string): 'STANDARD_CONTENT' | 'TABULAR_DATA' => {
     if (contentString.includes('|') || contentString.includes('\t')) {
       return 'TABULAR_DATA';
     }
@@ -135,7 +205,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   const flushGroup = () => {
     if (currentGroup.length > 0) {
       const combined = currentGroup.join("\n");
-      const layout = determineLayout(combined);
+      const layout = determineLayout(combined, currentHeader);
       bodySlides.push({
         id: slideIdCounter++,
         title: currentHeader,
@@ -175,6 +245,14 @@ export function parseDocumentToSlides(raw: string): ParseResult {
         flushGroup()
         currentHeader = headerText
         seenFirstHeader = true
+        
+        // Insert Chapter Divider
+        bodySlides.push({
+          id: slideIdCounter++,
+          title: currentHeader,
+          content: [],
+          layout: "CHAPTER_DIVIDER"
+        })
       }
       continue
     }
@@ -182,6 +260,14 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       flushGroup()
       currentHeader = line.replace("## ", "").trim()
       seenFirstHeader = true
+      
+      // Insert Chapter Divider
+      bodySlides.push({
+        id: slideIdCounter++,
+        title: currentHeader,
+        content: [],
+        layout: "CHAPTER_DIVIDER"
+      })
       continue
     }
     if (line.startsWith("### ")) {
@@ -256,27 +342,29 @@ export function parseDocumentToSlides(raw: string): ParseResult {
       continue
     }
 
-    // Bullet List Conversion for loose paragraph text:
-    // Tokenize sequential sentences separated by periods or semicolons,
-    // stripping inline spaces and wrapping each into a structured bullet list item.
-    const sentences = line
+    // === EXPLICIT LIST TOKENIZATION ENGINE ===
+    // Programmatically split every loose paragraph at period (.) and semicolon (;)
+    // boundaries, producing one distinct bullet item per extracted sentence.
+    // This prevents large flat paragraph blocks from collapsing onto a single canvas.
+    const rawSentences = line
       .split(/(?<=[.;])\s+/)
-      .map(s => {
-        let cleaned = s.trim();
-        if (!cleaned) return "";
-        if (!/[.;!?]$/.test(cleaned)) {
-          cleaned += ".";
-        }
-        return cleaned;
-      })
+      .map(s => s.trim())
       .filter(Boolean);
 
-    if (sentences.length > 0) {
-      sentences.forEach(sentence => {
-        pushContent(`- ${sentence}`)
+    // Only treat as multi-sentence if we actually extracted more than one fragment
+    if (rawSentences.length > 1) {
+      rawSentences.forEach(sentence => {
+        let cleaned = sentence;
+        if (!/[.;!?]$/.test(cleaned)) cleaned += ".";
+        pushContent(`- ${cleaned}`);
       });
+    } else if (rawSentences.length === 1) {
+      // Single sentence – still wrap as a bullet so it lands in an <li>
+      let cleaned = rawSentences[0];
+      if (!/[.;!?]$/.test(cleaned)) cleaned += ".";
+      pushContent(`- ${cleaned}`);
     } else {
-      pushContent(line)
+      pushContent(line);
     }
   }
 
@@ -286,7 +374,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   const uniqueHeaders = Array.from(new Set(bodySlides.map(s => s.title)))
 
   const titleSlideCombined = titleSlideContent.join("\n");
-  const titleSlideLayout = determineLayout(titleSlideCombined);
+  const titleSlideLayout = determineLayout(titleSlideCombined, docTitle);
 
   const titleSlide: Slide = {
     id: 1,
@@ -352,173 +440,87 @@ export function getSlideHeight(content: string[]): number {
   return 1.4 + bodyHeight
 }
 
+// === HARD CHUNKING BUDGET (§4) ===
+// Maximum 4 bullet points OR 400 characters per slide frame.
+// The moment either threshold is crossed the array is split immediately.
 const isOverBudget = (content: string[]): boolean => {
   const charLength = content.join("\n").length;
-  return content.length > 4 || charLength > 450;
+  return content.length > 4 || charLength > 400;
 };
 
 function applyVerticalThresholds(slides: Slide[]): Slide[] {
-  const step1: Slide[] = []
-
-  // Step 1: Vertical Axis Splitting Rule (Optimal 3/4 Budget Cap: 5 lines or 450 characters)
-  slides.forEach((slide) => {
-    if (slide.id === 1) {
-      step1.push(slide)
-      return
-    }
-
-    if (isOverBudget(slide.content)) {
-      // Split lines one-by-one
-      let currentChunk: string[] = []
-      let partIndex = 1
-      const baseTitle = slide.title.replace(/\s*-\s*Part\s*\d+$/, "")
-
-      for (let i = 0; i < slide.content.length; i++) {
-        const line = slide.content[i]
-        const tempChunk = [...currentChunk, line]
-        
-        if (isOverBudget(tempChunk)) {
-          // Truncate and split
-          if (currentChunk.length === 0) {
-            step1.push({
-              id: 0,
-              title: `${baseTitle} - Part ${partIndex++}`,
-              content: [line],
-              layout: slide.layout
-            })
-          } else {
-            step1.push({
-              id: 0,
-              title: `${baseTitle} - Part ${partIndex++}`,
-              content: currentChunk,
-              layout: slide.layout
-            })
-            currentChunk = [line]
-          }
-        } else {
-          currentChunk.push(line)
-        }
-      }
-      if (currentChunk.length > 0) {
-        step1.push({
-          id: 0,
-          title: `${baseTitle} - Part ${partIndex++}`,
-          content: currentChunk,
-          layout: slide.layout
-        })
-      }
-    } else {
-      step1.push(slide)
-    }
-  })
-
-  // Step 2: Dynamic Merging Enforcer (Consolidate sequential chunks up to optimal 3/4 budget cap)
-  const step2: Slide[] = []
-  let i = 0
-  while (i < step1.length) {
-    const currentSlide = step1[i]
-    if (currentSlide.id === 1) {
-      step2.push(currentSlide)
-      i++
-      continue
-    }
-
-    const currentBase = currentSlide.title.replace(/\s*-\s*Part\s*\d+$/, "")
-    
-    // Look ahead to check if we can merge next slides of the same topic
-    let mergedContent = [...currentSlide.content]
-    let nextIndex = i + 1
-    
-    while (nextIndex < step1.length) {
-      const nextSlide = step1[nextIndex]
-      const nextBase = nextSlide.title.replace(/\s*-\s*Part\s*\d+$/, "")
-      
-      if (currentBase !== nextBase) {
-        break
-      }
-      
-      // Try to merge lines of nextSlide into mergedContent
-      let allMerged = true
-      let tempContent = [...mergedContent]
-      
-      for (let j = 0; j < nextSlide.content.length; j++) {
-        const nextLine = nextSlide.content[j]
-        if (!isOverBudget([...tempContent, nextLine])) {
-          tempContent.push(nextLine)
-        } else {
-          allMerged = false
-          break
-        }
-      }
-      
-      if (allMerged) {
-        // All content of nextSlide was merged successfully!
-        mergedContent = tempContent
-        nextIndex++ // skip this slide as it is fully consolidated
-      } else {
-        // Could not fit all content of nextSlide, merge as many lines as possible and update nextSlide
-        for (let j = 0; j < nextSlide.content.length; j++) {
-          const nextLine = nextSlide.content[j]
-          if (!isOverBudget([...mergedContent, nextLine])) {
-            mergedContent.push(nextLine)
-            nextSlide.content.splice(j, 1)
-            j--
-          } else {
-            break
-          }
-        }
-        break
-      }
-    }
-    
-    currentSlide.content = mergedContent
-    step2.push(currentSlide)
-    
-    // Move index to the next unmerged slide
-    i = nextIndex
-  }
-
-  // Step 3: Re-label slide titles to "Header - Part X" or clean suffixes, and re-index slide IDs
   const finalResult: Slide[] = []
-  let currentBaseTitle = ""
-  let matchingSlides: Slide[] = []
 
-  const flushMatching = () => {
-    if (matchingSlides.length > 0) {
-      if (matchingSlides.length === 1) {
-        const s = matchingSlides[0]
-        s.title = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
-        finalResult.push(s)
-      } else {
-        matchingSlides.forEach((s, idx) => {
-          const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
-          s.title = `${base} - Part ${idx + 1}`
-          finalResult.push(s)
-        })
-      }
-      matchingSlides = []
-    }
-  }
-
-  step2.forEach((s) => {
-    if (s.id === 1) {
-      flushMatching()
-      finalResult.push(s)
+  slides.forEach((slide) => {
+    if (slide.id === 1 || slide.layout === "CHAPTER_DIVIDER") {
+      finalResult.push(slide)
       return
     }
 
-    const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
-    if (base !== currentBaseTitle) {
-      flushMatching()
-      currentBaseTitle = base
+    if (!isOverBudget(slide.content)) {
+      finalResult.push(slide)
+      return
     }
-    matchingSlides.push(s)
+
+    // Splitting Logic (Vertical Axis Splitting Rule)
+    let currentChunk: string[] = []
+    let partIndex = 1
+    const baseTitle = slide.title.replace(/\s*-\s*Part\s*\d+$/, "")
+
+    for (let i = 0; i < slide.content.length; i++) {
+      const line = slide.content[i]
+      const tempChunk = [...currentChunk, line]
+      
+      if (isOverBudget(tempChunk)) {
+        if (currentChunk.length === 0) {
+          finalResult.push({
+            id: 0,
+            title: `${baseTitle} - Part ${partIndex++}`,
+            content: [line],
+            layout: slide.layout
+          })
+        } else {
+          finalResult.push({
+            id: 0,
+            title: `${baseTitle} - Part ${partIndex++}`,
+            content: currentChunk,
+            layout: slide.layout
+          })
+          currentChunk = [line]
+        }
+      } else {
+        currentChunk.push(line)
+      }
+    }
+    if (currentChunk.length > 0) {
+      finalResult.push({
+        id: 0,
+        title: `${baseTitle} - Part ${partIndex++}`,
+        content: currentChunk,
+        layout: slide.layout
+      })
+    }
   })
-  flushMatching()
 
   // Assign sequential IDs
   finalResult.forEach((s, idx) => {
     s.id = idx + 1
+  })
+
+  // Cleanup titles for single parts
+  let titleCounts = new Map<string, number>()
+  finalResult.forEach(s => {
+    if (s.id === 1 || s.layout === "CHAPTER_DIVIDER") return
+    const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
+    titleCounts.set(base, (titleCounts.get(base) || 0) + 1)
+  })
+  
+  finalResult.forEach(s => {
+    if (s.id === 1 || s.layout === "CHAPTER_DIVIDER") return
+    const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
+    if (titleCounts.get(base) === 1) {
+      s.title = base
+    }
   })
 
   return finalResult

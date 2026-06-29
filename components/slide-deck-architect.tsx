@@ -45,7 +45,7 @@ export default function SlideDeckArchitect() {
   const [logoBase64, setLogoBase64] = useState<string | null>(null)
 
   // Theme Engine States
-  const [themeId, setThemeId] = useState<ThemeId>("clinical")
+  const [themeId, setThemeId] = useState<ThemeId>("contrast_avant_garde")
   const [useCustomTheme, setUseCustomTheme] = useState(false)
   const [customPrimary, setCustomPrimary] = useState("#0D9488")
   const [customSecondary, setCustomSecondary] = useState("#0F766E")
