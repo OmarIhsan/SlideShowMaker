@@ -228,13 +228,13 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         // Standard content body — applies to ALL slides including Slide 1
         const formattedContent = buildFormattedContent(slide, primaryHex, theme)
 
-        // === PPTX BOUNDING FRAME (§5): x:0.8, y:1.2, w:8.4, h:3.2
+        // === PPTX BOUNDING FRAME (§5): x:1.2, y:1.5, w:7.6, h:3.4
         // valign:middle, zero title header rendered above
         pptxSlide.addText(formattedContent, {
-          x: 0.8,
-          y: 1.2,
-          w: 8.4,
-          h: 3.2,
+          x: 1.2,
+          y: 1.5,
+          w: 7.6,
+          h: 3.4,
           align: "left",
           valign: "middle",
           fit: "shrink",

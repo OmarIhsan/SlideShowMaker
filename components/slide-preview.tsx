@@ -114,7 +114,7 @@ export function parseAndHighlightMetrics(text: string) {
 // ──────────────────────────────────────────────────────────────
 // ContentSlide
 // Typography template (§2) — UNIFORM across ALL slides:
-//   Body text: text-2xl md:text-3xl font-medium tracking-wide leading-relaxed
+//   Body text: text-3xl md:text-4xl font-medium tracking-wide leading-relaxed
 //   Alternating color: Odd lines → #1E293B (Deep Enamel) | Even lines → #0F4C81 (Ceramic Cobalt)
 //   Bullet glyph: solid square — color mirrors line text color
 //   Font: Open Sans, Arial
@@ -131,7 +131,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
   return (
     <div className="w-full">
       <ul className="space-y-6 pl-0">
-        {slide.content.map((lineText: string, index: number) => {
+        {slide.content.filter(line => line.trim().length > 0).map((lineText: string, index: number) => {
           const cleanText = lineText
             .replace(/^[-*•]\s*/, "")
             .replace(/^\d+[.)]\s*/, "")
@@ -174,7 +174,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
           return (
             <li 
               key={index} 
-              className="flex items-start text-2xl md:text-3xl font-medium leading-relaxed tracking-wide transition-colors duration-150"
+              className="flex items-start text-3xl md:text-4xl font-medium leading-relaxed tracking-wide transition-colors duration-150"
               style={{ color: lineColor }}
             >
               {/* Precision highlight parser for critical metrics */}

@@ -82,7 +82,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     bodyFont: "Inter",
     captionFont: "Inter",
     titleFontSizePptx: 36,
-    bodyFontSizePptx: 22,
+    bodyFontSizePptx: 26,
     captionFontSizePptx: 14,
     titleColor: "#0F4C81",
     bodyColor: "#1E293B",
@@ -211,14 +211,18 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   let slideIdCounter = 2;
 
   let currentChunk: string[] = [];
-  const maxCharacters = 400;
-  const maxLines = 4;
+  const maxCharacters = 350;
+  const maxLines = 3;
 
   const pushNewSlide = (data: { title: string, content: string[], layout: "STANDARD_CONTENT" | "TABULAR_DATA" }) => {
+    // Explicitly filter out empty or whitespace-only array elements
+    const sanitizedContent = data.content.filter(line => line.trim().length > 0);
+    if (sanitizedContent.length === 0 && data.layout !== "CHAPTER_DIVIDER") return;
+
     bodySlides.push({
       id: slideIdCounter++,
       title: data.title,
-      content: data.content,
+      content: sanitizedContent,
       layout: data.layout
     });
   }
