@@ -214,7 +214,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   const maxCharacters = 350;
   const maxLines = 3;
 
-  const pushNewSlide = (data: { title: string, content: string[], layout: "STANDARD_CONTENT" | "TABULAR_DATA" }) => {
+  const pushNewSlide = (data: { title: string, content: string[], layout: "STANDARD_CONTENT" | "TABULAR_DATA" | "CHAPTER_DIVIDER" }) => {
     // Explicitly filter out empty or whitespace-only array elements
     const sanitizedContent = data.content.filter(line => line.trim().length > 0);
     if (sanitizedContent.length === 0 && data.layout !== "CHAPTER_DIVIDER") return;

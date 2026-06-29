@@ -28,7 +28,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
 
   return bodySegments.map((segment, index) => {
     const warning = isWarning(segment.cleanText)
-    const fontSize = theme.bodyFontSizePptx || 22
+    const fontSize = theme.bodyFontSizePptx || 34
 
     // Alternating color: odd segments (0,2,4…) → Deep Enamel; even (1,3,5…) → Ceramic Cobalt
     const textColor = warning ? "1E293B" : (index % 2 === 0 ? "1E293B" : "0F4C81")
@@ -58,7 +58,7 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
   if (typeof doc.text === "function") {
     // jsPDF
     doc.setFont("Inter", "bold")
-    doc.setFontSize(24)
+    doc.setFontSize(36)
     doc.setTextColor("#0F4C81")
     doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), {
       align: "left",
@@ -76,7 +76,7 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
       y: 0.5,
       w: 8.6,
       h: 0.8,
-      fontSize: theme.titleFontSizePptx || 36,
+      fontSize: theme.titleFontSizePptx || 48,
       bold: true,
       color: titleColorClean,
       fontFace: "Inter",
@@ -153,7 +153,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         y: 1.8,
         w: 5.2,
         h: 2.0,
-        fontSize: 48,
+        fontSize: 60,
         bold: true,
         color: "F8F9FA",
         fontFace: "Inter",
@@ -175,7 +175,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         y: SLIDE_FRAME.footerY,
         w: isAvantGarde ? 7.6 : SLIDE_FRAME.bodyW,
         h: 0.3,
-        fontSize: theme.captionFontSizePptx || 14,
+        fontSize: theme.captionFontSizePptx || 26,
         color: "777777",
         fontFace: "Inter",
         italic: true,
@@ -199,7 +199,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
                   fill: { color: "0F4C81" },
                   color: "FFFFFF",
                   bold: true,
-                  fontSize: 14,
+                  fontSize: 26,
                   align: "left",
                   valign: "middle",
                   fontFace: "Inter"
@@ -208,7 +208,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
                 cellObj.options = {
                   fill: { color: rowIndex % 2 === 1 ? "FFFFFF" : "F8FAFC" },
                   color: "1E293B",
-                  fontSize: 12,
+                  fontSize: 24,
                   align: "left",
                   valign: "middle",
                   fontFace: "Inter"
@@ -248,7 +248,7 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         y: 1.5,
         w: theme.id === "contrast_avant_garde" ? 7.6 : 8.6,
         h: 3.4,
-        fontSize: theme.bodyFontSizePptx || 18,
+        fontSize: theme.bodyFontSizePptx || 30,
         fontFace: "Inter",
         color: "1E293B",
         lineSpacing: 24,
@@ -294,7 +294,7 @@ function renderPdfTableGrid(doc: any, slide: Slide, theme: Theme, startY: number
   let currentY = startY
 
   doc.setFont("Inter", "normal")
-  doc.setFontSize(10)
+  doc.setFontSize(22)
 
   rows.forEach((row, rowIndex) => {
     let maxLines = 1
@@ -354,7 +354,7 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
 
     // Chapter title
     doc.setFont("Inter", "bold")
-    doc.setFontSize(36)
+    doc.setFontSize(48)
     doc.setTextColor("#F8F9FA")
     doc.text(slide.title, 0.5, 2.5)
     return
@@ -370,7 +370,7 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
   if (lecturerName) {
     const isAvantGarde = theme.id === "contrast_avant_garde"
     doc.setFont("Inter", "italic")
-    doc.setFontSize(10)
+    doc.setFontSize(22)
     doc.setTextColor("#777777")
     doc.text(`Lecturer: ${lecturerName}`, isAvantGarde ? 1.4 : SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
   }
@@ -418,7 +418,7 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
       // Alternating color: odd segments (0,2,4…) → Deep Enamel; even (1,3,5…) → Ceramic Cobalt
       const lineColor = segmentIndex % 2 === 0 ? "#1E293B" : "#0F4C81"
       doc.setFont("Inter", "normal")
-      doc.setFontSize(14)
+      doc.setFontSize(26)
       doc.setTextColor(lineColor)
 
       if (segment.isListItem) {
