@@ -177,8 +177,8 @@ function ContentSlide({ slide, isTitleSlide }: { slide: Slide; isTitleSlide?: bo
               key={i}
               className={`flex items-start ${
                 isTitleSlide
-                  ? "text-xl font-medium leading-relaxed"
-                  : "text-2xl md:text-3xl font-medium tracking-wide leading-relaxed"
+                  ? "text-xl font-semibold tracking-normal leading-relaxed"
+                  : "text-xl md:text-2xl font-semibold tracking-normal leading-relaxed"
               }`}
             >
               {/* Square bullet glyph — Ceramic Cobalt #0F4C81 */}

@@ -104,7 +104,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     bodyFont: "Inter",
     captionFont: "Inter",
     titleFontSizePptx: 36,
-    bodyFontSizePptx: 22,
+    bodyFontSizePptx: 18,
     captionFontSizePptx: 14,
     titleColor: "#0F4C81",
     bodyColor: "#1E293B",
@@ -127,7 +127,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     bodyFont: "Inter",
     captionFont: "Inter",
     titleFontSizePptx: 40,
-    bodyFontSizePptx: 22,
+    bodyFontSizePptx: 18,
     captionFontSizePptx: 12,
     titleColor: "#0F4C81",
     bodyColor: "#1E293B",    // Deep Enamel – all body text
@@ -441,11 +441,11 @@ export function getSlideHeight(content: string[]): number {
 }
 
 // === HARD CHUNKING BUDGET (§4) ===
-// Maximum 4 bullet points OR 400 characters per slide frame.
+// Maximum 4 bullet points OR 350 characters per slide frame.
 // The moment either threshold is crossed the array is split immediately.
 const isOverBudget = (content: string[]): boolean => {
   const charLength = content.join("\n").length;
-  return content.length > 4 || charLength > 400;
+  return content.length > 4 || charLength > 350;
 };
 
 function applyVerticalThresholds(slides: Slide[]): Slide[] {

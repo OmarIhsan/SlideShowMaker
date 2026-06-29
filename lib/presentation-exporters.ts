@@ -29,7 +29,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
   return bodySegments.map((segment, index) => {
     const warning = isWarning(segment.cleanText)
     const textColor = "1E293B" // Deep Enamel – strictly enforced
-    const fontSize = theme.bodyFontSizePptx || 22
+    const fontSize = theme.bodyFontSizePptx || 18
 
     return {
       text: segment.cleanText + (index < bodySegments.length - 1 ? "\n" : ""),
@@ -44,7 +44,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
         fontFace: "Inter",
         lineSpacing: isAvantGarde ? 28 : 24,
         fill: warning ? { color: "C5A059", transparency: 90 } : undefined,
-        bold: warning ? true : false,
+        bold: true,
       },
     }
   })
@@ -423,7 +423,7 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
     renderPdfTableGrid(doc, slide, theme, startY)
   } else if (slide.id !== 1) {
     const bodySegments = buildBodySegments(slide.content)
-    const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments)
+    const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments, theme)
     const minStartY = (theme.id === "academic_artisan_titleless" || theme.id === "contrast_avant_garde") ? 0.5 : 1.5
     const startY = Math.max(minStartY, (5.625 - centeredBodyHeight) / 2)
     
@@ -450,7 +450,7 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
         return
       }
 
-      doc.setFont("Inter", "normal")
+      doc.setFont("Inter", "bold")
       doc.setFontSize(14)
       doc.setTextColor("#1E293B")
       
