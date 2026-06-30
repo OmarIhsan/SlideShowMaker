@@ -509,12 +509,6 @@ function renderPdfPage(
     doc.setFontSize(14)
 
     const centeredBodyHeight = bodySegments.reduce((height, segment) => {
-      const lower = segment.cleanText.toLowerCase()
-      const isWarning = ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(w => lower.includes(w))
-      if (isWarning) {
-        const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.4).length
-        return height + (lines * pdfLineHeight) + 0.3
-      }
       if (segment.isListItem) {
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.2).length
         return height + (lines * pdfLineHeight) + 0.16
@@ -527,24 +521,6 @@ function renderPdfPage(
 
     let currentY = startY
     bodySegments.forEach((segment, segmentIndex) => {
-      const lower = segment.cleanText.toLowerCase()
-      const isWarning = ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(w => lower.includes(w))
-
-      if (isWarning) {
-        const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.4)
-        doc.setFillColor(248, 245, 237)
-        doc.rect(SLIDE_FRAME.bodyX, currentY - 0.2, SLIDE_FRAME.bodyW, (lines.length * pdfLineHeight) + 0.2, "F")
-        doc.setDrawColor("#C5A059")
-        doc.setLineWidth(0.04)
-        doc.line(SLIDE_FRAME.bodyX, currentY - 0.2, SLIDE_FRAME.bodyX, currentY - 0.2 + (lines.length * pdfLineHeight) + 0.2)
-        doc.setFont(fontToUse, "bold")
-        doc.setTextColor("#1E293B")
-        doc.text(lines, SLIDE_FRAME.bodyX + 0.2, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW - 0.4 })
-        currentY += (lines.length * pdfLineHeight) + 0.3
-        doc.setFont(fontToUse, "normal")
-        doc.setFontSize(14)
-        return
-      }
 
       doc.setFont(fontToUse, "normal")
       doc.setFontSize(14)

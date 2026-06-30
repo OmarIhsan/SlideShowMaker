@@ -210,13 +210,6 @@ export function parseAndHighlightMetrics(text: string) {
 }
 
 function ContentSlide({ slide }: { slide: Slide }) {
-  const isWarning = (text: string) => {
-    const lower = text.toLowerCase()
-    return ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(
-      (w) => lower.includes(w),
-    )
-  }
-
   const contentToRender = slide.content;
 
   return (
@@ -234,33 +227,6 @@ function ContentSlide({ slide }: { slide: Slide }) {
             .trim()
 
           if (!cleanText) return null
-
-          // Warning / callout item
-          if (isWarning(cleanText)) {
-            return (
-              <li key={index} className="list-none">
-                <div
-                  className="flex items-start p-4 border-l-4"
-                  style={{
-                    borderColor: TOKEN.gold,
-                    backgroundColor: "rgba(197,160,89,0.10)",
-                  }}
-                >
-                  <svg className="w-5 h-5 mr-3 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
-                       stroke={TOKEN.gold} strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round"
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <span
-                    className="font-semibold leading-relaxed text-lg font-medium tracking-normal text-justify"
-                    style={{ color: TOKEN.enamel, textAlign: "justify" }}
-                  >
-                    {cleanText}
-                  </span>
-                </div>
-              </li>
-            )
-          }
 
           return (
             <li

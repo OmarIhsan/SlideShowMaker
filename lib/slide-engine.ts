@@ -275,7 +275,7 @@ const isOverBudget = (content: string[]): boolean => {
   const visualLines = Math.ceil(wordCount / 22);
   
   if (visualLines > 6) return true;
-  if (allText.length > 500) return true;
+  if (allText.length > 450) return true;
   
   return false;
 };

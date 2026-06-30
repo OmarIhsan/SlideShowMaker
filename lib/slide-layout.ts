@@ -49,15 +49,6 @@ export function measurePdfBodyHeight(doc: any, segments: BodySegment[], theme?: 
   const isAvantGarde = theme?.id === "contrast_avant_garde"
 
   return segments.reduce((height, segment) => {
-    const lower = segment.cleanText.toLowerCase()
-    const isWarning = ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(w => lower.includes(w))
-    
-    if (isWarning) {
-      const textWidth = isAvantGarde ? 7.6 : 8.4
-      const lines = doc.splitTextToSize(segment.cleanText, textWidth - 0.4).length
-      return height + (lines * 0.28) + 0.3
-    }
-
     if (segment.isListItem) {
       const lines = doc.splitTextToSize(segment.cleanText, 7.0).length
       return height + (lines * 0.3) + 0.16
