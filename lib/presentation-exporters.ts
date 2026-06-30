@@ -160,7 +160,7 @@ export async function exportSlidesToPowerPoint({
     // Add 1px Cobalt structural anchor line at left margin (x: 0.5)
     pptxSlide.addShape("line", {
       type: "line",
-      x: 1.5,
+      x: 0.39,
       y: 1.1,
       w: 0.0,
       h: 3.4,
@@ -456,7 +456,7 @@ function renderPdfPage(
   // Add left anchor line (1px Cobalt)
   doc.setDrawColor("#0F4C81")
   doc.setLineWidth(0.01)
-  doc.line(1.5, 1.1, 1.5, 4.5)
+  doc.line(0.39, 1.1, 0.39, 4.5)
 
   const fontToUse = (typeof doc.getFontList === "function" && doc.getFontList()["Open Sans"]) ? "Open Sans" : "Helvetica";
 
