@@ -1,7 +1,7 @@
 // Content-agnostic academic document-to-presentation translation engine.
 // Strictly uses the rigid Slide layout schema and groups contents verbatim.
 
-export type ThemeId = "clinical" | "midnight" | "warm" | "academic_artisan" | "academic_artisan_titleless" | "contrast_avant_garde"
+export type ThemeId = "contrast_avant_garde"
 
 export type Theme = {
   id: ThemeId
@@ -27,89 +27,6 @@ export type Theme = {
 }
 
 export const THEMES: Record<ThemeId, Theme> = {
-  clinical: {
-    id: "clinical",
-    label: "Clinical Teal",
-    accentBg: "bg-teal-600",
-    accentText: "text-teal-600",
-    chipBg: "bg-teal-50",
-    chipText: "text-teal-700",
-    ring: "ring-teal-500",
-    border: "border-teal-500",
-    hexPrimary: "#0D9488",
-    hexSecondary: "#0F766E",
-    hexBg: "#F8FAFC",
-  },
-  midnight: {
-    id: "midnight",
-    label: "Midnight Blue",
-    accentBg: "bg-indigo-600",
-    accentText: "text-indigo-600",
-    chipBg: "bg-indigo-50",
-    chipText: "text-indigo-700",
-    ring: "ring-indigo-500",
-    border: "border-indigo-500",
-    hexPrimary: "#4F46E5",
-    hexSecondary: "#4338CA",
-    hexBg: "#F8FAFC",
-  },
-  warm: {
-    id: "warm",
-    label: "Forest Academy",
-    accentBg: "bg-emerald-600",
-    accentText: "text-emerald-600",
-    chipBg: "bg-emerald-50",
-    chipText: "text-emerald-700",
-    ring: "ring-emerald-500",
-    border: "border-emerald-500",
-    hexPrimary: "#059669",
-    hexSecondary: "#047857",
-    hexBg: "#F8FAFC",
-  },
-  academic_artisan: {
-    id: "academic_artisan",
-    label: "The Academic Artisan",
-    accentBg: "bg-[#0F4C81]",
-    accentText: "text-[#0F4C81]",
-    chipBg: "bg-[#F8F9FA]",
-    chipText: "text-[#0F4C81]",
-    ring: "ring-[#0F4C81]",
-    border: "border-[#0F4C81]",
-    hexPrimary: "#0F4C81",
-    hexSecondary: "#C5A059",
-    hexBg: "#F8F9FA",
-    titleFont: "Inter",
-    bodyFont: "Inter",
-    captionFont: "Inter",
-    titleFontSizePptx: 36,
-    bodyFontSizePptx: 26,
-    captionFontSizePptx: 14,
-    titleColor: "#0F4C81",
-    bodyColor: "#1E293B",
-    captionColor: "#64748B"
-  },
-  academic_artisan_titleless: {
-    id: "academic_artisan_titleless",
-    label: "The Academic Artisan (Titleless)",
-    accentBg: "bg-[#0F4C81]",
-    accentText: "text-[#0F4C81]",
-    chipBg: "bg-[#F8F9FA]",
-    chipText: "text-[#0F4C81]",
-    ring: "ring-[#0F4C81]",
-    border: "border-[#0F4C81]",
-    hexPrimary: "#0F4C81",
-    hexSecondary: "#C5A059",
-    hexBg: "#F8F9FA",
-    titleFont: "Inter",
-    bodyFont: "Inter",
-    captionFont: "Inter",
-    titleFontSizePptx: 36,
-    bodyFontSizePptx: 18,
-    captionFontSizePptx: 14,
-    titleColor: "#0F4C81",
-    bodyColor: "#1E293B",
-    captionColor: "#64748B"
-  },
   contrast_avant_garde: {
     id: "contrast_avant_garde",
     label: "The Contrast Avant-Garde",
