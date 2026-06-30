@@ -145,9 +145,9 @@ export async function exportSlidesToPowerPoint({
 
     // Add brand metadata header at top left
     pptxSlide.addText(headerText, {
-      x: 2.47,
+      x: 2.52,
       y: 0.5,
-      w: 4.53,
+      w: 4.45,
       h: 0.3,
       fontSize: 9,
       bold: true,
@@ -159,7 +159,7 @@ export async function exportSlidesToPowerPoint({
 
     // Running Footer Left
     pptxSlide.addText(footerLeftText, {
-      x: 2.47,
+      x: 2.52,
       y: 4.8,
       w: 2.5,
       h: 0.3,
@@ -172,7 +172,7 @@ export async function exportSlidesToPowerPoint({
 
     // Running Footer Right
     pptxSlide.addText(footerRightText, {
-      x: 5.5,
+      x: 5.47,
       y: 4.8,
       w: 1.5,
       h: 0.3,
@@ -403,7 +403,7 @@ function renderPdfPage(
   doc.setFont(fontToUse, "bold")
   doc.setFontSize(8)
   doc.setTextColor("#94A3B8") // Slate Gray
-  doc.text(footerRightText, 7.0, 4.95, { align: "right" })
+  doc.text(footerRightText, 6.97, 4.95, { align: "right" })
 
   if (slide.layout === "TABULAR_DATA") {
     const rows = slide.content.map((rowText) => {

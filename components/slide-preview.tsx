@@ -98,11 +98,11 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 2.47, y: 0.5) */}
+      {/* Subtle Brand Metadata Header at top left (x: 2.47 -> 2.52, y: 0.5) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "32.93%",
+          left: "33.6%",
           top: "8.9%",
           color: "#94A3B8",
           fontFamily: "Inter, sans-serif"
@@ -111,14 +111,14 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 2.47 (left: 32.93%), y: 1.1 (top: 19.6%), w: 4.53 (width: 60.4%), h: 3.4 (height: 60.4%) */}
+      {/* Main slide content bounding box: x: 2.52 (left: 33.6%), y: 1.25 (top: 22.22%), w: 4.45 (width: 59.33%), h: 3.4 (height: 60.44%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "32.93%",
-          top: "19.6%",
-          width: "60.4%",
-          height: "60.4%"
+          left: "33.6%",
+          top: "22.22%",
+          width: "59.33%",
+          height: "60.44%"
         }}
       >
         {(() => {
@@ -131,13 +131,13 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* Running Footer aligned to left: 32.93% and width: 60.4% */}
+      {/* Running Footer aligned to left: 33.6% and width: 59.33% */}
       <div
         className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
         style={{ 
           borderColor: "#F1F5F9",
-          left: "32.93%",
-          width: "60.4%"
+          left: "33.6%",
+          width: "59.33%"
         }}
       >
         <span
