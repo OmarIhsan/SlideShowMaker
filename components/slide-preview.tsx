@@ -154,7 +154,7 @@ export function SlideRenderer({
       {/* Vertical dividing line (1px Ceramic Cobalt) */}
       <div
         className="absolute z-10"
-        style={{ left: "20.0%", top: "19.6%", width: "1px", height: "60.4%", backgroundColor: "#E2E8F0" }}
+        style={{ left: "20.0%", top: "19.6%", width: "1px", height: "60.4%", backgroundColor: TOKEN.cobalt }}
         aria-hidden="true"
       />
 
@@ -169,7 +169,7 @@ export function SlideRenderer({
       {/* Main slide content bounding box */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
-        style={{ left: "22.93%", top: "22.22%", width: "43.73%", height: "60.44%", fontFamily: "Plus Jakarta Sans, sans-serif" }}
+        style={{ left: "20.67%", top: "22.22%", width: "46.0%", height: "60.44%", fontFamily: "Plus Jakarta Sans, sans-serif" }}
       >
         {(() => {
           switch (slide.layout) {

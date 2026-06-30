@@ -164,7 +164,7 @@ export async function exportSlidesToPowerPoint({
       y: 1.1,
       w: 0.0,
       h: 3.4,
-      line: { color: "E2E8F0", width: 1 }
+      line: { color: "0F4C81", width: 1 }
     })
 
     // Add brand metadata header at top left
@@ -454,7 +454,7 @@ function renderPdfPage(
   }
 
   // Add left anchor line (1px Cobalt)
-  doc.setDrawColor("#E2E8F0")
+  doc.setDrawColor("#0F4C81")
   doc.setLineWidth(0.01)
   doc.line(1.5, 1.1, 1.5, 4.5)
 
