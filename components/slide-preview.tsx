@@ -132,10 +132,14 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* Running Footer */}
+      {/* Running Footer aligned to left: 9.1% and width: 86.5% */}
       <div
-        className="absolute bottom-4 left-13 right-13 flex items-center justify-between border-t pt-2 z-10"
-        style={{ borderColor: "#F1F5F9" }}
+        className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
+        style={{ 
+          borderColor: "#F1F5F9",
+          left: "9.1%",
+          width: "86.5%"
+        }}
       >
         <span
           className="text-xs font-bold tracking-widest uppercase"

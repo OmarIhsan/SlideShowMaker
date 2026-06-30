@@ -157,7 +157,7 @@ export async function exportSlidesToPowerPoint({
     pptxSlide.addText(footerLeftText, {
       x: SLIDE_FRAME.bodyX,
       y: SLIDE_FRAME.footerY,
-      w: 3.2,
+      w: 6.0,
       h: 0.3,
       fontSize: 10,
       bold: true,
@@ -168,9 +168,9 @@ export async function exportSlidesToPowerPoint({
 
     // Running Footer Right
     pptxSlide.addText(footerRightText, {
-      x: 4.5,
+      x: SLIDE_FRAME.bodyX,
       y: SLIDE_FRAME.footerY,
-      w: 3.5,
+      w: SLIDE_FRAME.bodyW,
       h: 0.3,
       fontSize: 10,
       bold: true,
@@ -396,7 +396,7 @@ function renderPdfPage(
   doc.text(footerLeftText, SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
 
   // Running Footer Right
-  doc.text(footerRightText, 8.0, SLIDE_FRAME.footerY, { align: "right" })
+  doc.text(footerRightText, SLIDE_FRAME.bodyX + SLIDE_FRAME.bodyW, SLIDE_FRAME.footerY, { align: "right" })
 
   if (slide.layout === "TABULAR_DATA") {
     const rows = slide.content.map((rowText) => {
