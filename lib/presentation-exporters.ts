@@ -26,10 +26,10 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
   return bodySegments.map((segment, index) => {
     const textOpts: any = {
       color: "1E293B",
-      fontSize: 14,
+      fontSize: 18,
       fontFace: "Plus Jakarta Sans",
       lineSpacing: 19,
-      bold: false,
+      bold: true,
     };
 
     if (segment.isListItem) {
@@ -502,11 +502,11 @@ function renderPdfPage(
   } else {
     // Standard body renderer (Layout B)
     const contentToRender = slide.content;
-    const pdfLineHeight = (14 / 72) * 1.3
+    const pdfLineHeight = (18 / 72) * 1.3
 
     const bodySegments = buildBodySegments(contentToRender)
-    doc.setFont(fontToUse, "normal")
-    doc.setFontSize(14)
+    doc.setFont(fontToUse, "bold")
+    doc.setFontSize(18)
 
     const centeredBodyHeight = bodySegments.reduce((height, segment) => {
       if (segment.isListItem) {
@@ -522,20 +522,20 @@ function renderPdfPage(
     let currentY = startY
     bodySegments.forEach((segment, segmentIndex) => {
 
-      doc.setFont(fontToUse, "normal")
-      doc.setFontSize(14)
+      doc.setFont(fontToUse, "bold")
+      doc.setFontSize(18)
       doc.setTextColor(theme.hexPrimary)
 
       if (segment.isListItem) {
         doc.setFillColor("#0F4C81")
         doc.circle(SLIDE_FRAME.bodyX + 0.05, currentY - 0.04, 0.03, "F")
-        doc.setFontSize(14)
+        doc.setFontSize(18)
         doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.2)
         doc.text(lines, SLIDE_FRAME.bodyX + 0.18, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW - 0.2 })
         currentY += (lines.length * pdfLineHeight) + 0.16
       } else {
-        doc.setFontSize(14)
+        doc.setFontSize(18)
         doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW)
         doc.text(lines, SLIDE_FRAME.bodyX, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW })

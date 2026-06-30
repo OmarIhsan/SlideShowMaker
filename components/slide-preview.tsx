@@ -231,7 +231,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
           return (
             <li
               key={index}
-              className="flex items-start font-medium tracking-normal text-lg font-medium text-justify"
+              className="flex items-start font-semibold tracking-normal text-lg text-justify"
               style={{ 
                 fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", 
                 lineHeight: 1.3,
