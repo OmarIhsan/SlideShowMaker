@@ -73,38 +73,39 @@ export function SlideRenderer({
       )}
 
       {/* left-accent line/Cobalt column matching accentX: 1.0, accentY: 1.4, accentW: 0.05, accentH: 3.2 */}
-      {/* Structural Accent Bar (accentX: 1.0 -> 10.0% of 10.0) */}
+      {/* Structural Accent Bar (accentX: 1.0 -> 13.3% of 7.5) */}
       <div 
         className="absolute z-10 rounded-r"
         style={{
-          left: '10.0%',
-          top: "24.9%",
+          left: '13.3%',
+          top: "19.6%",
           width: '0.5%',
-          height: "80.0%",
+          height: "64.0%",
           backgroundColor: TOKEN.cobalt,
         }}
         aria-hidden="true"
       />
 
-      {/* Vertical dividing line matching pptx x: 3.0 (left: 30.0%), y: 1.4 (top: 24.9%), h: 4.5 (height: 80.0%) */}
+      {/* Vertical dividing line matching pptx x: 3.0 (left: 40.0%), y: 1.0 (top: 17.8%), h: 3.6 (height: 64.0%) */}
+      {/* Wait, user: divider line x: 1.7 (left: 22.7%), y: 1.0 (top: 17.8%), h: 3.6 (height: 64.0%) */}
       <div
         className="absolute z-10"
         style={{
-          left: "30.0%",
-          top: "24.9%",
+          left: "22.7%",
+          top: "17.8%",
           width: "1px",
-          height: "80.0%",
+          height: "64.0%",
           backgroundColor: "#E2E8F0"
         }}
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 3.22, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 1.92, y: 0.5) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "32.2%",
-          top: "10.6%",
+          left: "25.6%",
+          top: "8.9%",
           color: TOKEN.gold,
           fontFamily: "Inter, sans-serif"
         }}
@@ -112,14 +113,14 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 3.22 (left: 32.2%), y: 1.4 (top: 24.9%), w: 6.5 (width: 65.0%), h: 4.5 (height: 80.0%) */}
+      {/* Main slide content bounding box: x: 1.92 (left: 25.6%), y: 1.1 (top: 19.6%), w: 5.1 (width: 68.0%), h: 3.6 (height: 64.0%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "32.2%",
-          top: "24.9%",
-          width: "65.0%",
-          height: "80.0%"
+          left: "25.6%",
+          top: "19.6%",
+          width: "68.0%",
+          height: "64.0%"
         }}
       >
         {(() => {
@@ -132,13 +133,13 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* Running Footer aligned to left: 32.2% and width: 65.0% */}
+      {/* Running Footer aligned to left: 25.6% and width: 68.0% */}
       <div
         className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
         style={{ 
           borderColor: "#F1F5F9",
-          left: "32.2%",
-          width: "65.0%"
+          left: "25.6%",
+          width: "68.0%"
         }}
       >
         <span
@@ -211,7 +212,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   <span
-                    className="font-semibold leading-relaxed text-lg md:text-xl font-medium tracking-normal text-justify"
+                    className="font-semibold leading-relaxed text-lg font-medium tracking-normal text-justify"
                     style={{ color: TOKEN.enamel, textAlign: "justify" }}
                   >
                     {cleanText}
@@ -224,7 +225,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
           return (
             <li
               key={index}
-              className="flex items-start font-medium tracking-normal text-lg md:text-xl font-medium text-justify"
+              className="flex items-start font-medium tracking-normal text-lg font-medium text-justify"
               style={{ 
                 fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", 
                 lineHeight: 1.3,
