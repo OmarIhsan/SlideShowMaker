@@ -206,9 +206,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     id: 1,
     title: "Lecture Slides",
     content: [
-      "Verbatim Academic Presentation Courseware",
-      "Presented by: Dr. Faisal Alhuwaizi",
-      "This deck contains verbatim syllabus details compiled from raw content outlines."
+      "Presented by: Dr. Faisal Alhuwaizi"
     ],
     layout: "STANDARD_CONTENT"
   }

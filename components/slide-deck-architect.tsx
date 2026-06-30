@@ -46,6 +46,9 @@ export default function SlideDeckArchitect() {
 
   // Theme Engine States
   const [themeId, setThemeId] = useState<ThemeId>("contrast_avant_garde")
+  const [brandHeader, setBrandHeader] = useState("DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES")
+  const [brandFooterLeft, setBrandFooterLeft] = useState("DR. CUBE DENTISTRY")
+  const [brandFooterRight, setBrandFooterRight] = useState("2026 EDITION")
   const [useCustomTheme, setUseCustomTheme] = useState(false)
   const [customPrimary, setCustomPrimary] = useState("#0D9488")
   const [customSecondary, setCustomSecondary] = useState("#0F766E")
@@ -122,27 +125,27 @@ export default function SlideDeckArchitect() {
     if (typeof window === "undefined" || slides.length === 0) return
     setIsExporting(true)
     try {
-      await exportSlidesToPowerPoint({ slides, theme, logoBase64, lecturerName })
+      await exportSlidesToPowerPoint({ slides, theme, logoBase64, lecturerName, brandHeader, brandFooterLeft, brandFooterRight })
     } catch (err) {
       console.error("Failed to generate PowerPoint deck", err)
       alert("Failed to export PowerPoint: " + (err instanceof Error ? err.message : String(err)))
     } finally {
       setIsExporting(false)
     }
-  }, [slides, theme, logoBase64, lecturerName])
+  }, [slides, theme, logoBase64, lecturerName, brandHeader, brandFooterLeft, brandFooterRight])
 
   const exportToPDF = useCallback(async () => {
     if (typeof window === "undefined" || slides.length === 0) return
     setIsExportingPDF(true)
     try {
-      await exportSlidesToPDFWithFallback({ slides, theme, logoBase64, lecturerName })
+      await exportSlidesToPDFWithFallback({ slides, theme, logoBase64, lecturerName, brandHeader, brandFooterLeft, brandFooterRight })
     } catch (err) {
       console.error("Failed to generate PDF document", err)
       alert("Failed to export PDF: " + (err instanceof Error ? err.message : String(err)))
     } finally {
       setIsExportingPDF(false)
     }
-  }, [slides, theme, logoBase64, lecturerName])
+  }, [slides, theme, logoBase64, lecturerName, brandHeader, brandFooterLeft, brandFooterRight])
 
   return (
     <div className="flex h-dvh flex-col bg-slate-100 text-slate-900">
@@ -271,6 +274,49 @@ export default function SlideDeckArchitect() {
                     placeholder="Enter academic name"
                     className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-slate-300 focus:ring-1 focus:ring-slate-300"
                   />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="brand-header" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Brand Header
+                  </label>
+                  <input
+                    id="brand-header"
+                    type="text"
+                    value={brandHeader}
+                    onChange={(e) => setBrandHeader(e.target.value)}
+                    placeholder="DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES"
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-slate-300 focus:ring-1 focus:ring-slate-300"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="brand-footer-left" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Footer Left
+                    </label>
+                    <input
+                      id="brand-footer-left"
+                      type="text"
+                      value={brandFooterLeft}
+                      onChange={(e) => setBrandFooterLeft(e.target.value)}
+                      placeholder="DR. CUBE DENTISTRY"
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-slate-300 focus:ring-1 focus:ring-slate-300"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="brand-footer-right" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Footer Right
+                    </label>
+                    <input
+                      id="brand-footer-right"
+                      type="text"
+                      value={brandFooterRight}
+                      onChange={(e) => setBrandFooterRight(e.target.value)}
+                      placeholder="2026 EDITION"
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-slate-300 focus:ring-1 focus:ring-slate-300"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -426,6 +472,9 @@ export default function SlideDeckArchitect() {
                         theme={theme} 
                         logoUrl={logoUrl} 
                         lecturerName={lecturerName}
+                        brandHeader={brandHeader}
+                        brandFooterLeft={brandFooterLeft}
+                        brandFooterRight={brandFooterRight}
                       />
                     </motion.div>
                   </AnimatePresence>

@@ -2,23 +2,29 @@ import type { Slide, Theme } from "@/lib/slide-engine"
 import {
   buildBodySegments,
   measurePdfBodyHeight,
-  renderCenteredPdfBody,
   SLIDE_FRAME,
-} from "@/lib/slide-layout"
+} from "./slide-layout"
 
 type ExportDeckArgs = {
   slides: Slide[]
   theme: Theme
   logoBase64: string | null
   lecturerName: string
+  brandHeader?: string
+  brandFooterLeft?: string
+  brandFooterRight?: string
 }
 
 function cleanHex(hex: string): string {
   return hex.replace("#", "")
 }
 
-function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
-  const bodySegments = buildBodySegments(slide.content)
+function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme, lecturerName?: string) {
+  const contentToRender = slide.id === 1
+    ? [lecturerName ? `Presented by: ${lecturerName}` : "Presented by: Dr. Faisal Alhuwaizi"]
+    : slide.content;
+
+  const bodySegments = buildBodySegments(contentToRender)
 
   return bodySegments.map((segment, index) => {
     return {
@@ -42,16 +48,14 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
   // Titleless canvas layout: slide titles are not printed on the slides.
 }
 
-// addSlideDecoration: renders the solid 24px Dentin Gold (#C5A059) left anchor column
-// that stretches top-to-bottom on every standard (non-title, non-divider) slide.
-// Zero floating lines or border images – structural block only.
+// addSlideDecoration: renders the Cobalt column block
 function addSlideDecoration(doc: any, theme: Theme) {
   if (typeof doc.rect === "function") {
     // jsPDF path
     doc.setFillColor("#0F4C81")
     doc.rect(SLIDE_FRAME.accentX, SLIDE_FRAME.accentY, SLIDE_FRAME.accentW, SLIDE_FRAME.accentH, "F")
   } else {
-    // PptxGenJS path
+    // pptxgenjs path
     doc.addShape("rect", {
       x: SLIDE_FRAME.accentX,
       y: SLIDE_FRAME.accentY,
@@ -63,7 +67,15 @@ function addSlideDecoration(doc: any, theme: Theme) {
   }
 }
 
-export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lecturerName }: ExportDeckArgs): Promise<void> {
+export async function exportSlidesToPowerPoint({
+  slides,
+  theme,
+  logoBase64,
+  lecturerName,
+  brandHeader,
+  brandFooterLeft,
+  brandFooterRight,
+}: ExportDeckArgs): Promise<void> {
   const pptxgenModule = await import("pptxgenjs")
   const PptxGen = (pptxgenModule as any).default || pptxgenModule
   const pptx = new PptxGen()
@@ -73,15 +85,18 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
   const primaryHex = cleanHex(theme.hexPrimary)
   const bgHex = cleanHex(theme.hexBg)
 
+  const headerText = brandHeader || "DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES"
+  const footerLeftText = brandFooterLeft || "DR. CUBE DENTISTRY"
+  const footerRightText = brandFooterRight || "2026 EDITION"
+
   slides.forEach((slide) => {
     const pptxSlide = pptx.addSlide()
 
     if (slide.layout === "CHAPTER_DIVIDER") {
       // === CHAPTER DIVIDER: full-bleed #1E293B canvas ===
-      // Text area: left 60% | Solid gold block: right 40% (zero images, zero lines)
       pptxSlide.background = { color: "1E293B" }
 
-      // Right-side solid Dentin Gold anchor block
+      // Solid Dentin Gold (#C5A059) right side visual block
       pptxSlide.addShape("rect", {
         x: 6.0,
         y: 0,
@@ -91,18 +106,18 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         line: { color: "C5A059", width: 0 }
       })
 
-      // Chapter title rendered over the dark left panel
+      // Chapter title text frame
       pptxSlide.addText(slide.title, {
         x: 0.5,
         y: 1.8,
-        w: 5.2,
+        w: 5.0,
         h: 2.0,
-        fontSize: 60,
+        fontSize: 48,
         bold: true,
-        color: "F8F9FA",
         fontFace: "Inter",
-        valign: "middle",
-        align: "left"
+        color: "F8F9FA",
+        align: "left",
+        valign: "middle"
       })
       return
     }
@@ -122,11 +137,11 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
       line: { color: "E2E8F0", width: 1 }
     })
 
-    // Add brand metadata header at top left (x: 1.4, y: 0.6, w: 6.6, h: 0.4)
-    pptxSlide.addText("DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES", {
-      x: 1.4,
+    // Add brand metadata header at top left
+    pptxSlide.addText(headerText, {
+      x: SLIDE_FRAME.bodyX,
       y: 0.6,
-      w: 6.6,
+      w: SLIDE_FRAME.bodyW,
       h: 0.4,
       fontSize: 10,
       bold: true,
@@ -137,10 +152,10 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
     })
 
     // Running Footer Left
-    pptxSlide.addText("DR. CUBE DENTISTRY", {
-      x: 1.4,
+    pptxSlide.addText(footerLeftText, {
+      x: SLIDE_FRAME.bodyX,
       y: SLIDE_FRAME.footerY,
-      w: 3.3,
+      w: 3.2,
       h: 0.3,
       fontSize: 10,
       bold: true,
@@ -150,10 +165,10 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
     })
 
     // Running Footer Right
-    pptxSlide.addText("2026 EDITION", {
-      x: 4.7,
+    pptxSlide.addText(footerRightText, {
+      x: 4.5,
       y: SLIDE_FRAME.footerY,
-      w: 3.3,
+      w: 3.5,
       h: 0.3,
       fontSize: 10,
       bold: true,
@@ -199,17 +214,16 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
           return cells
         })
         pptxSlide.addTable(tableRows, {
-          x: theme.id === "contrast_avant_garde" ? 1.4 : 0.7,
+          x: SLIDE_FRAME.bodyX,
           y: 1.6,
-          w: theme.id === "contrast_avant_garde" ? 7.6 : 8.6,
+          w: SLIDE_FRAME.bodyW,
           border: { type: "solid", color: "E2E8F0", width: 1 },
         })
       } else {
         // Standard content body — applies to ALL slides including Slide 1
-        const formattedContent = buildFormattedContent(slide, primaryHex, theme)
+        const formattedContent = buildFormattedContent(slide, primaryHex, theme, lecturerName)
 
         // === PPTX BOUNDING FRAME ===
-        // valign:middle, zero title header rendered above
         pptxSlide.addText(formattedContent, {
           x: SLIDE_FRAME.bodyX,
           y: SLIDE_FRAME.bodyY,
@@ -223,12 +237,13 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
       }
     } catch (error) {
       console.error("Safeguard applied for slide compile exception:", error)
-      pptxSlide.addText(slide.content.join(" "), {
-        x: theme.id === "contrast_avant_garde" ? 1.4 : 0.7,
-        y: 1.5,
-        w: theme.id === "contrast_avant_garde" ? 7.6 : 8.6,
+      // Fallback text layer
+      pptxSlide.addText(slide.content.join("\n"), {
+        x: SLIDE_FRAME.bodyX,
+        y: SLIDE_FRAME.bodyY,
+        w: SLIDE_FRAME.bodyW,
         h: 3.4,
-        fontSize: theme.bodyFontSizePptx || 30,
+        fontSize: 30,
         fontFace: "Inter",
         color: "1E293B",
         lineSpacing: 24,
@@ -266,9 +281,8 @@ function renderPdfTableGrid(doc: any, slide: Slide, theme: Theme, startY: number
   if (rows.length === 0) return
 
   const numCols = Math.max(...rows.map((r) => r.length))
-  const isAvantGarde = theme.id === "contrast_avant_garde"
-  const tableX = isAvantGarde ? 1.4 : SLIDE_FRAME.bodyX
-  const tableW = customWidth || (isAvantGarde ? 7.6 : SLIDE_FRAME.bodyW)
+  const tableX = SLIDE_FRAME.bodyX
+  const tableW = customWidth || SLIDE_FRAME.bodyW
   const colW = tableW / numCols
 
   let currentY = startY
@@ -320,11 +334,18 @@ function renderPdfTableGrid(doc: any, slide: Slide, theme: Theme, startY: number
   })
 }
 
-function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: string, logoBase64: string | null) {
+function renderPdfPage(
+  doc: any,
+  slide: Slide,
+  theme: Theme,
+  lecturerName: string,
+  logoBase64: string | null,
+  brandHeader?: string,
+  brandFooterLeft?: string,
+  brandFooterRight?: string
+) {
   if (slide.layout === "CHAPTER_DIVIDER") {
     // === CHAPTER DIVIDER (PDF) ===
-    // Full-bleed deep navy canvas + solid Dentin Gold right-side block.
-    // Zero floating lines, zero background images.
     doc.setFillColor("#1E293B")
     doc.rect(0, 0, 10, 5.625, "F")
 
@@ -353,23 +374,26 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
 
   const fontToUse = (typeof doc.getFontList === "function" && doc.getFontList()["Plus Jakarta Sans"]) ? "Plus Jakarta Sans" : "Helvetica";
 
-  // Add brand metadata header at top left (x: 1.4, y: 0.8)
+  const headerText = brandHeader || "DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES"
+  const footerLeftText = brandFooterLeft || "DR. CUBE DENTISTRY"
+  const footerRightText = brandFooterRight || "2026 EDITION"
+
+  // Add brand metadata header at top left
   doc.setFont(fontToUse, "bold")
   doc.setFontSize(10)
   doc.setTextColor("#C5A059") // Dentin Gold
-  doc.text("DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES", 1.4, 0.8)
+  doc.text(headerText, SLIDE_FRAME.bodyX, 0.8)
 
   // Running Footer Left
   doc.setFont(fontToUse, "bold")
   doc.setFontSize(10)
   doc.setTextColor("#64748B")
-  doc.text("DR. CUBE DENTISTRY", 1.4, SLIDE_FRAME.footerY)
+  doc.text(footerLeftText, SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
 
   // Running Footer Right
-  doc.text("2026 EDITION", 8.0, SLIDE_FRAME.footerY, { align: "right" })
+  doc.text(footerRightText, 8.0, SLIDE_FRAME.footerY, { align: "right" })
 
   if (slide.layout === "TABULAR_DATA") {
-    const isAvantGarde = theme.id === "contrast_avant_garde"
     const rows = slide.content.map((rowText) => {
       return rowText
         .replace(/^\|/, "")
@@ -378,64 +402,84 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
         .map((c) => c.trim())
     })
     const numCols = Math.max(...rows.map((r) => r.length))
-    const colW = (isAvantGarde ? 7.6 : SLIDE_FRAME.bodyW) / numCols
+    const colW = SLIDE_FRAME.bodyW / numCols
     const totalTableH = measurePdfTableHeight(doc, rows, colW)
     const startY = Math.max(1.5, (5.625 - totalTableH) / 2)
     renderPdfTableGrid(doc, slide, theme, startY)
   } else {
     // Standard body renderer — ALL slides including Slide 1
-    const bodySegments = buildBodySegments(slide.content)
+    const contentToRender = slide.id === 1
+      ? [lecturerName ? `Presented by: ${lecturerName}` : "Presented by: Dr. Faisal Alhuwaizi"]
+      : slide.content;
+
+    const bodySegments = buildBodySegments(contentToRender)
     const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments, theme)
-    const startY = Math.max(0.5, (5.625 - centeredBodyHeight) / 2)
-    
+    const startY = Math.max(1.4, (5.625 - centeredBodyHeight) / 2)
+
     let currentY = startY
     bodySegments.forEach((segment, segmentIndex) => {
       const lower = segment.cleanText.toLowerCase()
       const isWarning = ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(w => lower.includes(w))
 
       if (isWarning) {
-        const lines = doc.splitTextToSize(segment.cleanText, 8.4 - 0.4)
+        const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.4)
         doc.setFillColor(248, 245, 237)
-        doc.rect(0.8, currentY - 0.2, 8.4, (lines.length * 0.48) + 0.2, "F")
+        doc.rect(SLIDE_FRAME.bodyX, currentY - 0.2, SLIDE_FRAME.bodyW, (lines.length * 0.48) + 0.2, "F")
         doc.setDrawColor("#C5A059")
         doc.setLineWidth(0.04)
-        doc.line(0.8, currentY - 0.2, 0.8, currentY - 0.2 + (lines.length * 0.48) + 0.2)
-        doc.setFont("Inter", "bold")
+        doc.line(SLIDE_FRAME.bodyX, currentY - 0.2, SLIDE_FRAME.bodyX, currentY - 0.2 + (lines.length * 0.48) + 0.2)
+        doc.setFont(fontToUse, "bold")
         doc.setTextColor("#1E293B")
-        doc.text(lines, 1.0, currentY)
+        doc.text(lines, SLIDE_FRAME.bodyX + 0.2, currentY)
         currentY += (lines.length * 0.48) + 0.3
-        doc.setFont("Inter", "normal")
+        doc.setFont(fontToUse, "normal")
         return
       }
 
-      doc.setFont("Inter", "normal")
+      doc.setFont(fontToUse, "normal")
       doc.setFontSize(24)
 
       if (segment.isListItem) {
         // Circle bullet — color is #0F4C81
         doc.setFillColor("#0F4C81")
-        doc.circle(0.88, currentY - 0.08, 0.035, "F")
+        doc.circle(SLIDE_FRAME.bodyX - 0.15, currentY - 0.08, 0.035, "F")
         doc.setTextColor("#1E293B")
-        const lines = doc.splitTextToSize(segment.cleanText, 7.8)
-        doc.text(lines, 1.02, currentY)
+        const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.2)
+        doc.text(lines, SLIDE_FRAME.bodyX, currentY)
         currentY += (lines.length * 0.48) + 0.16
         return
       }
 
       // Non-list paragraph
       doc.setTextColor("#1E293B")
-      const lines = doc.splitTextToSize(segment.cleanText, 8.4)
-      doc.text(lines, 0.8, currentY)
+      const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW)
+      doc.text(lines, SLIDE_FRAME.bodyX, currentY)
       currentY += (lines.length * 0.48) + 0.12
     })
   }
 }
 
-function renderFallbackPdfPage(doc: any, slide: Slide, theme: Theme) {
-  renderPdfPage(doc, slide, theme, "", null)
+function renderFallbackPdfPage(
+  doc: any,
+  slide: Slide,
+  theme: Theme,
+  lecturerName: string = "",
+  brandHeader?: string,
+  brandFooterLeft?: string,
+  brandFooterRight?: string
+) {
+  renderPdfPage(doc, slide, theme, lecturerName, null, brandHeader, brandFooterLeft, brandFooterRight)
 }
 
-export async function exportSlidesToPDF({ slides, theme, logoBase64, lecturerName }: ExportDeckArgs): Promise<void> {
+export async function exportSlidesToPDF({
+  slides,
+  theme,
+  logoBase64,
+  lecturerName,
+  brandHeader,
+  brandFooterLeft,
+  brandFooterRight,
+}: ExportDeckArgs): Promise<void> {
   const { jsPDF } = await import("jspdf")
   const doc = new jsPDF({
     orientation: "landscape",
@@ -470,11 +514,11 @@ export async function exportSlidesToPDF({ slides, theme, logoBase64, lecturerNam
     }
 
     try {
-      renderPdfPage(doc, slide, theme, lecturerName, logoBase64)
+      renderPdfPage(doc, slide, theme, lecturerName, logoBase64, brandHeader, brandFooterLeft, brandFooterRight)
     } catch (error) {
       console.error("Safeguard applied for PDF slide render exception:", error)
       try {
-        renderFallbackPdfPage(doc, slide, theme)
+        renderFallbackPdfPage(doc, slide, theme, lecturerName, brandHeader, brandFooterLeft, brandFooterRight)
       } catch (fallbackError) {
         console.error("Critical fail inside fallback PDF render:", fallbackError)
         doc.text(slide.title, 0.7, 1.4)
@@ -508,7 +552,15 @@ export async function exportSlidesToPDFWithFallback(args: ExportDeckArgs): Promi
         fallbackDoc.addPage([10, 5.625], "landscape")
       }
       try {
-        renderFallbackPdfPage(fallbackDoc, slide, args.theme)
+        renderFallbackPdfPage(
+          fallbackDoc,
+          slide,
+          args.theme,
+          args.lecturerName,
+          args.brandHeader,
+          args.brandFooterLeft,
+          args.brandFooterRight
+        )
       } catch (err) {
         console.error("Critical fail inside fallback PDF render:", err)
         fallbackDoc.text(slide.title, 0.7, 1.4)

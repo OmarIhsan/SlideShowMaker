@@ -23,11 +23,17 @@ export function SlideRenderer({
   theme,
   logoUrl,
   lecturerName,
+  brandHeader = "DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES",
+  brandFooterLeft = "DR. CUBE DENTISTRY",
+  brandFooterRight = "2026 EDITION",
 }: {
   slide: Slide
   theme: Theme
   logoUrl: string | null
   lecturerName: string
+  brandHeader?: string
+  brandFooterLeft?: string
+  brandFooterRight?: string
 }) {
   // ── CHAPTER DIVIDER ─────────────────────────────────────────
   if (slide.layout === "CHAPTER_DIVIDER") {
@@ -66,13 +72,13 @@ export function SlideRenderer({
         </div>
       )}
 
-      {/* left-accent line/Cobalt column matching accentX: 0.8, accentY: 1.4, accentW: 0.1, accentH: 3.2 */}
+      {/* left-accent line/Cobalt column matching accentX: 1.0, accentY: 1.4, accentW: 0.05, accentH: 3.2 */}
       <div
         className="absolute z-10 rounded-r"
         style={{
-          left: "8%",
+          left: "10%",
           top: "24.9%",
-          width: "1%",
+          width: "0.5%",
           height: "56.9%",
           backgroundColor: TOKEN.cobalt
         }}
@@ -92,26 +98,26 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 1.4, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 1.3, y: 0.6) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "14%",
+          left: "13%",
           top: "10.6%",
           color: TOKEN.gold,
           fontFamily: "Inter, sans-serif"
         }}
       >
-        DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES
+        {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 1.4 (left: 14%), y: 1.4 (top: 24.9%), w: 6.6 (width: 66%), h: 3.2 (height: 56.9%) */}
+      {/* Main slide content bounding box: x: 1.3 (left: 13%), y: 1.4 (top: 24.9%), w: 6.5 (width: 65%), h: 3.2 (height: 56.9%) */}
       <div
-        className="absolute flex flex-col justify-center text-left max-w-[66%] overflow-hidden break-words pr-2 z-10"
+        className="absolute flex flex-col justify-center text-left max-w-[65%] overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "14%",
+          left: "13%",
           top: "24.9%",
-          width: "66%",
+          width: "65%",
           height: "56.9%"
         }}
       >
@@ -120,27 +126,27 @@ export function SlideRenderer({
             case "TABULAR_DATA":
               return <TableSlide slide={slide} theme={theme} />
             default:
-              return <ContentSlide slide={slide} />
+              return <ContentSlide slide={slide} lecturerName={lecturerName} />
           }
         })()}
       </div>
 
       {/* Running Footer */}
       <div
-        className="absolute bottom-4 left-14 right-14 flex items-center justify-between border-t pt-2 z-10"
+        className="absolute bottom-4 left-13 right-13 flex items-center justify-between border-t pt-2 z-10"
         style={{ borderColor: "#F1F5F9" }}
       >
         <span
           className="text-xs font-bold tracking-widest uppercase"
           style={{ color: TOKEN.caption, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
         >
-          DR. CUBE DENTISTRY
+          {brandFooterLeft}
         </span>
         <span
           className="text-xs font-bold tracking-widest uppercase"
           style={{ color: TOKEN.caption, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
         >
-          2026 EDITION
+          {brandFooterRight}
         </span>
       </div>
     </div>
@@ -157,7 +163,7 @@ export function parseAndHighlightMetrics(text: string) {
   );
 }
 
-function ContentSlide({ slide }: { slide: Slide }) {
+function ContentSlide({ slide, lecturerName }: { slide: Slide; lecturerName?: string }) {
   const isWarning = (text: string) => {
     const lower = text.toLowerCase()
     return ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(
@@ -165,10 +171,14 @@ function ContentSlide({ slide }: { slide: Slide }) {
     )
   }
 
+  const contentToRender = slide.id === 1
+    ? [lecturerName ? `Presented by: ${lecturerName}` : "Presented by: Dr. Faisal Alhuwaizi"]
+    : slide.content;
+
   return (
     <div className="w-full">
       <ul className="space-y-4 pl-0">
-        {slide.content.filter(line => line.trim().length > 0).map((lineText: string, index: number) => {
+        {contentToRender.filter(line => line.trim().length > 0).map((lineText: string, index: number) => {
           const cleanText = lineText
             .replace(/^[-*•]\s*/, "")
             .replace(/^\d+[.)]\s*/, "")
