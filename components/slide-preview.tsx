@@ -1,5 +1,4 @@
 import type { Slide, Theme } from "@/lib/slide-engine"
-import { getFontScaleForSlide } from "@/lib/font-autofit"
 
 // ============================================================
 // GLOBAL DESIGN TOKENS (Contrast Avant-Garde framework)
@@ -174,7 +173,6 @@ function ContentSlide({ slide }: { slide: Slide }) {
   }
 
   const contentToRender = slide.content;
-  const fontScale = getFontScaleForSlide(contentToRender);
 
   return (
     <div className="w-full">
@@ -205,7 +203,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   <span
-                    className={`font-semibold leading-relaxed ${fontScale.sizeWeb}`}
+                    className="font-semibold leading-relaxed text-xl md:text-2xl font-medium"
                     style={{ color: TOKEN.enamel }}
                   >
                     {cleanText}
@@ -218,10 +216,10 @@ function ContentSlide({ slide }: { slide: Slide }) {
           return (
             <li
               key={index}
-              className={`flex items-start font-medium list-item tracking-wide ${fontScale.sizeWeb}`}
+              className="flex items-start font-medium list-item tracking-wide text-xl md:text-2xl font-medium"
               style={{ 
                 fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", 
-                lineHeight: fontScale.lineHeightMultiplier 
+                lineHeight: 1.35
               }}
             >
               {/* Circle bullet glyph colored in Ceramic Cobalt (#0F4C81) */}

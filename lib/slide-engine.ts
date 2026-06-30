@@ -256,13 +256,6 @@ export function getSlideHeight(content: string[]): number {
 }
 
 const isOverBudget = (content: string[]): boolean => {
-  const allText = content.join(" ");
-  const wordCount = allText.split(/\s+/).length;
-  const visualLines = Math.ceil(wordCount / 12);
-  
-  if (visualLines > 5) return true;
-  if (allText.length > 600) return true;
-  
   return false;
 };
 

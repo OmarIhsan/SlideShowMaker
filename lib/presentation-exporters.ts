@@ -1,5 +1,4 @@
 import type { Slide, Theme } from "@/lib/slide-engine"
-import { getFontScaleForSlide } from "./font-autofit"
 import {
   buildBodySegments,
   measurePdfBodyHeight,
@@ -22,7 +21,6 @@ function cleanHex(hex: string): string {
 
 function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
   const contentToRender = slide.content;
-  const fontScale = getFontScaleForSlide(contentToRender)
   const bodySegments = buildBodySegments(contentToRender)
 
   return bodySegments.map((segment, index) => {
@@ -34,9 +32,9 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
           color: "0F4C81"
         },
         color: "1E293B",
-        fontSize: fontScale.sizePptx,
+        fontSize: 20,
         fontFace: "Plus Jakarta Sans",
-        lineSpacing: fontScale.lineSpacingPptx,
+        lineSpacing: 27,
         bold: false,
       },
     }
@@ -411,13 +409,12 @@ function renderPdfPage(
   } else {
     // Standard body renderer — ALL slides including Slide 1
     const contentToRender = slide.content;
-    const fontScale = getFontScaleForSlide(contentToRender)
-    const pdfLineHeight = (fontScale.sizePptx / 72) * fontScale.lineHeightMultiplier
+    const pdfLineHeight = (20 / 72) * 1.35
 
     // Standardize measure method to use the dynamic font scale parameters
     const bodySegments = buildBodySegments(contentToRender)
     doc.setFont(fontToUse, "normal")
-    doc.setFontSize(fontScale.sizePptx)
+    doc.setFontSize(20)
 
     // Calculate height accurately with dynamic font scale variables
     const centeredBodyHeight = bodySegments.reduce((height, segment) => {
@@ -454,12 +451,12 @@ function renderPdfPage(
         doc.text(lines, SLIDE_FRAME.bodyX + 0.2, currentY)
         currentY += (lines.length * pdfLineHeight) + 0.3
         doc.setFont(fontToUse, "normal")
-        doc.setFontSize(fontScale.sizePptx)
+        doc.setFontSize(20)
         return
       }
 
       doc.setFont(fontToUse, "normal")
-      doc.setFontSize(fontScale.sizePptx)
+      doc.setFontSize(20)
 
       if (segment.isListItem) {
         // Circle bullet — color is #0F4C81
