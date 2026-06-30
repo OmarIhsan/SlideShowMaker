@@ -25,7 +25,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
   return bodySegments.map((segment, index) => {
     const textOpts: any = {
       color: "1E293B",
-      fontSize: 17,
+      fontSize: 15,
       fontFace: "Plus Jakarta Sans",
       lineSpacing: 19,
       bold: true,
@@ -160,11 +160,11 @@ export async function exportSlidesToPowerPoint({
     // Add 1px Cobalt structural anchor line at left margin (x: 0.5)
     pptxSlide.addShape("line", {
       type: "line",
-      x: 0.5,
+      x: 1.5,
       y: 1.1,
       w: 0.0,
       h: 3.4,
-      line: { color: "0F4C81", width: 1 }
+      line: { color: "E2E8F0", width: 1 }
     })
 
     // Add brand metadata header at top left
@@ -196,14 +196,14 @@ export async function exportSlidesToPowerPoint({
 
     // Running Footer Right
     pptxSlide.addText(footerRightText, {
-      x: 4.0,
+      x: 3.5,
       y: 4.8,
-      w: 3.0,
+      w: 1.5,
       h: 0.3,
       fontSize: 8,
       bold: true,
       color: "94A3B8", // Slate Gray
-      fontFace: "Inter",
+      fontFace: "Plus Jakarta Sans",
       align: "right"
     })
 
@@ -218,7 +218,7 @@ export async function exportSlidesToPowerPoint({
           y: 0.9,
           w: 6.5,
           h: 0.4,
-          fontSize: 17,
+          fontSize: 15,
           bold: true,
           color: "0F4C81",
           fontFace: "Inter",
@@ -454,9 +454,9 @@ function renderPdfPage(
   }
 
   // Add left anchor line (1px Cobalt)
-  doc.setDrawColor("#0F4C81")
+  doc.setDrawColor("#E2E8F0")
   doc.setLineWidth(0.01)
-  doc.line(0.5, 1.1, 0.5, 4.5)
+  doc.line(1.5, 1.1, 1.5, 4.5)
 
   const fontToUse = (typeof doc.getFontList === "function" && doc.getFontList()["Open Sans"]) ? "Open Sans" : "Helvetica";
 
@@ -477,15 +477,15 @@ function renderPdfPage(
   doc.text(footerLeftText, 0.5, 4.95)
 
   // Running Footer Right
-  doc.setFont("Inter", "bold")
+  doc.setFont("Plus Jakarta Sans", "bold")
   doc.setFontSize(8)
   doc.setTextColor("#94A3B8") // Slate Gray
-  doc.text(footerRightText, 7.0, 4.95, { align: "right" })
+  doc.text(footerRightText, 5.0, 4.95, { align: "right" })
 
   if (slide.layout === "EVIDENCE_COMPARATIVE") {
     // Render optional title for context
     doc.setFont("Inter", "bold")
-    doc.setFontSize(17)
+    doc.setFontSize(15)
     doc.setTextColor("#0F4C81")
     doc.text(slide.title, 0.5, 1.1)
 
@@ -526,11 +526,11 @@ function renderPdfPage(
   } else {
     // Standard body renderer (Layout B)
     const contentToRender = slide.content;
-    const pdfLineHeight = (17 / 72) * 1.3
+    const pdfLineHeight = (15 / 72) * 1.3
 
     const bodySegments = buildBodySegments(contentToRender)
-    doc.setFont(fontToUse, "bold")
-    doc.setFontSize(17)
+    doc.setFont("Plus Jakarta Sans", "bold")
+    doc.setFontSize(15)
 
     const centeredBodyHeight = bodySegments.reduce((height, segment) => {
       if (segment.isListItem) {
@@ -546,20 +546,20 @@ function renderPdfPage(
     let currentY = startY
     bodySegments.forEach((segment, segmentIndex) => {
 
-      doc.setFont(fontToUse, "bold")
-      doc.setFontSize(17)
+      doc.setFont("Plus Jakarta Sans", "bold")
+      doc.setFontSize(15)
       doc.setTextColor(theme.hexPrimary)
 
       if (segment.isListItem) {
         doc.setFillColor("#0F4C81")
         doc.circle(SLIDE_FRAME.bodyX + 0.05, currentY - 0.04, 0.03, "F")
-        doc.setFontSize(17)
+        doc.setFontSize(15)
         doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.2)
         doc.text(lines, SLIDE_FRAME.bodyX + 0.18, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW - 0.2 })
         currentY += (lines.length * pdfLineHeight) + 0.16
       } else {
-        doc.setFontSize(17)
+        doc.setFontSize(15)
         doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW)
         doc.text(lines, SLIDE_FRAME.bodyX, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW })

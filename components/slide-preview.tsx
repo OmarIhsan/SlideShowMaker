@@ -126,7 +126,7 @@ export function SlideRenderer({
         {/* Running Footer */}
         <div
           className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
-          style={{ borderColor: "#F1F5F9", left: "6.67%", width: "86.66%" }}
+          style={{ borderColor: "#F1F5F9", left: "20.0%", width: "46.66%" }}
         >
           <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: TOKEN.cobalt }}>
             {brandFooterLeft}
@@ -154,7 +154,7 @@ export function SlideRenderer({
       {/* Vertical dividing line (1px Ceramic Cobalt) */}
       <div
         className="absolute z-10"
-        style={{ left: "6.67%", top: "19.6%", width: "1px", height: "60.4%", backgroundColor: TOKEN.cobalt }}
+        style={{ left: "20.0%", top: "19.6%", width: "1px", height: "60.4%", backgroundColor: "#E2E8F0" }}
         aria-hidden="true"
       />
 
@@ -169,7 +169,7 @@ export function SlideRenderer({
       {/* Main slide content bounding box */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
-        style={{ left: "7.33%", top: "22.22%", width: "86.0%", height: "60.44%" }}
+        style={{ left: "22.93%", top: "22.22%", width: "43.73%", height: "60.44%", fontFamily: "Plus Jakarta Sans, sans-serif" }}
       >
         {(() => {
           switch (slide.layout) {
@@ -184,7 +184,7 @@ export function SlideRenderer({
       {/* Running Footer aligned to left: 6.67% and width: 86.66% */}
       <div
         className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
-        style={{ borderColor: "#F1F5F9", left: "6.67%", width: "86.66%" }}
+        style={{ borderColor: "#F1F5F9", left: "20.0%", width: "46.66%" }}
       >
         <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: TOKEN.cobalt }}>
           {brandFooterLeft}
@@ -229,7 +229,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
           return (
             <li
               key={index}
-              className="flex items-start font-semibold tracking-normal text-[17px] text-justify"
+              className="flex items-start font-semibold tracking-normal text-[15px] font-['Plus_Jakarta_Sans'] text-justify"
               style={{ 
                 fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", 
                 lineHeight: 1.3,
