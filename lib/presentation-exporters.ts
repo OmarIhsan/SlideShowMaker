@@ -132,10 +132,10 @@ export async function exportSlidesToPowerPoint({
     // Add right limit line
     pptxSlide.addShape("line", {
       type: "line",
-      x: 8.0,
-      y: 1.0,
+      x: 4.0,
+      y: 1.4,
       w: 0.0,
-      h: 4.0,
+      h: 4.5,
       line: { color: "E2E8F0", width: 1 }
     })
 
@@ -375,7 +375,7 @@ function renderPdfPage(
   // Add right limit line
   doc.setDrawColor("#E2E8F0")
   doc.setLineWidth(0.01)
-  doc.line(8.0, 1.0, 8.0, 5.0)
+  doc.line(4.0, 1.4, 4.0, 5.9)
 
   const fontToUse = (typeof doc.getFontList === "function" && doc.getFontList()["Plus Jakarta Sans"]) ? "Plus Jakarta Sans" : "Helvetica";
 

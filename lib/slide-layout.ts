@@ -3,14 +3,14 @@ import type { Slide, Theme } from "@/lib/slide-engine"
 export const SLIDE_FRAME = {
   titleY: 0.5,
   titleH: 0.8,
-  bodyX: 8.22,
-  bodyY: 1.2,
-  bodyW: 4.58,
-  bodyH: 3.6,
+  bodyX: 4.22,
+  bodyY: 1.4,
+  bodyW: 8.5,
+  bodyH: 4.5,
   accentX: 1.0,
-  accentY: 1.2,
+  accentY: 1.4,
   accentW: 0.05,
-  accentH: 3.6,
+  accentH: 4.5,
   footerY: 5.2,
 }
 

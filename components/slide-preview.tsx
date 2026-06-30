@@ -78,32 +78,32 @@ export function SlideRenderer({
         className="absolute z-10 rounded-r"
         style={{
           left: '7.5%',
-          top: "16%",
+          top: "18.7%",
           width: '0.5%',
-          height: "48%",
+          height: "60.0%",
           backgroundColor: TOKEN.cobalt,
         }}
         aria-hidden="true"
       />
 
-      {/* Vertical dividing line matching pptx x: 8.0 (left: 60%), y: 1.0 (top: 13.3%), h: 4.0 (height: 53.3%) */}
+      {/* Vertical dividing line matching pptx x: 4.0 (left: 30.0%), y: 1.4 (top: 18.7%), h: 4.5 (height: 60.0%) */}
       <div
         className="absolute z-10"
         style={{
-          left: "60%",
-          top: "13.3%",
+          left: "30.0%",
+          top: "18.7%",
           width: "1px",
-          height: "53.3%",
+          height: "60.0%",
           backgroundColor: "#E2E8F0"
         }}
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 8.22, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 4.22, y: 0.6) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "61.7%",
+          left: "31.5%",
           top: "8%",
           color: TOKEN.gold,
           fontFamily: "Inter, sans-serif"
@@ -112,14 +112,14 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 8.22 (left: 61.7%), y: 1.2 (top: 16%), w: 4.58 (width: 34.4%), h: 3.6 (height: 48%) */}
+      {/* Main slide content bounding box: x: 4.22 (left: 31.5%), y: 1.4 (top: 18.7%), w: 8.5 (width: 65.0%), h: 4.5 (height: 60.0%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "61.7%",
-          top: "16%",
-          width: "34.4%",
-          height: "48%"
+          left: "31.5%",
+          top: "18.7%",
+          width: "65.0%",
+          height: "60.0%"
         }}
       >
         {(() => {
