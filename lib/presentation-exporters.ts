@@ -136,20 +136,20 @@ export async function exportSlidesToPowerPoint({
     // Add right limit line
     pptxSlide.addShape("line", {
       type: "line",
-      x: 1.7,
-      y: 1.0,
+      x: 2.25,
+      y: 1.1,
       w: 0.0,
-      h: 3.6,
+      h: 3.4,
       line: { color: "E2E8F0", width: 1 }
     })
 
     // Add brand metadata header at top left
     pptxSlide.addText(headerText, {
-      x: SLIDE_FRAME.bodyX,
-      y: 0.6,
-      w: SLIDE_FRAME.bodyW,
-      h: 0.4,
-      fontSize: 10,
+      x: 2.47,
+      y: 0.5,
+      w: 4.53,
+      h: 0.3,
+      fontSize: 9,
       bold: true,
       color: "94A3B8", // Slate Gray
       fontFace: "Plus Jakarta Sans",
@@ -159,11 +159,11 @@ export async function exportSlidesToPowerPoint({
 
     // Running Footer Left
     pptxSlide.addText(footerLeftText, {
-      x: SLIDE_FRAME.bodyX,
-      y: 5.1,
-      w: 3.0,
+      x: 2.47,
+      y: 4.8,
+      w: 2.5,
       h: 0.3,
-      fontSize: 9,
+      fontSize: 8,
       bold: true,
       color: "0F4C81", // Ceramic Cobalt
       fontFace: "Plus Jakarta Sans",
@@ -172,11 +172,11 @@ export async function exportSlidesToPowerPoint({
 
     // Running Footer Right
     pptxSlide.addText(footerRightText, {
-      x: 8.22,
-      y: 5.1,
+      x: 5.5,
+      y: 4.8,
       w: 1.5,
       h: 0.3,
-      fontSize: 9,
+      fontSize: 8,
       bold: true,
       color: "94A3B8", // Slate Gray
       fontFace: "Plus Jakarta Sans",
@@ -389,21 +389,21 @@ function renderPdfPage(
 
   // Add brand metadata header at top left
   doc.setFont(fontToUse, "bold")
-  doc.setFontSize(10)
+  doc.setFontSize(9)
   doc.setTextColor("#94A3B8") // Slate Gray
-  doc.text(headerText, SLIDE_FRAME.bodyX, 0.8)
+  doc.text(headerText, SLIDE_FRAME.bodyX, 0.7)
 
   // Running Footer Left
   doc.setFont(fontToUse, "bold")
-  doc.setFontSize(9)
+  doc.setFontSize(8)
   doc.setTextColor("#0F4C81") // Ceramic Cobalt
-  doc.text(footerLeftText, SLIDE_FRAME.bodyX, 5.25)
+  doc.text(footerLeftText, SLIDE_FRAME.bodyX, 4.95)
 
   // Running Footer Right
   doc.setFont(fontToUse, "bold")
-  doc.setFontSize(9)
+  doc.setFontSize(8)
   doc.setTextColor("#94A3B8") // Slate Gray
-  doc.text(footerRightText, 9.72, 5.25, { align: "right" })
+  doc.text(footerRightText, 7.0, 4.95, { align: "right" })
 
   if (slide.layout === "TABULAR_DATA") {
     const rows = slide.content.map((rowText) => {

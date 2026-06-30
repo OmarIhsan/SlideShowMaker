@@ -72,7 +72,6 @@ export function SlideRenderer({
         </div>
       )}
 
-      {/* left-accent line/Cobalt column matching accentX: 1.0, accentY: 1.4, accentW: 0.05, accentH: 3.2 */}
       {/* Structural Accent Bar (accentX: 1.0 -> 13.3% of 7.5) */}
       <div 
         className="absolute z-10 rounded-r"
@@ -80,32 +79,31 @@ export function SlideRenderer({
           left: '13.3%',
           top: "19.6%",
           width: '0.5%',
-          height: "64.0%",
+          height: "60.4%",
           backgroundColor: TOKEN.cobalt,
         }}
         aria-hidden="true"
       />
 
-      {/* Vertical dividing line matching pptx x: 3.0 (left: 40.0%), y: 1.0 (top: 17.8%), h: 3.6 (height: 64.0%) */}
-      {/* Wait, user: divider line x: 1.7 (left: 22.7%), y: 1.0 (top: 17.8%), h: 3.6 (height: 64.0%) */}
+      {/* Vertical dividing line matching pptx x: 2.25 (left: 30.0%), y: 1.1 (top: 19.6%), h: 3.4 (height: 60.4%) */}
       <div
         className="absolute z-10"
         style={{
-          left: "22.7%",
-          top: "17.8%",
+          left: "30.0%",
+          top: "19.6%",
           width: "1px",
-          height: "64.0%",
+          height: "60.4%",
           backgroundColor: "#E2E8F0"
         }}
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 3.22, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 2.47, y: 0.5) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "32.2%",
-          top: "10.6%",
+          left: "32.93%",
+          top: "8.9%",
           color: "#94A3B8",
           fontFamily: "Inter, sans-serif"
         }}
@@ -113,14 +111,14 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 3.22 (left: 32.2%), y: 1.4 (top: 24.9%), w: 6.5 (width: 65.0%), h: 4.5 (height: 80.0%) */}
+      {/* Main slide content bounding box: x: 2.47 (left: 32.93%), y: 1.1 (top: 19.6%), w: 4.53 (width: 60.4%), h: 3.4 (height: 60.4%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "32.2%",
-          top: "24.9%",
-          width: "65.0%",
-          height: "80.0%"
+          left: "32.93%",
+          top: "19.6%",
+          width: "60.4%",
+          height: "60.4%"
         }}
       >
         {(() => {
@@ -133,13 +131,13 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* Running Footer aligned to left: 32.2% and width: 65.0% */}
+      {/* Running Footer aligned to left: 32.93% and width: 60.4% */}
       <div
         className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
         style={{ 
           borderColor: "#F1F5F9",
-          left: "32.2%",
-          width: "65.0%"
+          left: "32.93%",
+          width: "60.4%"
         }}
       >
         <span
