@@ -98,7 +98,7 @@ export async function exportSlidesToPowerPoint({
 
   slides.forEach((slide) => {
     const pptxSlide = pptx.addSlide()
-
+    
     if (slide.layout === "CHAPTER_DIVIDER") {
       // === CHAPTER DIVIDER: full-bleed #1E293B canvas ===
       pptxSlide.background = { color: "1E293B" }
@@ -117,26 +117,26 @@ export async function exportSlidesToPowerPoint({
         valign: "middle"
       })
 
-      // Centered macro Isolation View Media frame (y: 2.5, w: 4.0, h: 3.0)
+      // Aesthetic Geometric Anchor
       pptxSlide.addShape("rect", {
         x: 1.75,
         y: 2.5,
         w: 4.0,
         h: 3.0,
-        fill: { color: "111827" },
-        line: { color: "374151", width: 1 }
+        fill: { color: "0F4C81" },
+        line: { color: "C5A059", width: 4 }
       })
 
-      pptxSlide.addText("Centered Macro Isolation View\n(Borderless Raw Crop)", {
-        x: 1.75,
-        y: 2.5,
-        w: 4.0,
-        h: 3.0,
-        fontSize: 9,
-        color: "C5A059",
-        fontFace: "Open Sans",
-        align: "center",
-        valign: "middle"
+      // Geometric graphic
+      pptxSlide.addShape("line", {
+        type: "line",
+        x: 2.75, y: 3.0, w: 2.0, h: 2.0,
+        line: { color: "C5A059", width: 1 }
+      })
+      pptxSlide.addShape("line", {
+        type: "line",
+        x: 2.75, y: 5.0, w: 2.0, h: -2.0,
+        line: { color: "C5A059", width: 1 }
       })
       return
     }
@@ -212,38 +212,30 @@ export async function exportSlidesToPowerPoint({
           valign: "middle"
         })
 
-        // Left Media Block
+        // Left Media Block (Charcoal)
         pptxSlide.addShape("rect", {
           x: 0.5,
           y: 1.5,
           w: 3.1,
           h: 2.5,
-          fill: { color: "E2E8F0" },
-          line: { color: "CBD5E1", width: 1 }
+          fill: { color: "1E293B" },
+          line: { color: "0F4C81", width: 2 }
         })
-        pptxSlide.addText("Pre-Op State", {
-          x: 0.5, y: 1.5, w: 3.1, h: 2.5,
-          fontSize: 12, bold: true, color: "64748B", fontFace: "Inter", align: "center", valign: "middle"
-        })
-        pptxSlide.addText("Baseline clinical observation prior to intervention.", {
+        pptxSlide.addText("Baseline clinical framework.", {
           x: 0.5, y: 4.1, w: 3.1, h: 0.4,
           fontSize: 10, italic: true, color: "64748B", fontFace: "Open Sans", align: "center", valign: "top"
         })
 
-        // Right Media Block
+        // Right Media Block (Cobalt)
         pptxSlide.addShape("rect", {
           x: 3.9,
           y: 1.5,
           w: 3.1,
           h: 2.5,
-          fill: { color: "E2E8F0" },
-          line: { color: "CBD5E1", width: 1 }
+          fill: { color: "0F4C81" },
+          line: { color: "C5A059", width: 2 }
         })
-        pptxSlide.addText("Post-Op Outcome", {
-          x: 3.9, y: 1.5, w: 3.1, h: 2.5,
-          fontSize: 12, bold: true, color: "64748B", fontFace: "Inter", align: "center", valign: "middle"
-        })
-        pptxSlide.addText("Final restoration state following targeted procedure.", {
+        pptxSlide.addText("Targeted procedural outcome.", {
           x: 3.9, y: 4.1, w: 3.1, h: 0.4,
           fontSize: 10, italic: true, color: "64748B", fontFace: "Open Sans", align: "center", valign: "top"
         })
@@ -301,49 +293,36 @@ export async function exportSlidesToPowerPoint({
           margin: 0,
         })
 
-        // === PPTX MEDIA FRAME (Right 60% Column - Unbordered) ===
+        // === PPTX MEDIA FRAME (Right 60% Column - Geometric Cobalt Block) ===
         pptxSlide.addShape("rect", {
           x: 3.1,
           y: 1.25,
           w: 3.9,
           h: 3.4,
-          fill: { color: "E2E8F0" },
-          line: { color: "E2E8F0", width: 0 }
+          fill: { color: "0F4C81" },
+          line: { color: "0F4C81", width: 0 }
         })
 
-        pptxSlide.addText("Intraoral Macro Photo", {
-          x: 3.1,
+        // Inner structural border
+        pptxSlide.addShape("rect", {
+          x: 3.25,
           y: 1.4,
-          w: 3.9,
-          h: 0.4,
-          fontSize: 12,
-          bold: true,
-          color: "64748B",
-          fontFace: "Inter",
-          align: "center",
-          valign: "middle"
+          w: 3.6,
+          h: 3.1,
+          fill: { color: "0F4C81", transparency: 100 },
+          line: { color: "FFFFFF", width: 1 } // Using white/20 substitute
         })
 
-        // Vector Arrow Annotation line
+        // Right bottom gold corner anchor
         pptxSlide.addShape("line", {
           type: "line",
-          x: 6.0,
-          y: 4.3,
-          w: 0.5,
-          h: 0,
+          x: 6.4, y: 4.1, w: 0.3, h: 0,
           line: { color: "C5A059", width: 2 }
         })
-
-        pptxSlide.addText("Structural Detail Focus", {
-          x: 4.8,
-          y: 4.15,
-          w: 1.1,
-          h: 0.25,
-          fontSize: 10,
-          bold: true,
-          color: "C5A059",
-          fontFace: "Inter",
-          align: "right"
+        pptxSlide.addShape("line", {
+          type: "line",
+          x: 6.7, y: 3.8, w: 0, h: 0.3,
+          line: { color: "C5A059", width: 2 }
         })
       }
     } catch (error) {
@@ -466,19 +445,16 @@ function renderPdfPage(
     doc.setTextColor("#C5A059")
     doc.text(slide.title, 3.75, 1.8, { align: "center" })
 
-    // Center macro Isolation View Media frame (y: 2.5, w: 4.0, h: 3.0)
-    doc.setFillColor("#111827")
-    doc.setDrawColor("#374151")
-    doc.setLineWidth(0.015)
+    // Aesthetic Geometric Anchor
+    doc.setFillColor("#0F4C81")
+    doc.setDrawColor("#C5A059")
+    doc.setLineWidth(0.04)
     doc.rect(1.75, 2.5, 4.0, 3.0, "FD")
-
-    doc.setFont("Inter", "bold")
-    doc.setFontSize(9)
-    doc.setTextColor("#C5A059")
-    doc.text("Centered Macro Isolation View", 3.75, 3.8, { align: "center" })
-    doc.setFontSize(8)
-    doc.setTextColor("#94A3B8")
-    doc.text("(Borderless Raw Crop)", 3.75, 4.1, { align: "center" })
+    
+    // Abstract geometric line graphic
+    doc.setLineWidth(0.01)
+    doc.line(2.75, 3.0, 4.75, 5.0)
+    doc.line(2.75, 5.0, 4.75, 3.0)
     return
   }
 
@@ -521,33 +497,26 @@ function renderPdfPage(
     doc.setTextColor("#0F4C81")
     doc.text(slide.title, 0.5, 1.1)
 
-    // Left Media Block
-    doc.setFillColor(226, 232, 240) // E2E8F0
-    doc.setDrawColor(203, 213, 225) // CBD5E1
+    // Left Media Block (Charcoal)
+    doc.setFillColor("#1E293B")
+    doc.setDrawColor("#0F4C81")
+    doc.setLineWidth(0.02)
     doc.rect(0.5, 1.5, 3.1, 2.5, "FD")
     
-    doc.setFont("Inter", "bold")
-    doc.setFontSize(12)
-    doc.setTextColor("#64748B")
-    doc.text("Pre-Op State", 2.05, 2.8, { align: "center" })
-
     doc.setFont("Open Sans", "italic")
     doc.setFontSize(10)
-    doc.text("Baseline clinical observation prior to intervention.", 2.05, 4.2, { align: "center" })
+    doc.setTextColor("#64748B")
+    doc.text("Baseline clinical framework.", 2.05, 4.2, { align: "center" })
 
-    // Right Media Block
-    doc.setFillColor(226, 232, 240) // E2E8F0
-    doc.setDrawColor(203, 213, 225) // CBD5E1
+    // Right Media Block (Cobalt)
+    doc.setFillColor("#0F4C81") 
+    doc.setDrawColor("#C5A059") 
     doc.rect(3.9, 1.5, 3.1, 2.5, "FD")
 
-    doc.setFont("Inter", "bold")
-    doc.setFontSize(12)
-    doc.setTextColor("#64748B")
-    doc.text("Post-Op Outcome", 5.45, 2.8, { align: "center" })
-
     doc.setFont("Open Sans", "italic")
     doc.setFontSize(10)
-    doc.text("Final restoration state following targeted procedure.", 5.45, 4.2, { align: "center" })
+    doc.setTextColor("#64748B")
+    doc.text("Targeted procedural outcome.", 5.45, 4.2, { align: "center" })
 
   } else if (slide.layout === "TABULAR_DATA") {
     const rows = slide.content.map((rowText) => {
@@ -630,29 +599,24 @@ function renderPdfPage(
       }
     })
 
-    // === PDF MEDIA FRAME (Right 60% Column - Unbordered) ===
-    doc.setFillColor(226, 232, 240) // E2E8F0
-    doc.setDrawColor(226, 232, 240)
+    // === PDF MEDIA FRAME (Right 60% Column - Geometric Cobalt) ===
+    doc.setFillColor("#0F4C81")
+    doc.setDrawColor("#0F4C81")
     doc.setLineWidth(0)
     doc.rect(3.1, 1.25, 3.9, 3.4, "FD")
 
-    doc.setFont("Inter", "bold")
-    doc.setFontSize(12)
-    doc.setTextColor("#64748B")
-    doc.text("Intraoral Macro Photo", 5.05, 2.8, { align: "center" })
+    // Inner structural border
+    doc.setDrawColor(255, 255, 255)
+    doc.setLineWidth(0.01)
+    doc.rect(3.25, 1.4, 3.6, 3.1)
 
-    // Vector Arrow Annotation
-    doc.setFontSize(10)
-    doc.setTextColor("#C5A059")
-    doc.text("Structural Detail Focus", 6.2, 4.3, { align: "right" })
+    // Right bottom gold corner anchor
     doc.setDrawColor("#C5A059")
     doc.setLineWidth(0.02)
-    doc.line(6.25, 4.27, 6.75, 4.27)
-    doc.line(6.65, 4.17, 6.75, 4.27)
-    doc.line(6.65, 4.37, 6.75, 4.27)
+    doc.line(6.4, 4.1, 6.7, 4.1)
+    doc.line(6.7, 3.8, 6.7, 4.1)
   }
 }
-
 function renderFallbackPdfPage(
   doc: any,
   slide: Slide,

@@ -47,7 +47,7 @@ export function SlideRenderer({
           className="absolute font-bold text-center w-full px-4" 
           style={{ 
             color: "#C5A059",
-            fontSize: "44px", // Updated to 44pt
+            fontSize: "44px",
             top: "26.67%",
             left: "0"
           }}
@@ -55,23 +55,24 @@ export function SlideRenderer({
           {slide.title}
         </h1>
 
-        {/* Media Frame: centered, y: 2.5, w: 4.0, h: 3.0, Borderless Raw Crop */}
+        {/* Aesthetic Geometric Anchor: centered, top: 44.44%, w: 53.33%, h: 53.33% */}
         <div
-          className="absolute overflow-hidden rounded flex flex-col items-center justify-center bg-slate-800 border border-slate-700/50"
+          className="absolute overflow-hidden flex flex-col items-center justify-center"
           style={{
             top: "44.44%",
             width: "53.33%",
             height: "53.33%",
-            left: "23.33%"
+            left: "23.33%",
+            backgroundColor: TOKEN.cobalt,
+            borderTop: `4px solid ${TOKEN.gold}`,
           }}
         >
-          <svg className="w-10 h-10 text-[#C5A059]/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <span className="text-[10px] font-bold text-[#C5A059] tracking-widest uppercase">
-            Centered Macro Isolation View
-          </span>
-          <span className="text-[8px] text-slate-400 mt-1 uppercase">Borderless Raw Crop</span>
+          {/* Abstract geometric lines inside the block */}
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: `linear-gradient(45deg, transparent 48%, ${TOKEN.gold} 49%, ${TOKEN.gold} 51%, transparent 52%)`,
+            backgroundSize: '20px 20px'
+          }}></div>
+          <div className="w-12 h-12 border-2 rotate-45 z-10" style={{ borderColor: TOKEN.gold }}></div>
         </div>
       </div>
     )
@@ -92,7 +93,7 @@ export function SlideRenderer({
           {brandHeader}
         </div>
 
-        {/* Header (Optional display for Layout C context) */}
+        {/* Header */}
         <div
           className="absolute z-10 text-lg font-bold"
           style={{ left: "6.67%", top: "14%", color: TOKEN.cobalt, fontFamily: "Inter, sans-serif" }}
@@ -100,35 +101,31 @@ export function SlideRenderer({
           {slide.title}
         </div>
 
-        {/* Split Media Container */}
+        {/* Split Aesthetic Container */}
         <div 
           className="absolute flex flex-row items-center justify-between"
           style={{ left: "6.67%", top: "25%", width: "86.66%", height: "55%" }}
         >
-          {/* Left Block */}
+          {/* Left Block - Charcoal Anchor */}
           <div className="w-[48%] h-full flex flex-col items-center justify-center">
-            <div className="w-full h-full bg-slate-200 border border-slate-300 rounded flex flex-col items-center justify-center">
-               <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-               </svg>
-               <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Pre-Op State</span>
+            <div className="w-full h-full relative overflow-hidden" style={{ backgroundColor: TOKEN.enamel, borderBottom: `3px solid ${TOKEN.cobalt}` }}>
+               {/* Inner geometric accent */}
+               <div className="absolute inset-4 border opacity-30" style={{ borderColor: TOKEN.canvas }}></div>
             </div>
-            <span className="mt-3 text-[10px] italic text-slate-500 font-sans">Baseline clinical observation prior to intervention.</span>
+            <span className="mt-3 text-[10px] italic font-sans" style={{ color: TOKEN.caption }}>Baseline clinical framework.</span>
           </div>
           
-          {/* Right Block */}
+          {/* Right Block - Cobalt Anchor */}
           <div className="w-[48%] h-full flex flex-col items-center justify-center">
-            <div className="w-full h-full bg-slate-200 border border-slate-300 rounded flex flex-col items-center justify-center">
-               <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-               </svg>
-               <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Post-Op Outcome</span>
+            <div className="w-full h-full relative overflow-hidden" style={{ backgroundColor: TOKEN.cobalt, borderBottom: `3px solid ${TOKEN.gold}` }}>
+               {/* Inner geometric accent */}
+               <div className="absolute inset-4 border opacity-30" style={{ borderColor: TOKEN.gold }}></div>
             </div>
-            <span className="mt-3 text-[10px] italic text-slate-500 font-sans">Final restoration state following targeted procedure.</span>
+            <span className="mt-3 text-[10px] italic font-sans" style={{ color: TOKEN.caption }}>Targeted procedural outcome.</span>
           </div>
         </div>
 
-        {/* Running Footer aligned to left: 6.67% and width: 86.66% */}
+        {/* Running Footer */}
         <div
           className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
           style={{ borderColor: "#F1F5F9", left: "6.67%", width: "86.66%" }}
@@ -156,14 +153,14 @@ export function SlideRenderer({
         </div>
       )}
 
-      {/* Vertical dividing line (1px Ceramic Cobalt) matching pptx x: 0.5 (left: 6.67%), top: 19.6%, h: 3.4 */}
+      {/* Vertical dividing line (1px Ceramic Cobalt) */}
       <div
         className="absolute z-10"
         style={{ left: "6.67%", top: "19.6%", width: "1px", height: "60.4%", backgroundColor: TOKEN.cobalt }}
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 0.55 -> 7.33%, y: 0.5) */}
+      {/* Subtle Brand Metadata Header at top left */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{ left: "7.33%", top: "8.9%", color: "#94A3B8", fontFamily: "Inter, sans-serif" }}
@@ -171,7 +168,7 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 0.55 (left: 7.33%), y: 1.25 (top: 22.22%), w: 2.55 (width: 34.0%), h: 3.4 (height: 60.44%) */}
+      {/* Main slide content bounding box */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{ left: "7.33%", top: "22.22%", width: "34.0%", height: "60.44%" }}
@@ -186,28 +183,17 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* Media Frame on standard slides: x: 3.1 (left: 41.33%), y: 1.25 (top: 22.22%), w: 3.9 (width: 52.0%), h: 3.4 (height: 60.44%) */}
-      {/* Massive unbordered 4:3 media container */}
+      {/* Aesthetic Geometric Frame (Right 60% Column) */}
       <div
-        className="absolute rounded flex flex-col items-center justify-center p-3 text-center z-10 bg-slate-200"
-        style={{ left: "41.33%", top: "22.22%", width: "52.0%", height: "60.44%" }}
+        className="absolute flex flex-col items-center justify-center overflow-hidden z-10 shadow-sm"
+        style={{ 
+          left: "41.33%", top: "22.22%", width: "52.0%", height: "60.44%",
+          backgroundColor: TOKEN.cobalt
+        }}
       >
-        <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-          Intraoral Macro Photo
-        </span>
-        <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        <span className="text-[9px] text-slate-500 uppercase">Unbordered Operative Imagery</span>
-        
-        {/* Annotation gold vector arrow (Dentin Gold #C5A059) */}
-        <div className="absolute bottom-4 right-4 flex items-center text-[10px] font-bold text-[#C5A059]">
-          <span>Structural Detail Focus</span>
-          <svg className="w-3.5 h-3.5 ml-1 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </div>
+        {/* Abstract structural grid inset */}
+        <div className="absolute inset-4 border border-white/20"></div>
+        <div className="absolute bottom-4 right-4 w-16 h-16 border-b-2 border-r-2" style={{ borderColor: TOKEN.gold }}></div>
       </div>
 
       {/* Running Footer aligned to left: 6.67% and width: 86.66% */}
