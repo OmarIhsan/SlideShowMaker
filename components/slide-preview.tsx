@@ -39,22 +39,39 @@ export function SlideRenderer({
   if (slide.layout === "CHAPTER_DIVIDER") {
     return (
       <div
-        className="relative flex h-full w-full overflow-hidden select-none"
-        style={{ backgroundColor: TOKEN.enamel, fontFamily: "Inter, sans-serif" }}
+        className="relative flex flex-col h-full w-full overflow-hidden select-none items-center justify-center"
+        style={{ backgroundColor: "#1E293B", fontFamily: "Plus Jakarta Sans, Inter, sans-serif" }}
       >
-        {/* Solid Dentin Gold right-side anchor block */}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-[40%]"
-          style={{ backgroundColor: TOKEN.gold }}
-          aria-hidden="true"
-        />
+        {/* Title: centered, y: 1.5 */}
+        <h1 
+          className="absolute font-bold text-center w-full px-4" 
+          style={{ 
+            color: "#C5A059",
+            fontSize: "24px",
+            top: "26.67%",
+            left: "0"
+          }}
+        >
+          {slide.title}
+        </h1>
 
-        {/* Chapter title — left panel */}
-        <div className="relative z-10 flex flex-col justify-center px-12 w-[60%]">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight" style={{ color: TOKEN.snow }}>
-            {slide.title}
-          </h1>
-          <div className="mt-5 h-1 w-20" style={{ backgroundColor: TOKEN.gold }} />
+        {/* Media Frame: centered, y: 2.5, w: 4.0, h: 3.0, Borderless Raw Crop */}
+        <div
+          className="absolute overflow-hidden rounded flex flex-col items-center justify-center bg-slate-800 border border-slate-700/50"
+          style={{
+            top: "44.44%",
+            width: "53.33%",
+            height: "53.33%",
+            left: "23.33%"
+          }}
+        >
+          <svg className="w-10 h-10 text-[#C5A059]/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span className="text-[10px] font-bold text-[#C5A059] tracking-widest uppercase">
+            Centered Macro Isolation View
+          </span>
+          <span className="text-[8px] text-slate-400 mt-1 uppercase">Borderless Raw Crop</span>
         </div>
       </div>
     )
@@ -111,13 +128,13 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 2.52 (left: 33.6%), y: 1.25 (top: 22.22%), w: 4.45 (width: 59.33%), h: 3.4 (height: 60.44%) */}
+      {/* Main slide content bounding box: x: 2.52 (left: 33.6%), y: 1.25 (top: 22.22%), w: 2.2 (width: 29.33%), h: 3.4 (height: 60.44%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
           left: "33.6%",
           top: "22.22%",
-          width: "59.33%",
+          width: "29.33%",
           height: "60.44%"
         }}
       >
@@ -129,6 +146,35 @@ export function SlideRenderer({
               return <ContentSlide slide={slide} />
           }
         })()}
+      </div>
+
+      {/* Media Frame on standard slides: x: 4.92 (left: 65.6%), y: 1.25 (top: 22.22%), w: 2.08 (width: 27.73%), h: 3.4 (height: 60.44%) */}
+      <div
+        className="absolute rounded flex flex-col items-center justify-center p-3 text-center z-10 bg-slate-50 border"
+        style={{
+          left: "65.6%",
+          top: "22.22%",
+          width: "27.73%",
+          height: "60.44%",
+          borderColor: "#C5A059",
+        }}
+      >
+        <span className="text-[9px] font-bold text-[#C5A059] uppercase tracking-wider mb-1">
+          Intraoral Macro Photo
+        </span>
+        <svg className="w-6 h-6 text-[#C5A059]/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span className="text-[7px] text-slate-400 uppercase">4:3 Macro Photo</span>
+        
+        {/* Annotation gold vector arrow */}
+        <div className="absolute bottom-2 right-2 flex items-center text-[7px] font-bold text-[#C5A059]">
+          <span>Macro Focus</span>
+          <svg className="w-2.5 h-2.5 ml-0.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </div>
       </div>
 
       {/* Running Footer aligned to left: 33.6% and width: 59.33% */}

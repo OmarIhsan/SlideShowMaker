@@ -103,26 +103,39 @@ export async function exportSlidesToPowerPoint({
       // === CHAPTER DIVIDER: full-bleed #1E293B canvas ===
       pptxSlide.background = { color: "1E293B" }
 
-      // Solid Dentin Gold (#C5A059) right side visual block
-      pptxSlide.addShape("rect", {
-        x: 4.5,
-        y: 0,
-        w: 3.0,
-        h: 5.625,
-        fill: { color: "C5A059" },
-        line: { color: "C5A059", width: 0 }
-      })
-
-      // Chapter title text frame
+      // Chapter title centered at Y: 1.5, size 24, gold C5A059
       pptxSlide.addText(slide.title, {
         x: 0.5,
-        y: 1.8,
-        w: 3.5,
-        h: 2.0,
-        fontSize: 32,
+        y: 1.5,
+        w: 6.5,
+        h: 0.8,
+        fontSize: 24,
         bold: true,
-        color: "FFFFFF",
-        fontFace: "Inter",
+        color: "C5A059",
+        fontFace: "Plus Jakarta Sans",
+        align: "center",
+        valign: "middle"
+      })
+
+      // Centered macro Isolation View Media frame (y: 2.5, w: 4.0, h: 3.0)
+      pptxSlide.addShape("rect", {
+        x: 1.75,
+        y: 2.5,
+        w: 4.0,
+        h: 3.0,
+        fill: { color: "111827" },
+        line: { color: "374151", width: 1 }
+      })
+
+      pptxSlide.addText("Centered Macro Isolation View\n(Borderless Raw Crop)", {
+        x: 1.75,
+        y: 2.5,
+        w: 4.0,
+        h: 3.0,
+        fontSize: 9,
+        color: "C5A059",
+        fontFace: "Plus Jakarta Sans",
+        align: "center",
         valign: "middle"
       })
       return
@@ -243,6 +256,51 @@ export async function exportSlidesToPowerPoint({
           fit: "shrink",
           margin: 0,
         })
+
+        // === PPTX MEDIA FRAME ===
+        pptxSlide.addShape("rect", {
+          x: 4.92,
+          y: 1.25,
+          w: 2.08,
+          h: 3.4,
+          fill: { color: "F8FAFC" },
+          line: { color: "C5A059", width: 1 }
+        })
+
+        pptxSlide.addText("Intraoral Macro Photo", {
+          x: 4.92,
+          y: 1.4,
+          w: 2.08,
+          h: 0.4,
+          fontSize: 8,
+          bold: true,
+          color: "C5A059",
+          fontFace: "Plus Jakarta Sans",
+          align: "center",
+          valign: "middle"
+        })
+
+        // Vector Arrow Annotation line
+        pptxSlide.addShape("line", {
+          type: "line",
+          x: 6.5,
+          y: 4.3,
+          w: 0.3,
+          h: 0,
+          line: { color: "C5A059", width: 2 }
+        })
+
+        pptxSlide.addText("Macro Focus", {
+          x: 5.8,
+          y: 4.15,
+          w: 0.7,
+          h: 0.25,
+          fontSize: 7,
+          bold: true,
+          color: "C5A059",
+          fontFace: "Plus Jakarta Sans",
+          align: "right"
+        })
       }
     } catch (error) {
       console.error("Safeguard applied for slide compile exception:", error)
@@ -358,15 +416,25 @@ function renderPdfPage(
     doc.setFillColor("#1E293B")
     doc.rect(0, 0, 7.5, 5.625, "F")
 
-    // Solid right-side gold block (mirrors PPTX layout 1:1)
-    doc.setFillColor("#C5A059")
-    doc.rect(4.5, 0, 3.0, 5.625, "F")
-
     // Chapter title
     doc.setFont("Inter", "bold")
-    doc.setFontSize(32)
-    doc.setTextColor("#F8F9FA")
-    doc.text(slide.title, 0.5, 2.8)
+    doc.setFontSize(24)
+    doc.setTextColor("#C5A059")
+    doc.text(slide.title, 3.75, 1.8, { align: "center" })
+
+    // Center macro Isolation View Media frame (y: 2.5, w: 4.0, h: 3.0)
+    doc.setFillColor("#111827")
+    doc.setDrawColor("#374151")
+    doc.setLineWidth(0.015)
+    doc.rect(1.75, 2.5, 4.0, 3.0, "FD")
+
+    doc.setFont("Inter", "bold")
+    doc.setFontSize(9)
+    doc.setTextColor("#C5A059")
+    doc.text("Centered Macro Isolation View", 3.75, 3.8, { align: "center" })
+    doc.setFontSize(8)
+    doc.setTextColor("#94A3B8")
+    doc.text("(Borderless Raw Crop)", 3.75, 4.1, { align: "center" })
     return
   }
 
@@ -469,24 +537,48 @@ function renderPdfPage(
 
       doc.setFont(fontToUse, "normal")
       doc.setFontSize(14)
+      doc.setTextColor(theme.hexPrimary)
 
       if (segment.isListItem) {
         // Circle bullet — color is #0F4C81
         doc.setFillColor("#0F4C81")
-        doc.circle(SLIDE_FRAME.bodyX - 0.15, currentY - 0.08, 0.035, "F")
+        doc.circle(SLIDE_FRAME.bodyX + 0.05, currentY - 0.04, 0.03, "F")
+        doc.setFontSize(14)
         doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.2)
-        doc.text(lines, SLIDE_FRAME.bodyX, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW - 0.2 })
+        doc.text(lines, SLIDE_FRAME.bodyX + 0.18, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW - 0.2 })
         currentY += (lines.length * pdfLineHeight) + 0.16
-        return
+      } else {
+        doc.setFontSize(14)
+        doc.setTextColor("#1E293B")
+        const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW)
+        doc.text(lines, SLIDE_FRAME.bodyX, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW })
+        currentY += (lines.length * pdfLineHeight) + 0.12
       }
-
-      // Non-list paragraph
-      doc.setTextColor("#1E293B")
-      const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW)
-      doc.text(lines, SLIDE_FRAME.bodyX, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW })
-      currentY += (lines.length * pdfLineHeight) + 0.12
     })
+
+    // === PDF MEDIA FRAME ===
+    doc.setFillColor("#F8FAFC")
+    doc.setDrawColor("#C5A059")
+    doc.setLineWidth(0.015)
+    doc.rect(4.92, 1.25, 2.08, 3.4, "FD")
+
+    doc.setFont(fontToUse, "bold")
+    doc.setFontSize(8)
+    doc.setTextColor("#C5A059")
+    doc.text("Intraoral Macro Photo", 5.96, 1.6, { align: "center" })
+
+    // Center camera icon box
+    doc.setFillColor("#E2E8F0")
+    doc.rect(5.76, 2.2, 0.4, 0.3, "F")
+
+    // Vector Arrow Annotation
+    doc.setFontSize(7)
+    doc.text("Macro Focus", 6.5, 4.3, { align: "right" })
+    doc.setLineWidth(0.02)
+    doc.line(6.55, 4.27, 6.85, 4.27)
+    doc.line(6.75, 4.22, 6.85, 4.27)
+    doc.line(6.75, 4.32, 6.85, 4.27)
   }
 }
 
