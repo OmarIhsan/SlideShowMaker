@@ -265,18 +265,14 @@ export function getSlideHeight(content: string[]): number {
 }
 
 const isOverBudget = (content: string[]): boolean => {
-  let totalLines = 0;
-  content.forEach(text => {
-    const clean = text
-      .replace(/^[-*•]\s*/, "")
-      .replace(/^\d+[.)]\s*/, "")
-      .replace(/^[a-zA-Z][.)]\s*/, "")
-      .trim()
-    const words = clean.split(/\s+/).filter(Boolean).length
-    totalLines += Math.max(1, Math.ceil(words / 7))
-  })
-  const charLength = content.join("\n").length;
-  return totalLines > 4 || charLength > 380;
+  const allText = content.join(" ");
+  const wordCount = allText.split(/\s+/).length;
+  const visualLines = Math.ceil(wordCount / 12);
+  
+  if (visualLines > 5) return true;
+  if (allText.length > 600) return true;
+  
+  return false;
 };
 
 function applyVerticalThresholds(slides: Slide[]): Slide[] {

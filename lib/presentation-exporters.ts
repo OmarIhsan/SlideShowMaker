@@ -182,6 +182,9 @@ export async function exportSlidesToPowerPoint({
 
     try {
       if (slide.layout === "TABULAR_DATA") {
+        const bulletX = 1.22;
+        const textX = 1.4;
+        const maxTextWidth = 6.4;
         const tableRows = slide.content.map((rowText, rowIndex) => {
           const cells = rowText
             .replace(/^\|/, "")
@@ -414,7 +417,7 @@ function renderPdfPage(
 
     const bodySegments = buildBodySegments(contentToRender)
     const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments, theme)
-    const startY = Math.max(1.4, (5.625 - centeredBodyHeight) / 2)
+    const startY = Math.max(SLIDE_FRAME.bodyY, (5.625 - centeredBodyHeight) / 2)
 
     let currentY = startY
     bodySegments.forEach((segment, segmentIndex) => {

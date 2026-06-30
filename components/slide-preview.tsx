@@ -73,14 +73,15 @@ export function SlideRenderer({
       )}
 
       {/* left-accent line/Cobalt column matching accentX: 1.0, accentY: 1.4, accentW: 0.05, accentH: 3.2 */}
-      <div
+      {/* Structural Accent Bar (accentX: 1.0 -> 10%) */}
+      <div 
         className="absolute z-10 rounded-r"
         style={{
-          left: "10%",
-          top: "24.9%",
-          width: "0.5%",
-          height: "56.9%",
-          backgroundColor: TOKEN.cobalt
+          left: '10%',
+          top: "21.3%",
+          width: '0.5%',
+          height: "67.6%",
+          backgroundColor: TOKEN.cobalt,
         }}
         aria-hidden="true"
       />
@@ -98,11 +99,11 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 1.3, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 1.4, y: 0.6) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "13%",
+          left: "14%",
           top: "10.6%",
           color: TOKEN.gold,
           fontFamily: "Inter, sans-serif"
@@ -111,14 +112,14 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 1.3 (left: 13%), y: 1.4 (top: 24.9%), w: 6.5 (width: 65%), h: 3.2 (height: 56.9%) */}
+      {/* Main slide content bounding box: x: 1.4 (left: 14%), y: 1.2 (top: 21.3%), w: 6.4 (width: 64%), h: 3.8 (height: 67.6%) */}
       <div
-        className="absolute flex flex-col justify-center text-left max-w-[65%] overflow-hidden break-words pr-2 z-10"
+        className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "13%",
-          top: "24.9%",
-          width: "65%",
-          height: "56.9%"
+          left: "14%",
+          top: "21.3%",
+          width: "64%",
+          height: "67.6%"
         }}
       >
         {(() => {
