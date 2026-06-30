@@ -141,6 +141,22 @@ export async function exportSlidesToPowerPoint({
 
     pptxSlide.background = { color: bgHex }
 
+    if (logoBase64) {
+      try {
+        pptxSlide.addImage({
+          data: logoBase64,
+          x: 1.5,
+          y: 1.25,
+          w: 4.5,
+          h: 3.125,
+          sizing: { type: "contain", w: 4.5, h: 3.125 },
+          transparency: 90
+        })
+      } catch (e) {
+        console.warn("Failed to render logo in PPTX", e)
+      }
+    }
+
     // Add 1px Cobalt structural anchor line at left margin (x: 0.5)
     pptxSlide.addShape("line", {
       type: "line",
@@ -425,6 +441,17 @@ function renderPdfPage(
 
   doc.setFillColor(theme.hexBg)
   doc.rect(0, 0, 7.5, 5.625, "F")
+
+  if (logoBase64) {
+    try {
+      doc.saveGraphicsState()
+      doc.setGState(new doc.GState({ opacity: 0.1 }))
+      doc.addImage(logoBase64, "PNG", 1.5, 1.25, 4.5, 3.125)
+      doc.restoreGraphicsState()
+    } catch (e) {
+      console.warn("Failed to render logo in PDF", e)
+    }
+  }
 
   // Add left anchor line (1px Cobalt)
   doc.setDrawColor("#0F4C81")
