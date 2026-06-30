@@ -40,7 +40,7 @@ import { EmptyState, GeneratingState, NavButton, OutlineDrawer, SectionLabel, To
 
 export default function SlideDeckArchitect() {
   // Branding States
-  const [lecturerName, setLecturerName] = useState("")
+
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [logoBase64, setLogoBase64] = useState<string | null>(null)
 
@@ -125,27 +125,27 @@ export default function SlideDeckArchitect() {
     if (typeof window === "undefined" || slides.length === 0) return
     setIsExporting(true)
     try {
-      await exportSlidesToPowerPoint({ slides, theme, logoBase64, lecturerName, brandHeader, brandFooterLeft, brandFooterRight })
-    } catch (err) {
-      console.error("Failed to generate PowerPoint deck", err)
-      alert("Failed to export PowerPoint: " + (err instanceof Error ? err.message : String(err)))
+      await exportSlidesToPowerPoint({ slides, theme, logoBase64, brandHeader, brandFooterLeft, brandFooterRight })
+    } catch (error) {
+      console.error("Export failed:", error)
+      alert("Failed to export presentation. Please try again.")
     } finally {
       setIsExporting(false)
     }
-  }, [slides, theme, logoBase64, lecturerName, brandHeader, brandFooterLeft, brandFooterRight])
+  }, [slides, theme, logoBase64, brandHeader, brandFooterLeft, brandFooterRight])
 
   const exportToPDF = useCallback(async () => {
     if (typeof window === "undefined" || slides.length === 0) return
     setIsExportingPDF(true)
     try {
-      await exportSlidesToPDFWithFallback({ slides, theme, logoBase64, lecturerName, brandHeader, brandFooterLeft, brandFooterRight })
+      await exportSlidesToPDFWithFallback({ slides, theme, logoBase64, brandHeader, brandFooterLeft, brandFooterRight })
     } catch (err) {
-      console.error("Failed to generate PDF document", err)
+      console.error("Failed to generate PDF deck", err)
       alert("Failed to export PDF: " + (err instanceof Error ? err.message : String(err)))
     } finally {
       setIsExportingPDF(false)
     }
-  }, [slides, theme, logoBase64, lecturerName, brandHeader, brandFooterLeft, brandFooterRight])
+  }, [slides, theme, logoBase64, brandHeader, brandFooterLeft, brandFooterRight])
 
   return (
     <div className="flex h-dvh flex-col bg-slate-100 text-slate-900">
@@ -262,20 +262,6 @@ export default function SlideDeckArchitect() {
               </SectionLabel>
 
               <div className="grid gap-3 rounded-xl border border-slate-200 p-4">
-                <div className="flex flex-col gap-1">
-                  <label htmlFor="lecturer-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Lecturer Name
-                  </label>
-                  <input
-                    id="lecturer-name"
-                    type="text"
-                    value={lecturerName}
-                    onChange={(e) => setLecturerName(e.target.value)}
-                    placeholder="Enter academic name"
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-slate-300 focus:ring-1 focus:ring-slate-300"
-                  />
-                </div>
-
                 <div className="flex flex-col gap-1">
                   <label htmlFor="brand-header" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     Brand Header
@@ -471,7 +457,6 @@ export default function SlideDeckArchitect() {
                         slide={slides[current]} 
                         theme={theme} 
                         logoUrl={logoUrl} 
-                        lecturerName={lecturerName}
                         brandHeader={brandHeader}
                         brandFooterLeft={brandFooterLeft}
                         brandFooterRight={brandFooterRight}

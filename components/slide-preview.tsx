@@ -22,7 +22,6 @@ export function SlideRenderer({
   slide,
   theme,
   logoUrl,
-  lecturerName,
   brandHeader = "DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES",
   brandFooterLeft = "DR. CUBE DENTISTRY",
   brandFooterRight = "2026 EDITION",
@@ -30,7 +29,6 @@ export function SlideRenderer({
   slide: Slide
   theme: Theme
   logoUrl: string | null
-  lecturerName: string
   brandHeader?: string
   brandFooterLeft?: string
   brandFooterRight?: string
@@ -231,7 +229,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
           return (
             <li
               key={index}
-              className="flex items-start font-semibold tracking-normal text-lg text-justify"
+              className="flex items-start font-semibold tracking-normal text-[17px] text-justify"
               style={{ 
                 fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", 
                 lineHeight: 1.3,

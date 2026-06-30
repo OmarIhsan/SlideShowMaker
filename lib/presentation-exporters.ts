@@ -9,7 +9,6 @@ type ExportDeckArgs = {
   slides: Slide[]
   theme: Theme
   logoBase64: string | null
-  lecturerName: string
   brandHeader?: string
   brandFooterLeft?: string
   brandFooterRight?: string
@@ -26,7 +25,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
   return bodySegments.map((segment, index) => {
     const textOpts: any = {
       color: "1E293B",
-      fontSize: 18,
+      fontSize: 17,
       fontFace: "Plus Jakarta Sans",
       lineSpacing: 19,
       bold: true,
@@ -73,7 +72,6 @@ export async function exportSlidesToPowerPoint({
   slides,
   theme,
   logoBase64,
-  lecturerName,
   brandHeader,
   brandFooterLeft,
   brandFooterRight,
@@ -204,7 +202,7 @@ export async function exportSlidesToPowerPoint({
           y: 0.9,
           w: 6.5,
           h: 0.4,
-          fontSize: 18,
+          fontSize: 17,
           bold: true,
           color: "0F4C81",
           fontFace: "Inter",
@@ -396,7 +394,6 @@ function renderPdfPage(
   doc: any,
   slide: Slide,
   theme: Theme,
-  lecturerName: string,
   logoBase64: string | null,
   brandHeader?: string,
   brandFooterLeft?: string,
@@ -461,7 +458,7 @@ function renderPdfPage(
   if (slide.layout === "EVIDENCE_COMPARATIVE") {
     // Render optional title for context
     doc.setFont("Inter", "bold")
-    doc.setFontSize(18)
+    doc.setFontSize(17)
     doc.setTextColor("#0F4C81")
     doc.text(slide.title, 0.5, 1.1)
 
@@ -502,11 +499,11 @@ function renderPdfPage(
   } else {
     // Standard body renderer (Layout B)
     const contentToRender = slide.content;
-    const pdfLineHeight = (18 / 72) * 1.3
+    const pdfLineHeight = (17 / 72) * 1.3
 
     const bodySegments = buildBodySegments(contentToRender)
     doc.setFont(fontToUse, "bold")
-    doc.setFontSize(18)
+    doc.setFontSize(17)
 
     const centeredBodyHeight = bodySegments.reduce((height, segment) => {
       if (segment.isListItem) {
@@ -523,19 +520,19 @@ function renderPdfPage(
     bodySegments.forEach((segment, segmentIndex) => {
 
       doc.setFont(fontToUse, "bold")
-      doc.setFontSize(18)
+      doc.setFontSize(17)
       doc.setTextColor(theme.hexPrimary)
 
       if (segment.isListItem) {
         doc.setFillColor("#0F4C81")
         doc.circle(SLIDE_FRAME.bodyX + 0.05, currentY - 0.04, 0.03, "F")
-        doc.setFontSize(18)
+        doc.setFontSize(17)
         doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.2)
         doc.text(lines, SLIDE_FRAME.bodyX + 0.18, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW - 0.2 })
         currentY += (lines.length * pdfLineHeight) + 0.16
       } else {
-        doc.setFontSize(18)
+        doc.setFontSize(17)
         doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW)
         doc.text(lines, SLIDE_FRAME.bodyX, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW })
@@ -548,19 +545,17 @@ function renderFallbackPdfPage(
   doc: any,
   slide: Slide,
   theme: Theme,
-  lecturerName: string = "",
   brandHeader?: string,
   brandFooterLeft?: string,
   brandFooterRight?: string
 ) {
-  renderPdfPage(doc, slide, theme, lecturerName, null, brandHeader, brandFooterLeft, brandFooterRight)
+  renderPdfPage(doc, slide, theme, null, brandHeader, brandFooterLeft, brandFooterRight)
 }
 
 export async function exportSlidesToPDF({
   slides,
   theme,
   logoBase64,
-  lecturerName,
   brandHeader,
   brandFooterLeft,
   brandFooterRight,
@@ -572,25 +567,28 @@ export async function exportSlidesToPDF({
     format: [7.5, 5.625],
   })
 
-  // Try to load Plus Jakarta Sans Google Font
-  try {
-    const fontUrl = "https://fonts.gstatic.com/s/plusjakartasans/v8/PlusJakartaSans-Medium.ttf"
-    const response = await fetch(fontUrl)
-    if (response.ok) {
-      const buffer = await response.arrayBuffer()
+  // Setup custom fonts if logo exists
+  if (logoBase64) {
+    try {
+      // Decode base64 to array buffer
+      const binaryStr = atob(BASE64_FONTS.plusJakartaMedium)
+      const bytes = new Uint8Array(binaryStr.length)
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i)
+      }
+      
+      // Convert to binary string format required by jsPDF VFS
       let binary = ""
-      const bytes = new Uint8Array(buffer)
-      const len = bytes.byteLength
-      for (let i = 0; i < len; i++) {
+      for (let i = 0; i < bytes.byteLength; i++) {
         binary += String.fromCharCode(bytes[i])
       }
       const base64Font = btoa(binary)
       doc.addFileToVFS("PlusJakartaSans-Medium.ttf", base64Font)
       doc.addFont("PlusJakartaSans-Medium.ttf", "Plus Jakarta Sans", "normal")
       doc.addFont("PlusJakartaSans-Medium.ttf", "Plus Jakarta Sans", "bold")
+    } catch (fontError) {
+      console.warn("Could not load Plus Jakarta Sans Google Font, falling back to Helvetica/Inter:", fontError)
     }
-  } catch (fontError) {
-    console.warn("Could not load Plus Jakarta Sans Google Font, falling back to Helvetica/Inter:", fontError)
   }
 
   slides.forEach((slide, index) => {
@@ -599,11 +597,11 @@ export async function exportSlidesToPDF({
     }
 
     try {
-      renderPdfPage(doc, slide, theme, lecturerName, logoBase64, brandHeader, brandFooterLeft, brandFooterRight)
+      renderPdfPage(doc, slide, theme, logoBase64, brandHeader, brandFooterLeft, brandFooterRight)
     } catch (error) {
       console.error("Safeguard applied for PDF slide render exception:", error)
       try {
-        renderFallbackPdfPage(doc, slide, theme, lecturerName, brandHeader, brandFooterLeft, brandFooterRight)
+        renderFallbackPdfPage(doc, slide, theme, brandHeader, brandFooterLeft, brandFooterRight)
       } catch (fallbackError) {
         console.error("Critical fail inside fallback PDF render:", fallbackError)
         doc.text(slide.title, 0.7, 1.4)
@@ -641,7 +639,6 @@ export async function exportSlidesToPDFWithFallback(args: ExportDeckArgs): Promi
           fallbackDoc,
           slide,
           args.theme,
-          args.lecturerName,
           args.brandHeader,
           args.brandFooterLeft,
           args.brandFooterRight

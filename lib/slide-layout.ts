@@ -45,7 +45,7 @@ export function buildBodySegments(content: string[]): BodySegment[] {
 
 export function measurePdfBodyHeight(doc: any, segments: BodySegment[], theme?: Theme): number {
   doc.setFont("Inter", "bold")
-  doc.setFontSize(18)
+  doc.setFontSize(17)
   const isAvantGarde = theme?.id === "contrast_avant_garde"
 
   return segments.reduce((height, segment) => {
