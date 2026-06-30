@@ -99,11 +99,11 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 8.3, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 8.22, y: 0.6) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "62.3%",
+          left: "61.7%",
           top: "8%",
           color: TOKEN.gold,
           fontFamily: "Inter, sans-serif"
@@ -112,13 +112,13 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 8.3 (left: 62.3%), y: 1.2 (top: 16%), w: 4.5 (width: 33.8%), h: 3.6 (height: 48%) */}
+      {/* Main slide content bounding box: x: 8.22 (left: 61.7%), y: 1.2 (top: 16%), w: 4.58 (width: 34.4%), h: 3.6 (height: 48%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "62.3%",
+          left: "61.7%",
           top: "16%",
-          width: "33.8%",
+          width: "34.4%",
           height: "48%"
         }}
       >
