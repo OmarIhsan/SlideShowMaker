@@ -169,7 +169,7 @@ export function SlideRenderer({
       {/* Main slide content bounding box */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
-        style={{ left: "5.87%", top: "22.22%", width: "46.0%", height: "60.44%", fontFamily: "Plus Jakarta Sans, sans-serif" }}
+        style={{ left: "7.2%", top: "22.22%", width: "46.0%", height: "60.44%", fontFamily: "Plus Jakarta Sans, sans-serif" }}
       >
         {(() => {
           switch (slide.layout) {
