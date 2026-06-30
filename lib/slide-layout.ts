@@ -5,7 +5,7 @@ export const SLIDE_FRAME = {
   titleH: 0.8,
   bodyX: 0.55,  // 0.5 left margin + 0.05 padding after 1px line
   bodyY: 1.25,
-  bodyW: 2.55,  // ~40% of 6.5 usable width (2.6 - 0.05 padding)
+  bodyW: 6.45,  // Full usable width (7.5 - 0.55 - 0.5 = 6.45)
   bodyH: 3.4,
   accentX: 0.5, // 0.5 left margin (where 1px line begins)
   accentY: 1.1,

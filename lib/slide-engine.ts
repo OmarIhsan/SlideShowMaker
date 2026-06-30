@@ -260,8 +260,8 @@ export function getSlideHeight(content: string[]): number {
     subLines.forEach((subLine) => {
       const words = subLine.split(/\s+/).filter(Boolean).length
       if (words === 0) return
-      // Estimate visual line wrapping (10 words per line, 0.28 inches height per line)
-      const visualLines = Math.max(1, Math.ceil(words / 10))
+      // Estimate visual line wrapping (22 words per line, 0.28 inches height per line)
+      const visualLines = Math.max(1, Math.ceil(words / 22))
       bodyHeight += (visualLines * 0.28) + 0.12
     })
   })
@@ -272,10 +272,10 @@ export function getSlideHeight(content: string[]): number {
 const isOverBudget = (content: string[]): boolean => {
   const allText = content.join(" ");
   const wordCount = allText.split(/\s+/).length;
-  const visualLines = Math.ceil(wordCount / 9);
+  const visualLines = Math.ceil(wordCount / 22);
   
-  if (visualLines > 3) return true;
-  if (allText.length > 320) return true;
+  if (visualLines > 10) return true;
+  if (allText.length > 800) return true;
   
   return false;
 };

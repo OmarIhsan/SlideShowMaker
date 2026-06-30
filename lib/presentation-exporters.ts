@@ -281,7 +281,7 @@ export async function exportSlidesToPowerPoint({
         // Standard content body — applies to ALL slides including Slide 1
         const formattedContent = buildFormattedContent(slide, primaryHex, theme)
 
-        // === PPTX BOUNDING FRAME (Left 40% Column) ===
+        // === PPTX BOUNDING FRAME (Full Width Column) ===
         pptxSlide.addText(formattedContent, {
           x: SLIDE_FRAME.bodyX,
           y: SLIDE_FRAME.bodyY,
@@ -291,38 +291,6 @@ export async function exportSlidesToPowerPoint({
           valign: "middle",
           fit: "shrink",
           margin: 0,
-        })
-
-        // === PPTX MEDIA FRAME (Right 60% Column - Geometric Cobalt Block) ===
-        pptxSlide.addShape("rect", {
-          x: 3.1,
-          y: 1.25,
-          w: 3.9,
-          h: 3.4,
-          fill: { color: "0F4C81" },
-          line: { color: "0F4C81", width: 0 }
-        })
-
-        // Inner structural border
-        pptxSlide.addShape("rect", {
-          x: 3.25,
-          y: 1.4,
-          w: 3.6,
-          h: 3.1,
-          fill: { color: "0F4C81", transparency: 100 },
-          line: { color: "FFFFFF", width: 1 } // Using white/20 substitute
-        })
-
-        // Right bottom gold corner anchor
-        pptxSlide.addShape("line", {
-          type: "line",
-          x: 6.4, y: 4.1, w: 0.3, h: 0,
-          line: { color: "C5A059", width: 2 }
-        })
-        pptxSlide.addShape("line", {
-          type: "line",
-          x: 6.7, y: 3.8, w: 0, h: 0.3,
-          line: { color: "C5A059", width: 2 }
         })
       }
     } catch (error) {
@@ -598,23 +566,6 @@ function renderPdfPage(
         currentY += (lines.length * pdfLineHeight) + 0.12
       }
     })
-
-    // === PDF MEDIA FRAME (Right 60% Column - Geometric Cobalt) ===
-    doc.setFillColor("#0F4C81")
-    doc.setDrawColor("#0F4C81")
-    doc.setLineWidth(0)
-    doc.rect(3.1, 1.25, 3.9, 3.4, "FD")
-
-    // Inner structural border
-    doc.setDrawColor(255, 255, 255)
-    doc.setLineWidth(0.01)
-    doc.rect(3.25, 1.4, 3.6, 3.1)
-
-    // Right bottom gold corner anchor
-    doc.setDrawColor("#C5A059")
-    doc.setLineWidth(0.02)
-    doc.line(6.4, 4.1, 6.7, 4.1)
-    doc.line(6.7, 3.8, 6.7, 4.1)
   }
 }
 function renderFallbackPdfPage(

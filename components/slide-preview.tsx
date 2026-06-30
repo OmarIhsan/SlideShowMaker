@@ -171,7 +171,7 @@ export function SlideRenderer({
       {/* Main slide content bounding box */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
-        style={{ left: "7.33%", top: "22.22%", width: "34.0%", height: "60.44%" }}
+        style={{ left: "7.33%", top: "22.22%", width: "86.0%", height: "60.44%" }}
       >
         {(() => {
           switch (slide.layout) {
@@ -181,19 +181,6 @@ export function SlideRenderer({
               return <ContentSlide slide={slide} />
           }
         })()}
-      </div>
-
-      {/* Aesthetic Geometric Frame (Right 60% Column) */}
-      <div
-        className="absolute flex flex-col items-center justify-center overflow-hidden z-10 shadow-sm"
-        style={{ 
-          left: "41.33%", top: "22.22%", width: "52.0%", height: "60.44%",
-          backgroundColor: TOKEN.cobalt
-        }}
-      >
-        {/* Abstract structural grid inset */}
-        <div className="absolute inset-4 border border-white/20"></div>
-        <div className="absolute bottom-4 right-4 w-16 h-16 border-b-2 border-r-2" style={{ borderColor: TOKEN.gold }}></div>
       </div>
 
       {/* Running Footer aligned to left: 6.67% and width: 86.66% */}
