@@ -72,38 +72,11 @@ export function SlideRenderer({
         </div>
       )}
 
-      {/* left-accent line/Cobalt column matching accentX: 1.0, accentY: 1.4, accentW: 0.05, accentH: 3.2 */}
-      {/* Structural Accent Bar (accentX: 1.0 -> 10%) */}
-      <div 
-        className="absolute z-10 rounded-r"
-        style={{
-          left: '10%',
-          top: "21.3%",
-          width: '0.5%',
-          height: "67.6%",
-          backgroundColor: TOKEN.cobalt,
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Vertical right limit line matching pptx x: 8.0 (left: 80%), y: 1.0 (top: 17.8%), h: 4.0 (height: 71.1%) */}
-      <div
-        className="absolute z-10"
-        style={{
-          left: "80%",
-          top: "17.8%",
-          width: "1px",
-          height: "71.1%",
-          backgroundColor: "#E2E8F0"
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Subtle Brand Metadata Header at top left (x: 1.4, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 0.8, y: 0.8 -> top: 10.6%) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "14%",
+          left: "6%",
           top: "10.6%",
           color: TOKEN.gold,
           fontFamily: "Inter, sans-serif"
@@ -112,14 +85,14 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 1.4 (left: 14%), y: 1.2 (top: 21.3%), w: 6.4 (width: 64%), h: 3.8 (height: 67.6%) */}
+      {/* Main slide content bounding box: x: 0.8 (left: 6%), y: 1.4 (top: 18.7%), w: 11.2 (width: 84%), h: 4.2 (height: 56%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "14%",
-          top: "21.3%",
-          width: "64%",
-          height: "67.6%"
+          left: "6%",
+          top: "18.7%",
+          width: "84%",
+          height: "56%"
         }}
       >
         {(() => {
@@ -134,7 +107,7 @@ export function SlideRenderer({
 
       {/* Running Footer */}
       <div
-        className="absolute bottom-4 left-13 right-13 flex items-center justify-between border-t pt-2 z-10"
+        className="absolute bottom-4 left-8 right-8 flex items-center justify-between border-t pt-2 z-10"
         style={{ borderColor: "#F1F5F9" }}
       >
         <span
@@ -203,7 +176,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   <span
-                    className="font-semibold leading-relaxed text-xl md:text-2xl font-medium"
+                    className="font-semibold leading-relaxed text-lg md:text-xl font-medium"
                     style={{ color: TOKEN.enamel }}
                   >
                     {cleanText}
@@ -216,10 +189,10 @@ function ContentSlide({ slide }: { slide: Slide }) {
           return (
             <li
               key={index}
-              className="flex items-start font-medium list-item tracking-wide text-xl md:text-2xl font-medium"
+              className="flex items-start font-medium list-item tracking-wide text-lg md:text-xl font-medium"
               style={{ 
                 fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", 
-                lineHeight: 1.35
+                lineHeight: 1.3
               }}
             >
               {/* Circle bullet glyph colored in Ceramic Cobalt (#0F4C81) */}
