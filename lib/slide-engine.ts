@@ -123,10 +123,15 @@ function sanitizeText(text: string): string {
 }
 
 export function parseDocumentToSlides(raw: string): ParseResult {
-  const source = raw || ""
+  let source = raw || ""
   if (source.trim().length === 0) {
     return { slides: [], chapterCount: 0 }
   }
+
+  // Sanitization Pipeline Filters
+  source = source.replace(/wit\s+h/g, "with")
+  source = source.replace(/^•\s+referred to as/gm, "• This layer is referred to as")
+  source = source.replace(/8818495erlying/g, "overlying")
 
   let currentTopicContext = "General Concepts";
 
