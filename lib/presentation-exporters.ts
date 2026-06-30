@@ -151,7 +151,7 @@ export async function exportSlidesToPowerPoint({
       h: 0.4,
       fontSize: 10,
       bold: true,
-      color: "C5A059", // Dentin Gold
+      color: "94A3B8", // Slate Gray
       fontFace: "Plus Jakarta Sans",
       align: "left",
       valign: "middle"
@@ -160,25 +160,25 @@ export async function exportSlidesToPowerPoint({
     // Running Footer Left
     pptxSlide.addText(footerLeftText, {
       x: SLIDE_FRAME.bodyX,
-      y: SLIDE_FRAME.footerY,
-      w: 6.0,
+      y: 5.1,
+      w: 3.0,
       h: 0.3,
-      fontSize: 10,
+      fontSize: 9,
       bold: true,
-      color: "64748B",
+      color: "0F4C81", // Ceramic Cobalt
       fontFace: "Plus Jakarta Sans",
       align: "left"
     })
 
     // Running Footer Right
     pptxSlide.addText(footerRightText, {
-      x: SLIDE_FRAME.bodyX,
-      y: SLIDE_FRAME.footerY,
-      w: SLIDE_FRAME.bodyW,
+      x: 8.22,
+      y: 5.1,
+      w: 1.5,
       h: 0.3,
-      fontSize: 10,
+      fontSize: 9,
       bold: true,
-      color: "64748B",
+      color: "94A3B8", // Slate Gray
       fontFace: "Plus Jakarta Sans",
       align: "right"
     })
@@ -390,17 +390,20 @@ function renderPdfPage(
   // Add brand metadata header at top left
   doc.setFont(fontToUse, "bold")
   doc.setFontSize(10)
-  doc.setTextColor("#C5A059") // Dentin Gold
+  doc.setTextColor("#94A3B8") // Slate Gray
   doc.text(headerText, SLIDE_FRAME.bodyX, 0.8)
 
   // Running Footer Left
   doc.setFont(fontToUse, "bold")
-  doc.setFontSize(10)
-  doc.setTextColor("#64748B")
-  doc.text(footerLeftText, SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
+  doc.setFontSize(9)
+  doc.setTextColor("#0F4C81") // Ceramic Cobalt
+  doc.text(footerLeftText, SLIDE_FRAME.bodyX, 5.25)
 
   // Running Footer Right
-  doc.text(footerRightText, SLIDE_FRAME.bodyX + SLIDE_FRAME.bodyW, SLIDE_FRAME.footerY, { align: "right" })
+  doc.setFont(fontToUse, "bold")
+  doc.setFontSize(9)
+  doc.setTextColor("#94A3B8") // Slate Gray
+  doc.text(footerRightText, 9.72, 5.25, { align: "right" })
 
   if (slide.layout === "TABULAR_DATA") {
     const rows = slide.content.map((rowText) => {

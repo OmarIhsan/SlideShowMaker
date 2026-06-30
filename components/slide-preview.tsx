@@ -100,27 +100,27 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 1.92, y: 0.5) */}
+      {/* Subtle Brand Metadata Header at top left (x: 3.22, y: 0.6) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "25.6%",
-          top: "8.9%",
-          color: TOKEN.gold,
+          left: "32.2%",
+          top: "10.6%",
+          color: "#94A3B8",
           fontFamily: "Inter, sans-serif"
         }}
       >
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 1.92 (left: 25.6%), y: 1.1 (top: 19.6%), w: 5.1 (width: 68.0%), h: 3.6 (height: 64.0%) */}
+      {/* Main slide content bounding box: x: 3.22 (left: 32.2%), y: 1.4 (top: 24.9%), w: 6.5 (width: 65.0%), h: 4.5 (height: 80.0%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "25.6%",
-          top: "19.6%",
-          width: "68.0%",
-          height: "64.0%"
+          left: "32.2%",
+          top: "24.9%",
+          width: "65.0%",
+          height: "80.0%"
         }}
       >
         {(() => {
@@ -133,24 +133,24 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* Running Footer aligned to left: 25.6% and width: 68.0% */}
+      {/* Running Footer aligned to left: 32.2% and width: 65.0% */}
       <div
         className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
         style={{ 
           borderColor: "#F1F5F9",
-          left: "25.6%",
-          width: "68.0%"
+          left: "32.2%",
+          width: "65.0%"
         }}
       >
         <span
           className="text-xs font-bold tracking-widest uppercase"
-          style={{ color: TOKEN.caption, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          style={{ color: "#0F4C81" }}
         >
           {brandFooterLeft}
         </span>
         <span
           className="text-xs font-bold tracking-widest uppercase"
-          style={{ color: TOKEN.caption, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          style={{ color: "#94A3B8" }}
         >
           {brandFooterRight}
         </span>
