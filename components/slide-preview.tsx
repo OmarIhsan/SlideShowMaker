@@ -65,7 +65,7 @@ export function SlideRenderer({
         </div>
       )}
 
-      {/* left-accent line/Dentin Gold column matching accentX: 0.8, accentY: 1.4, accentW: 0.08, accentH: 3.2 */}
+      {/* left-accent line/Cobalt column matching accentX: 0.8, accentY: 1.4, accentW: 0.08, accentH: 3.2 */}
       <div
         className="absolute z-10 rounded-r"
         style={{
@@ -73,18 +73,31 @@ export function SlideRenderer({
           top: "24.9%",
           width: "0.8%",
           height: "56.9%",
-          backgroundColor: TOKEN.gold
+          backgroundColor: TOKEN.cobalt
         }}
         aria-hidden="true"
       />
 
-      {/* Main slide content bounding box: x: 1.2 (left: 12%), y: 1.4 (top: 24.9%), w: 7.6 (width: 76%), h: 3.2 (height: 56.9%) */}
+      {/* Vertical right limit line matching pptx x: 8.0 (left: 80%), y: 1.0 (top: 17.8%), h: 4.0 (height: 71.1%) */}
       <div
-        className="absolute flex flex-col justify-center text-left max-w-[76%] overflow-hidden break-words pr-2 z-10"
+        className="absolute z-10"
+        style={{
+          left: "80%",
+          top: "17.8%",
+          width: "1px",
+          height: "71.1%",
+          backgroundColor: "#E2E8F0"
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Main slide content bounding box: x: 1.2 (left: 12%), y: 1.4 (top: 24.9%), w: 6.8 (width: 68%), h: 3.2 (height: 56.9%) */}
+      <div
+        className="absolute flex flex-col justify-center text-left max-w-[68%] overflow-hidden break-words pr-2 z-10"
         style={{
           left: "12%",
           top: "24.9%",
-          width: "76%",
+          width: "68%",
           height: "56.9%"
         }}
       >

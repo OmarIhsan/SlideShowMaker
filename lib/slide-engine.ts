@@ -356,7 +356,7 @@ const isOverBudget = (content: string[]): boolean => {
     totalLines += Math.max(1, Math.ceil(words / 7))
   })
   const charLength = content.join("\n").length;
-  return totalLines > 4 || charLength > 380;
+  return totalLines > 7 || charLength > 750;
 };
 
 function applyVerticalThresholds(slides: Slide[]): Slide[] {

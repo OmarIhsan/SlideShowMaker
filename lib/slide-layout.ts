@@ -5,7 +5,7 @@ export const SLIDE_FRAME = {
   titleH: 0.8,
   bodyX: 1.2,
   bodyY: 1.4,
-  bodyW: 7.6,
+  bodyW: 6.8,
   bodyH: 3.2,
   accentX: 0.8,
   accentY: 1.4,

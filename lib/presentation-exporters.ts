@@ -46,20 +46,19 @@ function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
 // that stretches top-to-bottom on every standard (non-title, non-divider) slide.
 // Zero floating lines or border images – structural block only.
 function addSlideDecoration(doc: any, theme: Theme) {
-  // Solid left-edge column: 0.25" wide × full 5.625" height – matches PDF & PPTX anchor
   if (typeof doc.rect === "function") {
     // jsPDF path
-    doc.setFillColor("#C5A059")
-    doc.rect(0, 0, 0.25, 5.625, "F")
+    doc.setFillColor("#0F4C81")
+    doc.rect(SLIDE_FRAME.accentX, SLIDE_FRAME.accentY, SLIDE_FRAME.accentW, SLIDE_FRAME.accentH, "F")
   } else {
     // PptxGenJS path
     doc.addShape("rect", {
-      x: 0,
-      y: 0,
-      w: 0.25,
-      h: 5.625,
-      fill: { color: "C5A059" },
-      line: { color: "C5A059", width: 0 }
+      x: SLIDE_FRAME.accentX,
+      y: SLIDE_FRAME.accentY,
+      w: SLIDE_FRAME.accentW,
+      h: SLIDE_FRAME.accentH,
+      fill: { color: "0F4C81" },
+      line: { color: "0F4C81", width: 0 }
     })
   }
 }
@@ -110,8 +109,18 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
 
     pptxSlide.background = { color: bgHex }
 
-    // Add gold anchor column to ALL slides (including slide 1)
+    // Add left anchor column to ALL slides (including slide 1)
     addSlideDecoration(pptxSlide, theme)
+
+    // Add right limit line
+    pptxSlide.addShape("line", {
+      type: "line",
+      x: 8.0,
+      y: 1.0,
+      w: 0.0,
+      h: 4.0,
+      line: { color: "E2E8F0", width: 1 }
+    })
 
     if (lecturerName) {
       const isAvantGarde = theme.id === "contrast_avant_garde"
@@ -173,13 +182,13 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
         // Standard content body — applies to ALL slides including Slide 1
         const formattedContent = buildFormattedContent(slide, primaryHex, theme)
 
-        // === PPTX BOUNDING FRAME (§5): x:1.2, y:1.5, w:7.6, h:3.4
+        // === PPTX BOUNDING FRAME ===
         // valign:middle, zero title header rendered above
         pptxSlide.addText(formattedContent, {
-          x: 1.2,
-          y: 1.5,
-          w: 7.6,
-          h: 3.4,
+          x: SLIDE_FRAME.bodyX,
+          y: SLIDE_FRAME.bodyY,
+          w: SLIDE_FRAME.bodyW,
+          h: SLIDE_FRAME.bodyH,
           align: "left",
           valign: "middle",
           fit: "shrink",
@@ -308,9 +317,13 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
   doc.setFillColor(theme.hexBg)
   doc.rect(0, 0, 10, 5.625, "F")
 
-  // Gold anchor column on ALL slides (including Slide 1) — uniform titleless layout
+  // Left anchor column on ALL slides (including Slide 1) — uniform titleless layout
   addSlideDecoration(doc, theme)
-  // No title is rendered on any slide.
+
+  // Add right limit line
+  doc.setDrawColor("#E2E8F0")
+  doc.setLineWidth(0.01)
+  doc.line(8.0, 1.0, 8.0, 5.0)
 
   if (lecturerName) {
     const isAvantGarde = theme.id === "contrast_avant_garde"
