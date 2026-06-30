@@ -32,9 +32,9 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
           color: "0F4C81"
         },
         color: "1E293B",
-        fontSize: 20,
+        fontSize: 16,
         fontFace: "Plus Jakarta Sans",
-        lineSpacing: 27,
+        lineSpacing: 21,
         bold: false,
       },
     }
@@ -121,10 +121,18 @@ export async function exportSlidesToPowerPoint({
 
     pptxSlide.background = { color: bgHex }
 
-    // Add left anchor column to ALL slides if accentW > 0
-    if (SLIDE_FRAME.accentW > 0) {
-      addSlideDecoration(pptxSlide, theme)
-    }
+    // Add left anchor column to ALL slides (including slide 1)
+    addSlideDecoration(pptxSlide, theme)
+
+    // Add right limit line
+    pptxSlide.addShape("line", {
+      type: "line",
+      x: 8.0,
+      y: 1.0,
+      w: 0.0,
+      h: 4.0,
+      line: { color: "E2E8F0", width: 1 }
+    })
 
     // Add brand metadata header at top left
     pptxSlide.addText(headerText, {
@@ -144,7 +152,7 @@ export async function exportSlidesToPowerPoint({
     pptxSlide.addText(footerLeftText, {
       x: SLIDE_FRAME.bodyX,
       y: SLIDE_FRAME.footerY,
-      w: 4.0,
+      w: 3.2,
       h: 0.3,
       fontSize: 10,
       bold: true,
@@ -155,9 +163,9 @@ export async function exportSlidesToPowerPoint({
 
     // Running Footer Right
     pptxSlide.addText(footerRightText, {
-      x: 8.0,
+      x: 4.5,
       y: SLIDE_FRAME.footerY,
-      w: 4.0,
+      w: 3.5,
       h: 0.3,
       fontSize: 10,
       bold: true,
@@ -221,7 +229,7 @@ export async function exportSlidesToPowerPoint({
           y: SLIDE_FRAME.bodyY,
           w: SLIDE_FRAME.bodyW,
           h: SLIDE_FRAME.bodyH,
-          align: "left",
+          align: "justify",
           valign: "middle",
           fit: "shrink",
           margin: 0,
@@ -339,24 +347,30 @@ function renderPdfPage(
   if (slide.layout === "CHAPTER_DIVIDER") {
     // === CHAPTER DIVIDER (PDF) ===
     doc.setFillColor("#1E293B")
-    doc.rect(0, 0, 13.333, 7.5, "F")
+    doc.rect(0, 0, 10, 5.625, "F")
 
     // Solid right-side gold block (mirrors PPTX layout 1:1)
     doc.setFillColor("#C5A059")
-    doc.rect(8.0, 0, 5.333, 7.5, "F")
+    doc.rect(6.0, 0, 4.0, 5.625, "F")
 
     // Chapter title
     doc.setFont("Inter", "bold")
     doc.setFontSize(48)
     doc.setTextColor("#F8F9FA")
-    doc.text(slide.title, 0.8, 3.5)
+    doc.text(slide.title, 0.5, 2.5)
     return
   }
 
   doc.setFillColor(theme.hexBg)
-  doc.rect(0, 0, 13.333, 7.5, "F")
+  doc.rect(0, 0, 10, 5.625, "F")
 
-  // Accent line removed in widescreen layout
+  // Left anchor column on ALL slides (including Slide 1) — uniform titleless layout
+  addSlideDecoration(doc, theme)
+
+  // Add right limit line
+  doc.setDrawColor("#E2E8F0")
+  doc.setLineWidth(0.01)
+  doc.line(8.0, 1.0, 8.0, 5.0)
 
   const fontToUse = (typeof doc.getFontList === "function" && doc.getFontList()["Plus Jakarta Sans"]) ? "Plus Jakarta Sans" : "Helvetica";
 
@@ -377,7 +391,7 @@ function renderPdfPage(
   doc.text(footerLeftText, SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
 
   // Running Footer Right
-  doc.text(footerRightText, 12.5, SLIDE_FRAME.footerY, { align: "right" })
+  doc.text(footerRightText, 8.0, SLIDE_FRAME.footerY, { align: "right" })
 
   if (slide.layout === "TABULAR_DATA") {
     const rows = slide.content.map((rowText) => {
@@ -390,7 +404,7 @@ function renderPdfPage(
     const numCols = Math.max(...rows.map((r) => r.length))
     const colW = SLIDE_FRAME.bodyW / numCols
     const totalTableH = measurePdfTableHeight(doc, rows, colW)
-    const startY = Math.max(1.5, (7.5 - totalTableH) / 2)
+    const startY = Math.max(1.5, (5.625 - totalTableH) / 2)
     renderPdfTableGrid(doc, slide, theme, startY)
   } else {
     // Standard body renderer — ALL slides including Slide 1
@@ -418,7 +432,7 @@ function renderPdfPage(
       return height + (lines * pdfLineHeight) + 0.12
     }, 0)
 
-    const startY = Math.max(SLIDE_FRAME.bodyY, (7.5 - centeredBodyHeight) / 2)
+    const startY = Math.max(SLIDE_FRAME.bodyY, (5.625 - centeredBodyHeight) / 2)
 
     let currentY = startY
     bodySegments.forEach((segment, segmentIndex) => {
@@ -434,7 +448,7 @@ function renderPdfPage(
         doc.line(SLIDE_FRAME.bodyX, currentY - 0.2, SLIDE_FRAME.bodyX, currentY - 0.2 + (lines.length * pdfLineHeight) + 0.2)
         doc.setFont(fontToUse, "bold")
         doc.setTextColor("#1E293B")
-        doc.text(lines, SLIDE_FRAME.bodyX + 0.2, currentY)
+        doc.text(lines, SLIDE_FRAME.bodyX + 0.2, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW - 0.4 })
         currentY += (lines.length * pdfLineHeight) + 0.3
         doc.setFont(fontToUse, "normal")
         doc.setFontSize(16)
@@ -450,7 +464,7 @@ function renderPdfPage(
         doc.circle(SLIDE_FRAME.bodyX - 0.15, currentY - 0.08, 0.035, "F")
         doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.2)
-        doc.text(lines, SLIDE_FRAME.bodyX, currentY)
+        doc.text(lines, SLIDE_FRAME.bodyX, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW - 0.2 })
         currentY += (lines.length * pdfLineHeight) + 0.16
         return
       }
@@ -458,7 +472,7 @@ function renderPdfPage(
       // Non-list paragraph
       doc.setTextColor("#1E293B")
       const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW)
-      doc.text(lines, SLIDE_FRAME.bodyX, currentY)
+      doc.text(lines, SLIDE_FRAME.bodyX, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW })
       currentY += (lines.length * pdfLineHeight) + 0.12
     })
   }
@@ -489,7 +503,7 @@ export async function exportSlidesToPDF({
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "in",
-    format: [13.333, 7.5],
+    format: [10, 5.625],
   })
 
   // Try to load Plus Jakarta Sans Google Font
@@ -515,7 +529,7 @@ export async function exportSlidesToPDF({
 
   slides.forEach((slide, index) => {
     if (index > 0) {
-      doc.addPage([13.333, 7.5], "landscape")
+      doc.addPage([10, 5.625], "landscape")
     }
 
     try {
@@ -549,12 +563,12 @@ export async function exportSlidesToPDFWithFallback(args: ExportDeckArgs): Promi
     const fallbackDoc = new jsPDF({
       orientation: "landscape",
       unit: "in",
-      format: [13.333, 7.5],
+      format: [10, 5.625],
     })
 
     args.slides.forEach((slide, index) => {
       if (index > 0) {
-        fallbackDoc.addPage([13.333, 7.5], "landscape")
+        fallbackDoc.addPage([10, 5.625], "landscape")
       }
       try {
         renderFallbackPdfPage(
@@ -568,8 +582,8 @@ export async function exportSlidesToPDFWithFallback(args: ExportDeckArgs): Promi
         )
       } catch (err) {
         console.error("Critical fail inside fallback PDF render:", err)
-        fallbackDoc.text(slide.title, 0.8, 1.4)
-        fallbackDoc.text(slide.content.join(" "), 0.8, 2.0)
+        fallbackDoc.text(slide.title, 0.7, 1.4)
+        fallbackDoc.text(slide.content.join(" "), 0.7, 2.0)
       }
     })
 
