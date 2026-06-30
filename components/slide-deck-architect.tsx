@@ -56,6 +56,7 @@ export default function SlideDeckArchitect() {
   const [isExporting, setIsExporting] = useState(false)
   const [isExportingPDF, setIsExportingPDF] = useState(false)
   const [ingestMode, setIngestMode] = useState<"upload" | "paste">("upload")
+  const [mobileTab, setMobileTab] = useState<"workspace" | "preview">("workspace")
 
   const {
     rawText,
@@ -151,9 +152,29 @@ export default function SlideDeckArchitect() {
     <div className="flex h-dvh flex-col bg-slate-100 text-slate-900">
       <TopBar total={total} phase={phase} />
 
+      {/* Mobile Tab Selector */}
+      <div className="flex border-b border-slate-200 bg-white lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileTab("workspace")}
+          className={`flex-1 py-3 text-center text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${mobileTab === "workspace" ? "border-slate-900 text-slate-900" : "border-transparent text-slate-400"}`}
+          style={{ borderBottomColor: mobileTab === "workspace" ? theme.hexPrimary : "transparent", color: mobileTab === "workspace" ? theme.hexPrimary : undefined }}
+        >
+          Workspace
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("preview")}
+          className={`flex-1 py-3 text-center text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${mobileTab === "preview" ? "border-slate-900 text-slate-900" : "border-transparent text-slate-400"}`}
+          style={{ borderBottomColor: mobileTab === "preview" ? theme.hexPrimary : "transparent", color: mobileTab === "preview" ? theme.hexPrimary : undefined }}
+        >
+          Slide Preview ({total})
+        </button>
+      </div>
+
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
         {/* LEFT PANEL (WORKSPACE DASHBOARD SIDEBAR) */}
-        <aside className="flex w-full flex-col overflow-hidden border-b border-slate-200 bg-white lg:w-2/5 lg:border-b-0 lg:border-r">
+        <aside className={`flex w-full flex-col overflow-hidden border-b border-slate-200 bg-white lg:w-2/5 lg:border-b-0 lg:border-r ${mobileTab === "workspace" ? "flex flex-1" : "hidden lg:flex"}`}>
           <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
             <header>
               <div className="flex items-center gap-2">
@@ -356,7 +377,10 @@ export default function SlideDeckArchitect() {
           <div className="border-t border-slate-200 bg-white/90 p-6 backdrop-blur">
             <button
               type="button"
-              onClick={handleGenerate}
+              onClick={() => {
+                handleGenerate()
+                setMobileTab("preview")
+              }}
               disabled={!canGenerate || phase === "generating"}
               className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               style={{ backgroundColor: theme.hexPrimary }}
@@ -424,7 +448,7 @@ export default function SlideDeckArchitect() {
         </aside>
 
         {/* RIGHT PANEL (MAIN SLIDE CANVAS ELEMENT) */}
-        <main className="relative flex flex-1 flex-col bg-slate-900">
+        <main className={`relative flex flex-1 flex-col bg-slate-900 ${mobileTab === "preview" ? "flex" : "hidden lg:flex"}`}>
           {phase === "idle" && <EmptyState />}
           {phase === "generating" && <GeneratingState stepIndex={stepIndex} theme={theme} />}
           {phase === "ready" && total > 0 && (

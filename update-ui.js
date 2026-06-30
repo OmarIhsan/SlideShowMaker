@@ -1,4 +1,7 @@
-"use client"
+const fs = require('fs');
+
+// 1. Rewrite components/slide-preview.tsx to use a locked 960x720 canvas and scale responsively.
+const slidePreviewCode = `"use client"
 
 import { useEffect, useRef, useState } from "react"
 import type { Slide, Theme } from "@/lib/slide-engine"
@@ -71,7 +74,7 @@ export function SlideRenderer({
         style={{
           width: "960px",
           height: "720px",
-          transform: `scale(${scale})`,
+          transform: \`scale(\${scale})\`,
           transformOrigin: "center center",
           flexShrink: 0,
         }}
@@ -133,12 +136,12 @@ function SlideRendererInner({
             height: "384px",
             left: "224px",
             backgroundColor: TOKEN.cobalt,
-            borderTop: `4px solid ${TOKEN.gold}`,
+            borderTop: \`4px solid \${TOKEN.gold}\`,
           }}
         >
           {/* Abstract geometric lines inside the block */}
           <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: `linear-gradient(45deg, transparent 48%, ${TOKEN.gold} 49%, ${TOKEN.gold} 51%, transparent 52%)`,
+            backgroundImage: \`linear-gradient(45deg, transparent 48%, \${TOKEN.gold} 49%, \${TOKEN.gold} 51%, transparent 52%)\`,
             backgroundSize: '20px 20px'
           }}></div>
           <div className="w-12 h-12 border-2 rotate-45 z-10" style={{ borderColor: TOKEN.gold }}></div>
@@ -177,7 +180,7 @@ function SlideRendererInner({
         >
           {/* Left Block - Charcoal Anchor */}
           <div className="w-[48%] h-full flex flex-col items-center justify-center">
-            <div className="w-full h-full relative overflow-hidden" style={{ backgroundColor: TOKEN.enamel, borderBottom: `3px solid ${TOKEN.cobalt}` }}>
+            <div className="w-full h-full relative overflow-hidden" style={{ backgroundColor: TOKEN.enamel, borderBottom: \`3px solid \${TOKEN.cobalt}\` }}>
                {/* Inner geometric accent */}
                <div className="absolute inset-4 border opacity-30" style={{ borderColor: TOKEN.canvas }}></div>
             </div>
@@ -186,7 +189,7 @@ function SlideRendererInner({
 
           {/* Right Block - Cobalt Anchor */}
           <div className="w-[48%] h-full flex flex-col items-center justify-center">
-            <div className="w-full h-full relative overflow-hidden" style={{ backgroundColor: TOKEN.cobalt, borderBottom: `3px solid ${TOKEN.gold}` }}>
+            <div className="w-full h-full relative overflow-hidden" style={{ backgroundColor: TOKEN.cobalt, borderBottom: \`3px solid \${TOKEN.gold}\` }}>
                {/* Inner geometric accent */}
                <div className="absolute inset-4 border opacity-30" style={{ borderColor: TOKEN.gold }}></div>
             </div>
@@ -269,7 +272,7 @@ function SlideRendererInner({
 }
 
 export function parseAndHighlightMetrics(text: string) {
-  const metricRegex = /(\b\d+%\b|\b\d+-\d+\s*nm\b|\bHV\s*=\s*\d+\b|\b\d+,\d+\s*rods\b|\b\d+(?:\.\d+)?\s*(?:µm|mm)\b)/gi;
+  const metricRegex = /(\\b\\d+%\\b|\\b\\d+-\\d+\\s*nm\\b|\\bHV\\s*=\\s*\\d+\\b|\\b\\d+,\\d+\\s*rods\\b|\\b\\d+(?:\\.\\d+)?\\s*(?:µm|mm)\\b)/gi;
   if (!metricRegex.test(text)) return text;
 
   const parts = text.split(metricRegex);
@@ -286,15 +289,15 @@ function ContentSlide({ slide }: { slide: Slide }) {
       <ul className="space-y-6 pl-0">
         {contentToRender.filter(line => line.trim().length > 0).map((lineText: string, index: number) => {
           const isUnordered = !slide.isPasteMode && (lineText.startsWith("-") || lineText.startsWith("*") || lineText.startsWith("•"))
-          const isOrdered = !slide.isPasteMode && (/^\d+[.)]/.test(lineText) || /^[a-zA-Z][.)]/.test(lineText))
+          const isOrdered = !slide.isPasteMode && (/^\\d+[.)]/.test(lineText) || /^[a-zA-Z][.)]/.test(lineText))
           const isListItem = isUnordered || isOrdered
 
           const cleanText = slide.isPasteMode
             ? lineText
             : lineText
-                .replace(/^[-*•]\s*/, "")
-                .replace(/^\d+[.)]\s*/, "")
-                .replace(/^[a-zA-Z][.)]\s*/, "")
+                .replace(/^[-*•]\\s*/, "")
+                .replace(/^\\d+[.)]\\s*/, "")
+                .replace(/^[a-zA-Z][.)]\\s*/, "")
                 .trim()
 
           if (!cleanText) return null
@@ -333,8 +336,8 @@ function ContentSlide({ slide }: { slide: Slide }) {
 function TableSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
   const rowsParsed = slide.content.map((rowText) =>
     rowText
-      .replace(/^\|/, "")
-      .replace(/\|$/, "")
+      .replace(/^\\|/, "")
+      .replace(/\\|$/, "")
       .split("|")
       .map((cell) => cell.trim()),
   )
@@ -363,7 +366,7 @@ function TableSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
               {row.map((cell, cellIndex) => (
                 <td
                   key={cellIndex}
-                  className={`px-4 py-3 text-[24px] ${cellIndex === 0 ? "font-semibold" : ""}`}
+                  className={\`px-4 py-3 text-[24px] \${cellIndex === 0 ? "font-semibold" : ""}\`}
                   style={{
                     color: cellIndex === 0 ? TOKEN.cobalt : TOKEN.enamel,
                   }}
@@ -378,3 +381,7 @@ function TableSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
     </div>
   )
 }
+`;
+
+fs.writeFileSync('components/slide-preview.tsx', slidePreviewCode);
+console.log('slide-preview updated successfully.');
