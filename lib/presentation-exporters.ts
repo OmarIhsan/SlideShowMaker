@@ -103,7 +103,7 @@ export async function exportSlidesToPowerPoint({
         x: 6.0,
         y: 0,
         w: 4.0,
-        h: 5.625,
+        h: 7.5,
         fill: { color: "C5A059" },
         line: { color: "C5A059", width: 0 }
       })
@@ -352,22 +352,22 @@ function renderPdfPage(
   if (slide.layout === "CHAPTER_DIVIDER") {
     // === CHAPTER DIVIDER (PDF) ===
     doc.setFillColor("#1E293B")
-    doc.rect(0, 0, 10, 5.625, "F")
+    doc.rect(0, 0, 13.33, 7.5, "F")
 
     // Solid right-side gold block (mirrors PPTX layout 1:1)
     doc.setFillColor("#C5A059")
-    doc.rect(6.0, 0, 4.0, 5.625, "F")
+    doc.rect(6.0, 0, 4.0, 7.5, "F")
 
     // Chapter title
     doc.setFont("Inter", "bold")
     doc.setFontSize(48)
     doc.setTextColor("#F8F9FA")
-    doc.text(slide.title, 0.5, 2.5)
+    doc.text(slide.title, 0.5, 3.5)
     return
   }
 
   doc.setFillColor(theme.hexBg)
-  doc.rect(0, 0, 10, 5.625, "F")
+  doc.rect(0, 0, 13.33, 7.5, "F")
 
   // Left anchor column on ALL slides (including Slide 1) — uniform titleless layout
   addSlideDecoration(doc, theme)
@@ -437,7 +437,7 @@ function renderPdfPage(
       return height + (lines * pdfLineHeight) + 0.12
     }, 0)
 
-    const startY = Math.max(SLIDE_FRAME.bodyY, (5.625 - centeredBodyHeight) / 2)
+    const startY = Math.max(SLIDE_FRAME.bodyY, (7.5 - centeredBodyHeight) / 2)
 
     let currentY = startY
     bodySegments.forEach((segment, segmentIndex) => {
@@ -508,7 +508,7 @@ export async function exportSlidesToPDF({
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "in",
-    format: [10, 5.625],
+    format: [13.33, 7.5],
   })
 
   // Try to load Plus Jakarta Sans Google Font
@@ -534,7 +534,7 @@ export async function exportSlidesToPDF({
 
   slides.forEach((slide, index) => {
     if (index > 0) {
-      doc.addPage([10, 5.625], "landscape")
+      doc.addPage([13.33, 7.5], "landscape")
     }
 
     try {
@@ -568,12 +568,12 @@ export async function exportSlidesToPDFWithFallback(args: ExportDeckArgs): Promi
     const fallbackDoc = new jsPDF({
       orientation: "landscape",
       unit: "in",
-      format: [10, 5.625],
+      format: [13.33, 7.5],
     })
 
     args.slides.forEach((slide, index) => {
       if (index > 0) {
-        fallbackDoc.addPage([10, 5.625], "landscape")
+        fallbackDoc.addPage([13.33, 7.5], "landscape")
       }
       try {
         renderFallbackPdfPage(

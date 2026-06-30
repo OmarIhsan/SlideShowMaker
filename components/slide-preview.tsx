@@ -73,38 +73,38 @@ export function SlideRenderer({
       )}
 
       {/* left-accent line/Cobalt column matching accentX: 1.0, accentY: 1.4, accentW: 0.05, accentH: 3.2 */}
-      {/* Structural Accent Bar (accentX: 1.0 -> 10%) */}
+      {/* Structural Accent Bar (accentX: 1.0 -> 7.5% of 13.33) */}
       <div 
         className="absolute z-10 rounded-r"
         style={{
-          left: '10%',
-          top: "23.1%",
+          left: '7.5%',
+          top: "16%",
           width: '0.5%',
-          height: "64%",
+          height: "48%",
           backgroundColor: TOKEN.cobalt,
         }}
         aria-hidden="true"
       />
 
-      {/* Vertical right limit line matching pptx x: 8.0 (left: 80%), y: 1.0 (top: 17.8%), h: 4.0 (height: 71.1%) */}
+      {/* Vertical dividing line matching pptx x: 8.0 (left: 60%), y: 1.0 (top: 13.3%), h: 4.0 (height: 53.3%) */}
       <div
         className="absolute z-10"
         style={{
-          left: "80%",
-          top: "17.8%",
+          left: "60%",
+          top: "13.3%",
           width: "1px",
-          height: "71.1%",
+          height: "53.3%",
           backgroundColor: "#E2E8F0"
         }}
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 1.4, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 8.3, y: 0.6) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "14%",
-          top: "10.6%",
+          left: "62.3%",
+          top: "8%",
           color: TOKEN.gold,
           fontFamily: "Inter, sans-serif"
         }}
@@ -112,14 +112,14 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 1.4 (left: 14%), y: 1.3 (top: 23.1%), w: 6.6 (width: 66%), h: 3.6 (height: 64%) */}
+      {/* Main slide content bounding box: x: 8.3 (left: 62.3%), y: 1.2 (top: 16%), w: 4.5 (width: 33.8%), h: 3.6 (height: 48%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "14%",
-          top: "23.1%",
-          width: "66%",
-          height: "64%"
+          left: "62.3%",
+          top: "16%",
+          width: "33.8%",
+          height: "48%"
         }}
       >
         {(() => {
