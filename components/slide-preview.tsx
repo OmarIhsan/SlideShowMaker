@@ -239,7 +239,7 @@ function SlideRendererInner({
 
       {/* Main slide content bounding box: bodyX=0.54 (69px), bodyY=1.1 (141px), bodyW=3.45 (442px), bodyH=3.4 (435px) */}
       <div
-        className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
+        className="absolute flex flex-col justify-start text-left overflow-hidden break-words pr-2 z-10"
         style={{ left: "69px", top: "141px", width: "442px", height: "435px", fontFamily: "Plus Jakarta Sans, sans-serif" }}
       >
         {(() => {

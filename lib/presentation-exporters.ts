@@ -302,7 +302,7 @@ export async function exportSlidesToPowerPoint({
           w: SLIDE_FRAME.bodyW,
           h: SLIDE_FRAME.bodyH,
           align: "justify",
-          valign: "middle",
+          valign: "top",
           fit: "shrink",
           margin: 0,
         })
@@ -319,7 +319,7 @@ export async function exportSlidesToPowerPoint({
         fontFace: "Inter",
         color: "1E293B",
         lineSpacing: 24,
-        valign: "middle",
+        valign: "top",
         margin: 0,
       })
     }
@@ -541,7 +541,7 @@ function renderPdfPage(
       return height + (lines * pdfLineHeight) + 0.12
     }, 0)
 
-    const startY = Math.max(SLIDE_FRAME.bodyY, (5.625 - centeredBodyHeight) / 2)
+    const startY = SLIDE_FRAME.bodyY
 
     let currentY = startY
     bodySegments.forEach((segment, segmentIndex) => {
