@@ -24,19 +24,24 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
   const bodySegments = buildBodySegments(contentToRender)
 
   return bodySegments.map((segment, index) => {
+    const textOpts: any = {
+      color: "1E293B",
+      fontSize: 16,
+      fontFace: "Plus Jakarta Sans",
+      lineSpacing: 21,
+      bold: false,
+    };
+
+    if (segment.isListItem) {
+      textOpts.bullet = {
+        code: "25CF",   // circle glyph
+        color: "0F4C81"
+      };
+    }
+
     return {
       text: segment.cleanText + (index < bodySegments.length - 1 ? "\n" : ""),
-      options: {
-        bullet: {
-          code: "25CF",   // circle glyph
-          color: "0F4C81"
-        },
-        color: "1E293B",
-        fontSize: 16,
-        fontFace: "Plus Jakarta Sans",
-        lineSpacing: 21,
-        bold: false,
-      },
+      options: textOpts,
     }
   })
 }

@@ -178,6 +178,10 @@ function ContentSlide({ slide }: { slide: Slide }) {
     <div className="w-full">
       <ul className="space-y-4 pl-0">
         {contentToRender.filter(line => line.trim().length > 0).map((lineText: string, index: number) => {
+          const isUnordered = lineText.startsWith("-") || lineText.startsWith("*") || lineText.startsWith("•")
+          const isOrdered = /^\d+[.)]/.test(lineText) || /^[a-zA-Z][.)]/.test(lineText)
+          const isListItem = isUnordered || isOrdered
+
           const cleanText = lineText
             .replace(/^[-*•]\s*/, "")
             .replace(/^\d+[.)]\s*/, "")
@@ -216,7 +220,7 @@ function ContentSlide({ slide }: { slide: Slide }) {
           return (
             <li
               key={index}
-              className="flex items-start font-medium list-item tracking-normal text-lg md:text-xl font-medium text-justify"
+              className="flex items-start font-medium tracking-normal text-lg md:text-xl font-medium text-justify"
               style={{ 
                 fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", 
                 lineHeight: 1.3,
@@ -224,15 +228,17 @@ function ContentSlide({ slide }: { slide: Slide }) {
               }}
             >
               {/* Circle bullet glyph colored in Ceramic Cobalt (#0F4C81) */}
-              <span className="shrink-0 mt-2 mr-4 rounded-full"
-                style={{
-                  display: "inline-block",
-                  width: "8px",
-                  height: "8px",
-                  backgroundColor: TOKEN.cobalt,
-                }}
-                aria-hidden="true"
-              />
+              {isListItem && (
+                <span className="shrink-0 mt-2 mr-4 rounded-full"
+                  style={{
+                    display: "inline-block",
+                    width: "8px",
+                    height: "8px",
+                    backgroundColor: TOKEN.cobalt,
+                  }}
+                  aria-hidden="true"
+                />
+              )}
               <span style={{ color: TOKEN.enamel }}>{cleanText}</span>
             </li>
           )
