@@ -196,6 +196,9 @@ function sanitizeText(text: string): string {
   // 2. Clean broken word fragments (case-insensitive)
   cleaned = cleaned.replace(/\b(enam|completos|fuinath)\b/gi, "");
   
+  // 3. INDEX_NUMBER_BLEEDING: Strip structural slide digits if they stand before a capitalized academic keyword
+  cleaned = cleaned.replace(/^\s*\b\d+\b\s*(?=[A-Z])/, "");
+  
   // Clean double spaces
   cleaned = cleaned.replace(/\s+/g, " ").trim();
   
@@ -258,7 +261,9 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
     const formattedToken = `- ${cleanBody}`;
 
-    if (isOverBudget([...currentChunk, formattedToken])) {
+    const isListPattern = /^\d+[.)]\s+/.test(cleanBody) || /^[a-zA-Z][.)]\s+/.test(cleanBody) || /^\d+[.)]/.test(token);
+
+    if (!isListPattern && isOverBudget([...currentChunk, formattedToken])) {
       if (currentChunk.length > 0) {
         pushNewSlide({
           title: currentTopicContext,

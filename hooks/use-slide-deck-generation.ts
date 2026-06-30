@@ -80,7 +80,7 @@ function cleanDocText(text: string): string {
       }
 
       // Count alphanumeric characters to filter out binary noise
-      const alphaCount = (line.match(/[a-zA-Z0-9]/g) || []).length;
+      const alphaCount = (line.match(/[a-zA-Z0-9\u0080-\uFFFF]/g) || []).length;
       if (alphaCount < line.length * 0.4) {
         return false;
       }
@@ -99,47 +99,49 @@ function extractTextFromDoc(arrayBuffer: ArrayBuffer): string {
   let i = 0;
   while (i < len) {
     // Check for UTF-16LE printable sequence
-    let utf16Temp = "";
+    let utf16TempBytes: number[] = [];
     let j = i;
     while (j + 1 < len) {
       const b1 = bytes[j];
       const b2 = bytes[j + 1];
 
       const isPrintableUtf16 =
-        (b2 === 0x00 && ((b1 >= 0x20 && b1 <= 0x7E) || b1 === 0x0A || b1 === 0x0D || b1 === 0x09)) ||
+        (b2 === 0x00 && ((b1 >= 0x20 && b1 <= 0x7E) || b1 === 0x0A || b1 === 0x0D || b1 === 0x09 || b1 >= 0x80)) ||
         (b2 === 0x20 && b1 >= 0x00 && b1 <= 0xFF) ||
         (b2 >= 0x01 && b2 <= 0x04 && b1 >= 0x00 && b1 <= 0xFF);
 
       if (isPrintableUtf16) {
-        utf16Temp += String.fromCharCode(b1 + (b2 << 8));
+        utf16TempBytes.push(b1, b2);
         j += 2;
       } else {
         break;
       }
     }
 
-    if (utf16Temp.length >= 4) {
-      text += utf16Temp + "\n";
+    if (utf16TempBytes.length >= 8) { // 4 chars
+      const utf16Buf = new Uint8Array(utf16TempBytes);
+      text += new TextDecoder("utf-16le").decode(utf16Buf) + "\n";
       i = j;
       continue;
     }
 
-    // Check for ASCII/ANSI printable sequence
-    let asciiTemp = "";
+    // Check for ASCII/ANSI/UTF-8 printable sequence
+    let asciiTempBytes: number[] = [];
     let k = i;
     while (k < len) {
       const b = bytes[k];
-      const isPrintableAscii = (b >= 0x20 && b <= 0x7E) || b === 0x0A || b === 0x0D || b === 0x09;
-      if (isPrintableAscii) {
-        asciiTemp += String.fromCharCode(b);
+      const isPrintableByte = (b >= 0x20 && b <= 0x7E) || b === 0x0A || b === 0x0D || b === 0x09 || (b >= 0x80 && b <= 0xFF);
+      if (isPrintableByte) {
+        asciiTempBytes.push(b);
         k++;
       } else {
         break;
       }
     }
 
-    if (asciiTemp.length >= 4) {
-      text += asciiTemp + "\n";
+    if (asciiTempBytes.length >= 4) {
+      const asciiBuf = new Uint8Array(asciiTempBytes);
+      text += new TextDecoder("utf-8").decode(asciiBuf) + "\n";
       i = k;
       continue;
     }
