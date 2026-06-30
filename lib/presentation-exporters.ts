@@ -26,9 +26,9 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
   return bodySegments.map((segment, index) => {
     const textOpts: any = {
       color: "1E293B",
-      fontSize: 16,
+      fontSize: 14,
       fontFace: "Plus Jakarta Sans",
-      lineSpacing: 21,
+      lineSpacing: 19,
       bold: false,
     };
 
@@ -82,7 +82,12 @@ export async function exportSlidesToPowerPoint({
   const PptxGen = (pptxgenModule as any).default || pptxgenModule
   const pptx = new PptxGen()
 
-  pptx.layout = "LAYOUT_16x9"
+  pptx.defineLayout({
+    name: "CUSTOM_4_3",
+    width: 7.5,
+    height: 5.625,
+  })
+  pptx.layout = "CUSTOM_4_3"
 
   const primaryHex = cleanHex(theme.hexPrimary)
   const bgHex = cleanHex(theme.hexBg)
@@ -100,10 +105,10 @@ export async function exportSlidesToPowerPoint({
 
       // Solid Dentin Gold (#C5A059) right side visual block
       pptxSlide.addShape("rect", {
-        x: 6.0,
+        x: 4.5,
         y: 0,
-        w: 4.0,
-        h: 7.5,
+        w: 3.0,
+        h: 5.625,
         fill: { color: "C5A059" },
         line: { color: "C5A059", width: 0 }
       })
@@ -112,13 +117,12 @@ export async function exportSlidesToPowerPoint({
       pptxSlide.addText(slide.title, {
         x: 0.5,
         y: 1.8,
-        w: 5.0,
+        w: 3.5,
         h: 2.0,
-        fontSize: 48,
+        fontSize: 32,
         bold: true,
+        color: "FFFFFF",
         fontFace: "Inter",
-        color: "F8F9FA",
-        align: "left",
         valign: "middle"
       })
       return
@@ -132,10 +136,10 @@ export async function exportSlidesToPowerPoint({
     // Add right limit line
     pptxSlide.addShape("line", {
       type: "line",
-      x: 3.0,
-      y: 1.4,
+      x: 1.7,
+      y: 1.0,
       w: 0.0,
-      h: 4.5,
+      h: 3.6,
       line: { color: "E2E8F0", width: 1 }
     })
 
@@ -352,22 +356,22 @@ function renderPdfPage(
   if (slide.layout === "CHAPTER_DIVIDER") {
     // === CHAPTER DIVIDER (PDF) ===
     doc.setFillColor("#1E293B")
-    doc.rect(0, 0, 13.33, 7.5, "F")
+    doc.rect(0, 0, 7.5, 5.625, "F")
 
     // Solid right-side gold block (mirrors PPTX layout 1:1)
     doc.setFillColor("#C5A059")
-    doc.rect(6.0, 0, 4.0, 7.5, "F")
+    doc.rect(4.5, 0, 3.0, 5.625, "F")
 
     // Chapter title
     doc.setFont("Inter", "bold")
-    doc.setFontSize(48)
+    doc.setFontSize(32)
     doc.setTextColor("#F8F9FA")
-    doc.text(slide.title, 0.5, 3.5)
+    doc.text(slide.title, 0.5, 2.8)
     return
   }
 
   doc.setFillColor(theme.hexBg)
-  doc.rect(0, 0, 13.33, 7.5, "F")
+  doc.rect(0, 0, 7.5, 5.625, "F")
 
   // Left anchor column on ALL slides (including Slide 1) — uniform titleless layout
   addSlideDecoration(doc, theme)
@@ -375,7 +379,7 @@ function renderPdfPage(
   // Add right limit line
   doc.setDrawColor("#E2E8F0")
   doc.setLineWidth(0.01)
-  doc.line(3.0, 1.4, 3.0, 5.9)
+  doc.line(1.7, 1.0, 1.7, 4.6)
 
   const fontToUse = (typeof doc.getFontList === "function" && doc.getFontList()["Plus Jakarta Sans"]) ? "Plus Jakarta Sans" : "Helvetica";
 
@@ -414,12 +418,12 @@ function renderPdfPage(
   } else {
     // Standard body renderer — ALL slides including Slide 1
     const contentToRender = slide.content;
-    const pdfLineHeight = (16 / 72) * 1.3
+    const pdfLineHeight = (14 / 72) * 1.3
 
     // Standardize measure method to use the dynamic font scale parameters
     const bodySegments = buildBodySegments(contentToRender)
     doc.setFont(fontToUse, "normal")
-    doc.setFontSize(16)
+    doc.setFontSize(14)
 
     // Calculate height accurately with dynamic font scale variables
     const centeredBodyHeight = bodySegments.reduce((height, segment) => {
@@ -437,7 +441,7 @@ function renderPdfPage(
       return height + (lines * pdfLineHeight) + 0.12
     }, 0)
 
-    const startY = Math.max(SLIDE_FRAME.bodyY, (7.5 - centeredBodyHeight) / 2)
+    const startY = Math.max(SLIDE_FRAME.bodyY, (5.625 - centeredBodyHeight) / 2)
 
     let currentY = startY
     bodySegments.forEach((segment, segmentIndex) => {
@@ -456,12 +460,12 @@ function renderPdfPage(
         doc.text(lines, SLIDE_FRAME.bodyX + 0.2, currentY, { align: "justify", maxWidth: SLIDE_FRAME.bodyW - 0.4 })
         currentY += (lines.length * pdfLineHeight) + 0.3
         doc.setFont(fontToUse, "normal")
-        doc.setFontSize(16)
+        doc.setFontSize(14)
         return
       }
 
       doc.setFont(fontToUse, "normal")
-      doc.setFontSize(16)
+      doc.setFontSize(14)
 
       if (segment.isListItem) {
         // Circle bullet — color is #0F4C81
@@ -508,7 +512,7 @@ export async function exportSlidesToPDF({
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "in",
-    format: [13.33, 7.5],
+    format: [7.5, 5.625],
   })
 
   // Try to load Plus Jakarta Sans Google Font
@@ -534,7 +538,7 @@ export async function exportSlidesToPDF({
 
   slides.forEach((slide, index) => {
     if (index > 0) {
-      doc.addPage([13.33, 7.5], "landscape")
+      doc.addPage([7.5, 5.625], "landscape")
     }
 
     try {
@@ -568,12 +572,12 @@ export async function exportSlidesToPDFWithFallback(args: ExportDeckArgs): Promi
     const fallbackDoc = new jsPDF({
       orientation: "landscape",
       unit: "in",
-      format: [13.33, 7.5],
+      format: [7.5, 5.625],
     })
 
     args.slides.forEach((slide, index) => {
       if (index > 0) {
-        fallbackDoc.addPage([13.33, 7.5], "landscape")
+        fallbackDoc.addPage([7.5, 5.625], "landscape")
       }
       try {
         renderFallbackPdfPage(
