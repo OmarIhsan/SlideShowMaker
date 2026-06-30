@@ -1,4 +1,5 @@
 import type { Slide, Theme } from "@/lib/slide-engine"
+import { getFontScaleForSlide } from "./font-autofit"
 import {
   buildBodySegments,
   measurePdfBodyHeight,
@@ -19,11 +20,9 @@ function cleanHex(hex: string): string {
   return hex.replace("#", "")
 }
 
-function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme, lecturerName?: string) {
-  const contentToRender = slide.id === 1
-    ? [lecturerName ? `Presented by: ${lecturerName}` : "Presented by: Dr. Faisal Alhuwaizi"]
-    : slide.content;
-
+function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
+  const contentToRender = slide.content;
+  const fontScale = getFontScaleForSlide(contentToRender)
   const bodySegments = buildBodySegments(contentToRender)
 
   return bodySegments.map((segment, index) => {
@@ -35,9 +34,9 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme, l
           color: "0F4C81"
         },
         color: "1E293B",
-        fontSize: 24,
+        fontSize: fontScale.sizePptx,
         fontFace: "Plus Jakarta Sans",
-        lineSpacing: 34,
+        lineSpacing: fontScale.lineSpacingPptx,
         bold: false,
       },
     }
@@ -224,7 +223,7 @@ export async function exportSlidesToPowerPoint({
         })
       } else {
         // Standard content body — applies to ALL slides including Slide 1
-        const formattedContent = buildFormattedContent(slide, primaryHex, theme, lecturerName)
+        const formattedContent = buildFormattedContent(slide, primaryHex, theme)
 
         // === PPTX BOUNDING FRAME ===
         pptxSlide.addText(formattedContent, {
@@ -411,12 +410,31 @@ function renderPdfPage(
     renderPdfTableGrid(doc, slide, theme, startY)
   } else {
     // Standard body renderer — ALL slides including Slide 1
-    const contentToRender = slide.id === 1
-      ? [lecturerName ? `Presented by: ${lecturerName}` : "Presented by: Dr. Faisal Alhuwaizi"]
-      : slide.content;
+    const contentToRender = slide.content;
+    const fontScale = getFontScaleForSlide(contentToRender)
+    const pdfLineHeight = (fontScale.sizePptx / 72) * fontScale.lineHeightMultiplier
 
+    // Standardize measure method to use the dynamic font scale parameters
     const bodySegments = buildBodySegments(contentToRender)
-    const centeredBodyHeight = measurePdfBodyHeight(doc, bodySegments, theme)
+    doc.setFont(fontToUse, "normal")
+    doc.setFontSize(fontScale.sizePptx)
+
+    // Calculate height accurately with dynamic font scale variables
+    const centeredBodyHeight = bodySegments.reduce((height, segment) => {
+      const lower = segment.cleanText.toLowerCase()
+      const isWarning = ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(w => lower.includes(w))
+      if (isWarning) {
+        const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.4).length
+        return height + (lines * pdfLineHeight) + 0.3
+      }
+      if (segment.isListItem) {
+        const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.2).length
+        return height + (lines * pdfLineHeight) + 0.16
+      }
+      const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW).length
+      return height + (lines * pdfLineHeight) + 0.12
+    }, 0)
+
     const startY = Math.max(SLIDE_FRAME.bodyY, (5.625 - centeredBodyHeight) / 2)
 
     let currentY = startY
@@ -427,20 +445,21 @@ function renderPdfPage(
       if (isWarning) {
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.4)
         doc.setFillColor(248, 245, 237)
-        doc.rect(SLIDE_FRAME.bodyX, currentY - 0.2, SLIDE_FRAME.bodyW, (lines.length * 0.48) + 0.2, "F")
+        doc.rect(SLIDE_FRAME.bodyX, currentY - 0.2, SLIDE_FRAME.bodyW, (lines.length * pdfLineHeight) + 0.2, "F")
         doc.setDrawColor("#C5A059")
         doc.setLineWidth(0.04)
-        doc.line(SLIDE_FRAME.bodyX, currentY - 0.2, SLIDE_FRAME.bodyX, currentY - 0.2 + (lines.length * 0.48) + 0.2)
+        doc.line(SLIDE_FRAME.bodyX, currentY - 0.2, SLIDE_FRAME.bodyX, currentY - 0.2 + (lines.length * pdfLineHeight) + 0.2)
         doc.setFont(fontToUse, "bold")
         doc.setTextColor("#1E293B")
         doc.text(lines, SLIDE_FRAME.bodyX + 0.2, currentY)
-        currentY += (lines.length * 0.48) + 0.3
+        currentY += (lines.length * pdfLineHeight) + 0.3
         doc.setFont(fontToUse, "normal")
+        doc.setFontSize(fontScale.sizePptx)
         return
       }
 
       doc.setFont(fontToUse, "normal")
-      doc.setFontSize(24)
+      doc.setFontSize(fontScale.sizePptx)
 
       if (segment.isListItem) {
         // Circle bullet — color is #0F4C81
@@ -449,7 +468,7 @@ function renderPdfPage(
         doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW - 0.2)
         doc.text(lines, SLIDE_FRAME.bodyX, currentY)
-        currentY += (lines.length * 0.48) + 0.16
+        currentY += (lines.length * pdfLineHeight) + 0.16
         return
       }
 
@@ -457,7 +476,7 @@ function renderPdfPage(
       doc.setTextColor("#1E293B")
       const lines = doc.splitTextToSize(segment.cleanText, SLIDE_FRAME.bodyW)
       doc.text(lines, SLIDE_FRAME.bodyX, currentY)
-      currentY += (lines.length * 0.48) + 0.12
+      currentY += (lines.length * pdfLineHeight) + 0.12
     })
   }
 }

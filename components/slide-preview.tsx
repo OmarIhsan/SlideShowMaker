@@ -1,4 +1,5 @@
 import type { Slide, Theme } from "@/lib/slide-engine"
+import { getFontScaleForSlide } from "@/lib/font-autofit"
 
 // ============================================================
 // GLOBAL DESIGN TOKENS (Contrast Avant-Garde framework)
@@ -127,7 +128,7 @@ export function SlideRenderer({
             case "TABULAR_DATA":
               return <TableSlide slide={slide} theme={theme} />
             default:
-              return <ContentSlide slide={slide} lecturerName={lecturerName} />
+              return <ContentSlide slide={slide} />
           }
         })()}
       </div>
@@ -164,7 +165,7 @@ export function parseAndHighlightMetrics(text: string) {
   );
 }
 
-function ContentSlide({ slide, lecturerName }: { slide: Slide; lecturerName?: string }) {
+function ContentSlide({ slide }: { slide: Slide }) {
   const isWarning = (text: string) => {
     const lower = text.toLowerCase()
     return ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(
@@ -172,9 +173,8 @@ function ContentSlide({ slide, lecturerName }: { slide: Slide; lecturerName?: st
     )
   }
 
-  const contentToRender = slide.id === 1
-    ? [lecturerName ? `Presented by: ${lecturerName}` : "Presented by: Dr. Faisal Alhuwaizi"]
-    : slide.content;
+  const contentToRender = slide.content;
+  const fontScale = getFontScaleForSlide(contentToRender);
 
   return (
     <div className="w-full">
@@ -205,7 +205,7 @@ function ContentSlide({ slide, lecturerName }: { slide: Slide; lecturerName?: st
                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   <span
-                    className="text-lg font-semibold leading-relaxed"
+                    className={`font-semibold leading-relaxed ${fontScale.sizeWeb}`}
                     style={{ color: TOKEN.enamel }}
                   >
                     {cleanText}
@@ -218,8 +218,11 @@ function ContentSlide({ slide, lecturerName }: { slide: Slide; lecturerName?: st
           return (
             <li
               key={index}
-              className="flex items-start text-2xl md:text-3xl font-medium leading-relaxed list-item tracking-wide"
-              style={{ fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", lineHeight: "1.4" }}
+              className={`flex items-start font-medium list-item tracking-wide ${fontScale.sizeWeb}`}
+              style={{ 
+                fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", 
+                lineHeight: fontScale.lineHeightMultiplier 
+              }}
             >
               {/* Circle bullet glyph colored in Ceramic Cobalt (#0F4C81) */}
               <span className="shrink-0 mt-2 mr-4 rounded-full"

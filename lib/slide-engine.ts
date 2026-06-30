@@ -140,7 +140,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     .filter(token => token.length > 0 && !/^(DCD|DR\.\s*CUBE.*)$/i.test(token));
 
   const bodySlides: Slide[] = [];
-  let slideIdCounter = 2;
+  let slideIdCounter = 1;
 
   let currentChunk: string[] = [];
 
@@ -202,21 +202,12 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     });
   }
 
-  const titleSlide: Slide = {
-    id: 1,
-    title: "Lecture Slides",
-    content: [
-      "Presented by: Dr. Faisal Alhuwaizi"
-    ],
-    layout: "STANDARD_CONTENT"
-  }
-
-  const finalSlides = [titleSlide, ...bodySlides];
+  const finalSlides = bodySlides;
   const uniqueHeaders = Array.from(new Set(finalSlides.map(s => s.title)));
 
   return {
     slides: finalSlides,
-    chapterCount: Math.max(uniqueHeaders.length - 1, 1)
+    chapterCount: Math.max(uniqueHeaders.length, 1)
   }
 }
 
@@ -279,7 +270,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
   const finalResult: Slide[] = []
 
   slides.forEach((slide) => {
-    if (slide.id === 1 || slide.layout === "CHAPTER_DIVIDER") {
+    if (slide.layout === "CHAPTER_DIVIDER") {
       finalResult.push(slide)
       return
     }
@@ -337,13 +328,13 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
   // Cleanup titles for single parts
   let titleCounts = new Map<string, number>()
   finalResult.forEach(s => {
-    if (s.id === 1 || s.layout === "CHAPTER_DIVIDER") return
+    if (s.layout === "CHAPTER_DIVIDER") return
     const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
     titleCounts.set(base, (titleCounts.get(base) || 0) + 1)
   })
   
   finalResult.forEach(s => {
-    if (s.id === 1 || s.layout === "CHAPTER_DIVIDER") return
+    if (s.layout === "CHAPTER_DIVIDER") return
     const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
     if (titleCounts.get(base) === 1) {
       s.title = base
