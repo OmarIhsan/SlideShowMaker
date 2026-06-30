@@ -65,11 +65,11 @@ export function SlideRenderer({
         </div>
       )}
 
-      {/* left-accent line/Cobalt column matching accentX: 0.8, accentY: 1.4, accentW: 0.08, accentH: 3.2 */}
+      {/* left-accent line/Cobalt column matching accentX: 0.6, accentY: 1.4, accentW: 0.08, accentH: 3.2 */}
       <div
         className="absolute z-10 rounded-r"
         style={{
-          left: "8%",
+          left: "6%",
           top: "24.9%",
           width: "0.8%",
           height: "56.9%",
