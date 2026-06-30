@@ -3,11 +3,11 @@ import type { Slide, Theme } from "@/lib/slide-engine"
 export const SLIDE_FRAME = {
   titleY: 0.5,
   titleH: 0.8,
-  bodyX: 2.52,
+  bodyX: 0.55,  // 0.5 left margin + 0.05 padding after 1px line
   bodyY: 1.25,
-  bodyW: 2.2,
+  bodyW: 2.55,  // ~40% of 6.5 usable width (2.6 - 0.05 padding)
   bodyH: 3.4,
-  accentX: 1.0,
+  accentX: 0.5, // 0.5 left margin (where 1px line begins)
   accentY: 1.1,
   accentW: 0.05,
   accentH: 3.4,

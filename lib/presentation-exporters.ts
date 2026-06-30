@@ -103,16 +103,16 @@ export async function exportSlidesToPowerPoint({
       // === CHAPTER DIVIDER: full-bleed #1E293B canvas ===
       pptxSlide.background = { color: "1E293B" }
 
-      // Chapter title centered at Y: 1.5, size 24, gold C5A059
+      // Chapter title centered at Y: 1.5, size 44, gold C5A059
       pptxSlide.addText(slide.title, {
         x: 0.5,
         y: 1.5,
         w: 6.5,
         h: 0.8,
-        fontSize: 24,
+        fontSize: 44,
         bold: true,
         color: "C5A059",
-        fontFace: "Plus Jakarta Sans",
+        fontFace: "Inter",
         align: "center",
         valign: "middle"
       })
@@ -134,7 +134,7 @@ export async function exportSlidesToPowerPoint({
         h: 3.0,
         fontSize: 9,
         color: "C5A059",
-        fontFace: "Plus Jakarta Sans",
+        fontFace: "Open Sans",
         align: "center",
         valign: "middle"
       })
@@ -143,56 +143,53 @@ export async function exportSlidesToPowerPoint({
 
     pptxSlide.background = { color: bgHex }
 
-    // Add left anchor column to ALL slides (including slide 1)
-    addSlideDecoration(pptxSlide, theme)
-
-    // Add right limit line
+    // Add 1px Cobalt structural anchor line at left margin (x: 0.5)
     pptxSlide.addShape("line", {
       type: "line",
-      x: 2.25,
+      x: 0.5,
       y: 1.1,
       w: 0.0,
       h: 3.4,
-      line: { color: "E2E8F0", width: 1 }
+      line: { color: "0F4C81", width: 1 }
     })
 
     // Add brand metadata header at top left
     pptxSlide.addText(headerText, {
-      x: 2.52,
+      x: 0.55,
       y: 0.5,
-      w: 4.45,
+      w: 6.45,
       h: 0.3,
       fontSize: 9,
       bold: true,
       color: "94A3B8", // Slate Gray
-      fontFace: "Plus Jakarta Sans",
+      fontFace: "Inter",
       align: "left",
       valign: "middle"
     })
 
     // Running Footer Left
     pptxSlide.addText(footerLeftText, {
-      x: 2.52,
+      x: 0.5,
       y: 4.8,
-      w: 2.5,
+      w: 3.0,
       h: 0.3,
       fontSize: 8,
       bold: true,
       color: "0F4C81", // Ceramic Cobalt
-      fontFace: "Plus Jakarta Sans",
+      fontFace: "Inter",
       align: "left"
     })
 
     // Running Footer Right
     pptxSlide.addText(footerRightText, {
-      x: 5.47,
+      x: 4.0,
       y: 4.8,
-      w: 1.5,
+      w: 3.0,
       h: 0.3,
       fontSize: 8,
       bold: true,
       color: "94A3B8", // Slate Gray
-      fontFace: "Plus Jakarta Sans",
+      fontFace: "Inter",
       align: "right"
     })
 
@@ -200,10 +197,57 @@ export async function exportSlidesToPowerPoint({
     // Content is rendered through the standard body text box for all slides.
 
     try {
-      if (slide.layout === "TABULAR_DATA") {
-        const bulletX = 1.22;
-        const textX = 1.4;
-        const maxTextWidth = 6.4;
+      if (slide.layout === "EVIDENCE_COMPARATIVE") {
+        // Render optional title for context
+        pptxSlide.addText(slide.title, {
+          x: 0.5,
+          y: 0.9,
+          w: 6.5,
+          h: 0.4,
+          fontSize: 18,
+          bold: true,
+          color: "0F4C81",
+          fontFace: "Inter",
+          align: "left",
+          valign: "middle"
+        })
+
+        // Left Media Block
+        pptxSlide.addShape("rect", {
+          x: 0.5,
+          y: 1.5,
+          w: 3.1,
+          h: 2.5,
+          fill: { color: "E2E8F0" },
+          line: { color: "CBD5E1", width: 1 }
+        })
+        pptxSlide.addText("Pre-Op State", {
+          x: 0.5, y: 1.5, w: 3.1, h: 2.5,
+          fontSize: 12, bold: true, color: "64748B", fontFace: "Inter", align: "center", valign: "middle"
+        })
+        pptxSlide.addText("Baseline clinical observation prior to intervention.", {
+          x: 0.5, y: 4.1, w: 3.1, h: 0.4,
+          fontSize: 10, italic: true, color: "64748B", fontFace: "Open Sans", align: "center", valign: "top"
+        })
+
+        // Right Media Block
+        pptxSlide.addShape("rect", {
+          x: 3.9,
+          y: 1.5,
+          w: 3.1,
+          h: 2.5,
+          fill: { color: "E2E8F0" },
+          line: { color: "CBD5E1", width: 1 }
+        })
+        pptxSlide.addText("Post-Op Outcome", {
+          x: 3.9, y: 1.5, w: 3.1, h: 2.5,
+          fontSize: 12, bold: true, color: "64748B", fontFace: "Inter", align: "center", valign: "middle"
+        })
+        pptxSlide.addText("Final restoration state following targeted procedure.", {
+          x: 3.9, y: 4.1, w: 3.1, h: 0.4,
+          fontSize: 10, italic: true, color: "64748B", fontFace: "Open Sans", align: "center", valign: "top"
+        })
+      } else if (slide.layout === "TABULAR_DATA") {
         const tableRows = slide.content.map((rowText, rowIndex) => {
           const cells = rowText
             .replace(/^\|/, "")
@@ -245,7 +289,7 @@ export async function exportSlidesToPowerPoint({
         // Standard content body — applies to ALL slides including Slide 1
         const formattedContent = buildFormattedContent(slide, primaryHex, theme)
 
-        // === PPTX BOUNDING FRAME ===
+        // === PPTX BOUNDING FRAME (Left 40% Column) ===
         pptxSlide.addText(formattedContent, {
           x: SLIDE_FRAME.bodyX,
           y: SLIDE_FRAME.bodyY,
@@ -257,25 +301,25 @@ export async function exportSlidesToPowerPoint({
           margin: 0,
         })
 
-        // === PPTX MEDIA FRAME ===
+        // === PPTX MEDIA FRAME (Right 60% Column - Unbordered) ===
         pptxSlide.addShape("rect", {
-          x: 4.92,
+          x: 3.1,
           y: 1.25,
-          w: 2.08,
+          w: 3.9,
           h: 3.4,
-          fill: { color: "F8FAFC" },
-          line: { color: "C5A059", width: 1 }
+          fill: { color: "E2E8F0" },
+          line: { color: "E2E8F0", width: 0 }
         })
 
         pptxSlide.addText("Intraoral Macro Photo", {
-          x: 4.92,
+          x: 3.1,
           y: 1.4,
-          w: 2.08,
+          w: 3.9,
           h: 0.4,
-          fontSize: 8,
+          fontSize: 12,
           bold: true,
-          color: "C5A059",
-          fontFace: "Plus Jakarta Sans",
+          color: "64748B",
+          fontFace: "Inter",
           align: "center",
           valign: "middle"
         })
@@ -283,22 +327,22 @@ export async function exportSlidesToPowerPoint({
         // Vector Arrow Annotation line
         pptxSlide.addShape("line", {
           type: "line",
-          x: 6.5,
+          x: 6.0,
           y: 4.3,
-          w: 0.3,
+          w: 0.5,
           h: 0,
           line: { color: "C5A059", width: 2 }
         })
 
-        pptxSlide.addText("Macro Focus", {
-          x: 5.8,
+        pptxSlide.addText("Structural Detail Focus", {
+          x: 4.8,
           y: 4.15,
-          w: 0.7,
+          w: 1.1,
           h: 0.25,
-          fontSize: 7,
+          fontSize: 10,
           bold: true,
           color: "C5A059",
-          fontFace: "Plus Jakarta Sans",
+          fontFace: "Inter",
           align: "right"
         })
       }
@@ -418,7 +462,7 @@ function renderPdfPage(
 
     // Chapter title
     doc.setFont("Inter", "bold")
-    doc.setFontSize(24)
+    doc.setFontSize(44)
     doc.setTextColor("#C5A059")
     doc.text(slide.title, 3.75, 1.8, { align: "center" })
 
@@ -441,39 +485,71 @@ function renderPdfPage(
   doc.setFillColor(theme.hexBg)
   doc.rect(0, 0, 7.5, 5.625, "F")
 
-  // Left anchor column on ALL slides (including Slide 1) — uniform titleless layout
-  addSlideDecoration(doc, theme)
-
-  // Add right limit line
-  doc.setDrawColor("#E2E8F0")
+  // Add left anchor line (1px Cobalt)
+  doc.setDrawColor("#0F4C81")
   doc.setLineWidth(0.01)
-  doc.line(1.7, 1.0, 1.7, 4.6)
+  doc.line(0.5, 1.1, 0.5, 4.5)
 
-  const fontToUse = (typeof doc.getFontList === "function" && doc.getFontList()["Plus Jakarta Sans"]) ? "Plus Jakarta Sans" : "Helvetica";
+  const fontToUse = (typeof doc.getFontList === "function" && doc.getFontList()["Open Sans"]) ? "Open Sans" : "Helvetica";
 
   const headerText = brandHeader || "DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES"
   const footerLeftText = brandFooterLeft || "DR. CUBE DENTISTRY"
   const footerRightText = brandFooterRight || "2026 EDITION"
 
   // Add brand metadata header at top left
-  doc.setFont(fontToUse, "bold")
+  doc.setFont("Inter", "bold")
   doc.setFontSize(9)
   doc.setTextColor("#94A3B8") // Slate Gray
-  doc.text(headerText, SLIDE_FRAME.bodyX, 0.7)
+  doc.text(headerText, 0.55, 0.7)
 
   // Running Footer Left
-  doc.setFont(fontToUse, "bold")
+  doc.setFont("Inter", "bold")
   doc.setFontSize(8)
   doc.setTextColor("#0F4C81") // Ceramic Cobalt
-  doc.text(footerLeftText, SLIDE_FRAME.bodyX, 4.95)
+  doc.text(footerLeftText, 0.5, 4.95)
 
   // Running Footer Right
-  doc.setFont(fontToUse, "bold")
+  doc.setFont("Inter", "bold")
   doc.setFontSize(8)
   doc.setTextColor("#94A3B8") // Slate Gray
-  doc.text(footerRightText, 6.97, 4.95, { align: "right" })
+  doc.text(footerRightText, 7.0, 4.95, { align: "right" })
 
-  if (slide.layout === "TABULAR_DATA") {
+  if (slide.layout === "EVIDENCE_COMPARATIVE") {
+    // Render optional title for context
+    doc.setFont("Inter", "bold")
+    doc.setFontSize(18)
+    doc.setTextColor("#0F4C81")
+    doc.text(slide.title, 0.5, 1.1)
+
+    // Left Media Block
+    doc.setFillColor(226, 232, 240) // E2E8F0
+    doc.setDrawColor(203, 213, 225) // CBD5E1
+    doc.rect(0.5, 1.5, 3.1, 2.5, "FD")
+    
+    doc.setFont("Inter", "bold")
+    doc.setFontSize(12)
+    doc.setTextColor("#64748B")
+    doc.text("Pre-Op State", 2.05, 2.8, { align: "center" })
+
+    doc.setFont("Open Sans", "italic")
+    doc.setFontSize(10)
+    doc.text("Baseline clinical observation prior to intervention.", 2.05, 4.2, { align: "center" })
+
+    // Right Media Block
+    doc.setFillColor(226, 232, 240) // E2E8F0
+    doc.setDrawColor(203, 213, 225) // CBD5E1
+    doc.rect(3.9, 1.5, 3.1, 2.5, "FD")
+
+    doc.setFont("Inter", "bold")
+    doc.setFontSize(12)
+    doc.setTextColor("#64748B")
+    doc.text("Post-Op Outcome", 5.45, 2.8, { align: "center" })
+
+    doc.setFont("Open Sans", "italic")
+    doc.setFontSize(10)
+    doc.text("Final restoration state following targeted procedure.", 5.45, 4.2, { align: "center" })
+
+  } else if (slide.layout === "TABULAR_DATA") {
     const rows = slide.content.map((rowText) => {
       return rowText
         .replace(/^\|/, "")
@@ -487,16 +563,14 @@ function renderPdfPage(
     const startY = Math.max(1.5, (5.625 - totalTableH) / 2)
     renderPdfTableGrid(doc, slide, theme, startY)
   } else {
-    // Standard body renderer — ALL slides including Slide 1
+    // Standard body renderer (Layout B)
     const contentToRender = slide.content;
     const pdfLineHeight = (14 / 72) * 1.3
 
-    // Standardize measure method to use the dynamic font scale parameters
     const bodySegments = buildBodySegments(contentToRender)
     doc.setFont(fontToUse, "normal")
     doc.setFontSize(14)
 
-    // Calculate height accurately with dynamic font scale variables
     const centeredBodyHeight = bodySegments.reduce((height, segment) => {
       const lower = segment.cleanText.toLowerCase()
       const isWarning = ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(w => lower.includes(w))
@@ -540,7 +614,6 @@ function renderPdfPage(
       doc.setTextColor(theme.hexPrimary)
 
       if (segment.isListItem) {
-        // Circle bullet — color is #0F4C81
         doc.setFillColor("#0F4C81")
         doc.circle(SLIDE_FRAME.bodyX + 0.05, currentY - 0.04, 0.03, "F")
         doc.setFontSize(14)
@@ -557,28 +630,26 @@ function renderPdfPage(
       }
     })
 
-    // === PDF MEDIA FRAME ===
-    doc.setFillColor("#F8FAFC")
-    doc.setDrawColor("#C5A059")
-    doc.setLineWidth(0.015)
-    doc.rect(4.92, 1.25, 2.08, 3.4, "FD")
+    // === PDF MEDIA FRAME (Right 60% Column - Unbordered) ===
+    doc.setFillColor(226, 232, 240) // E2E8F0
+    doc.setDrawColor(226, 232, 240)
+    doc.setLineWidth(0)
+    doc.rect(3.1, 1.25, 3.9, 3.4, "FD")
 
-    doc.setFont(fontToUse, "bold")
-    doc.setFontSize(8)
-    doc.setTextColor("#C5A059")
-    doc.text("Intraoral Macro Photo", 5.96, 1.6, { align: "center" })
-
-    // Center camera icon box
-    doc.setFillColor("#E2E8F0")
-    doc.rect(5.76, 2.2, 0.4, 0.3, "F")
+    doc.setFont("Inter", "bold")
+    doc.setFontSize(12)
+    doc.setTextColor("#64748B")
+    doc.text("Intraoral Macro Photo", 5.05, 2.8, { align: "center" })
 
     // Vector Arrow Annotation
-    doc.setFontSize(7)
-    doc.text("Macro Focus", 6.5, 4.3, { align: "right" })
+    doc.setFontSize(10)
+    doc.setTextColor("#C5A059")
+    doc.text("Structural Detail Focus", 6.2, 4.3, { align: "right" })
+    doc.setDrawColor("#C5A059")
     doc.setLineWidth(0.02)
-    doc.line(6.55, 4.27, 6.85, 4.27)
-    doc.line(6.75, 4.22, 6.85, 4.27)
-    doc.line(6.75, 4.32, 6.85, 4.27)
+    doc.line(6.25, 4.27, 6.75, 4.27)
+    doc.line(6.65, 4.17, 6.75, 4.27)
+    doc.line(6.65, 4.37, 6.75, 4.27)
   }
 }
 

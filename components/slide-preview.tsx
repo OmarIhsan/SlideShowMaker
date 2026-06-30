@@ -1,10 +1,10 @@
 import type { Slide, Theme } from "@/lib/slide-engine"
 
 // ============================================================
-// GLOBAL DESIGN TOKENS (Contrast Avant-Garde framework)
-//   Canvas Base:            #F8F9FA  (Clinical Base)
+// GLOBAL DESIGN TOKENS (Clinical Minimalist framework)
+//   Canvas Base:            #F8F9FA  (Clinical Off-White)
 //   Bullet Glyph:           #0F4C81  (Ceramic Cobalt)
-//   Body Text:              #1E293B  (Deep Enamel)
+//   Body Text:              #1E293B  (Slate Charcoal)
 //   Structural Anchor:      #0F4C81  (Ceramic Cobalt)
 //   Precision Highlight:    #C5A059  (Dentin Gold)
 // ============================================================
@@ -40,14 +40,14 @@ export function SlideRenderer({
     return (
       <div
         className="relative flex flex-col h-full w-full overflow-hidden select-none items-center justify-center"
-        style={{ backgroundColor: "#1E293B", fontFamily: "Plus Jakarta Sans, Inter, sans-serif" }}
+        style={{ backgroundColor: "#1E293B", fontFamily: "Inter, sans-serif" }}
       >
-        {/* Title: centered, y: 1.5 */}
+        {/* Title: centered, y: 1.5 (top: 26.67%) */}
         <h1 
           className="absolute font-bold text-center w-full px-4" 
           style={{ 
             color: "#C5A059",
-            fontSize: "24px",
+            fontSize: "44px", // Updated to 44pt
             top: "26.67%",
             left: "0"
           }}
@@ -77,7 +77,74 @@ export function SlideRenderer({
     )
   }
 
-  // ── STANDARD SLIDES (Unified Layout: Slide 1 is mirrored identically) ──
+  // ── EVIDENCE & COMPARATIVE DATA (Layout C) ─────────────────────────────
+  if (slide.layout === "EVIDENCE_COMPARATIVE") {
+    return (
+      <div
+        className="relative flex flex-col h-full w-full overflow-hidden select-none"
+        style={{ backgroundColor: TOKEN.canvas }}
+      >
+        {/* Subtle Brand Metadata Header at top left (0.5 left margin -> 6.67%) */}
+        <div
+          className="absolute z-10 text-xs font-bold tracking-widest uppercase"
+          style={{ left: "6.67%", top: "8.9%", color: "#94A3B8", fontFamily: "Inter, sans-serif" }}
+        >
+          {brandHeader}
+        </div>
+
+        {/* Header (Optional display for Layout C context) */}
+        <div
+          className="absolute z-10 text-lg font-bold"
+          style={{ left: "6.67%", top: "14%", color: TOKEN.cobalt, fontFamily: "Inter, sans-serif" }}
+        >
+          {slide.title}
+        </div>
+
+        {/* Split Media Container */}
+        <div 
+          className="absolute flex flex-row items-center justify-between"
+          style={{ left: "6.67%", top: "25%", width: "86.66%", height: "55%" }}
+        >
+          {/* Left Block */}
+          <div className="w-[48%] h-full flex flex-col items-center justify-center">
+            <div className="w-full h-full bg-slate-200 border border-slate-300 rounded flex flex-col items-center justify-center">
+               <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+               </svg>
+               <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Pre-Op State</span>
+            </div>
+            <span className="mt-3 text-[10px] italic text-slate-500 font-sans">Baseline clinical observation prior to intervention.</span>
+          </div>
+          
+          {/* Right Block */}
+          <div className="w-[48%] h-full flex flex-col items-center justify-center">
+            <div className="w-full h-full bg-slate-200 border border-slate-300 rounded flex flex-col items-center justify-center">
+               <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+               </svg>
+               <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Post-Op Outcome</span>
+            </div>
+            <span className="mt-3 text-[10px] italic text-slate-500 font-sans">Final restoration state following targeted procedure.</span>
+          </div>
+        </div>
+
+        {/* Running Footer aligned to left: 6.67% and width: 86.66% */}
+        <div
+          className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
+          style={{ borderColor: "#F1F5F9", left: "6.67%", width: "86.66%" }}
+        >
+          <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: TOKEN.cobalt }}>
+            {brandFooterLeft}
+          </span>
+          <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#94A3B8" }}>
+            {brandFooterRight}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // ── STANDARD SLIDES (Layout B - Clinical Step-by-Step) ──
   return (
     <div
       className="relative flex flex-col h-full w-full overflow-hidden select-none"
@@ -89,54 +156,25 @@ export function SlideRenderer({
         </div>
       )}
 
-      {/* Structural Accent Bar (accentX: 1.0 -> 13.3% of 7.5) */}
-      <div 
-        className="absolute z-10 rounded-r"
-        style={{
-          left: '13.3%',
-          top: "19.6%",
-          width: '0.5%',
-          height: "60.4%",
-          backgroundColor: TOKEN.cobalt,
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Vertical dividing line matching pptx x: 2.25 (left: 30.0%), y: 1.1 (top: 19.6%), h: 3.4 (height: 60.4%) */}
+      {/* Vertical dividing line (1px Ceramic Cobalt) matching pptx x: 0.5 (left: 6.67%), top: 19.6%, h: 3.4 */}
       <div
         className="absolute z-10"
-        style={{
-          left: "30.0%",
-          top: "19.6%",
-          width: "1px",
-          height: "60.4%",
-          backgroundColor: "#E2E8F0"
-        }}
+        style={{ left: "6.67%", top: "19.6%", width: "1px", height: "60.4%", backgroundColor: TOKEN.cobalt }}
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 2.47 -> 2.52, y: 0.5) */}
+      {/* Subtle Brand Metadata Header at top left (x: 0.55 -> 7.33%, y: 0.5) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
-        style={{
-          left: "33.6%",
-          top: "8.9%",
-          color: "#94A3B8",
-          fontFamily: "Inter, sans-serif"
-        }}
+        style={{ left: "7.33%", top: "8.9%", color: "#94A3B8", fontFamily: "Inter, sans-serif" }}
       >
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 2.52 (left: 33.6%), y: 1.25 (top: 22.22%), w: 2.2 (width: 29.33%), h: 3.4 (height: 60.44%) */}
+      {/* Main slide content bounding box: x: 0.55 (left: 7.33%), y: 1.25 (top: 22.22%), w: 2.55 (width: 34.0%), h: 3.4 (height: 60.44%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
-        style={{
-          left: "33.6%",
-          top: "22.22%",
-          width: "29.33%",
-          height: "60.44%"
-        }}
+        style={{ left: "7.33%", top: "22.22%", width: "34.0%", height: "60.44%" }}
       >
         {(() => {
           switch (slide.layout) {
@@ -148,54 +186,39 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* Media Frame on standard slides: x: 4.92 (left: 65.6%), y: 1.25 (top: 22.22%), w: 2.08 (width: 27.73%), h: 3.4 (height: 60.44%) */}
+      {/* Media Frame on standard slides: x: 3.1 (left: 41.33%), y: 1.25 (top: 22.22%), w: 3.9 (width: 52.0%), h: 3.4 (height: 60.44%) */}
+      {/* Massive unbordered 4:3 media container */}
       <div
-        className="absolute rounded flex flex-col items-center justify-center p-3 text-center z-10 bg-slate-50 border"
-        style={{
-          left: "65.6%",
-          top: "22.22%",
-          width: "27.73%",
-          height: "60.44%",
-          borderColor: "#C5A059",
-        }}
+        className="absolute rounded flex flex-col items-center justify-center p-3 text-center z-10 bg-slate-200"
+        style={{ left: "41.33%", top: "22.22%", width: "52.0%", height: "60.44%" }}
       >
-        <span className="text-[9px] font-bold text-[#C5A059] uppercase tracking-wider mb-1">
+        <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider mb-1">
           Intraoral Macro Photo
         </span>
-        <svg className="w-6 h-6 text-[#C5A059]/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        <span className="text-[7px] text-slate-400 uppercase">4:3 Macro Photo</span>
+        <span className="text-[9px] text-slate-500 uppercase">Unbordered Operative Imagery</span>
         
-        {/* Annotation gold vector arrow */}
-        <div className="absolute bottom-2 right-2 flex items-center text-[7px] font-bold text-[#C5A059]">
-          <span>Macro Focus</span>
-          <svg className="w-2.5 h-2.5 ml-0.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {/* Annotation gold vector arrow (Dentin Gold #C5A059) */}
+        <div className="absolute bottom-4 right-4 flex items-center text-[10px] font-bold text-[#C5A059]">
+          <span>Structural Detail Focus</span>
+          <svg className="w-3.5 h-3.5 ml-1 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
         </div>
       </div>
 
-      {/* Running Footer aligned to left: 33.6% and width: 59.33% */}
+      {/* Running Footer aligned to left: 6.67% and width: 86.66% */}
       <div
         className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
-        style={{ 
-          borderColor: "#F1F5F9",
-          left: "33.6%",
-          width: "59.33%"
-        }}
+        style={{ borderColor: "#F1F5F9", left: "6.67%", width: "86.66%" }}
       >
-        <span
-          className="text-xs font-bold tracking-widest uppercase"
-          style={{ color: "#0F4C81" }}
-        >
+        <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: TOKEN.cobalt }}>
           {brandFooterLeft}
         </span>
-        <span
-          className="text-xs font-bold tracking-widest uppercase"
-          style={{ color: "#94A3B8" }}
-        >
+        <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#94A3B8" }}>
           {brandFooterRight}
         </span>
       </div>

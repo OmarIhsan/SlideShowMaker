@@ -29,30 +29,30 @@ export type Theme = {
 export const THEMES: Record<ThemeId, Theme> = {
   contrast_avant_garde: {
     id: "contrast_avant_garde",
-    label: "The Contrast Avant-Garde",
-    accentBg: "bg-[#C5A059]",
-    accentText: "text-[#C5A059]",
+    label: "Masterclass Clinical Series",
+    accentBg: "bg-[#0F4C81]",
+    accentText: "text-[#F8F9FA]",
     chipBg: "bg-[#F8F9FA]",
-    chipText: "text-[#C5A059]",
-    ring: "ring-[#C5A059]",
-    border: "border-[#C5A059]",
-    // === GLOBAL DESIGN TOKENS (Contrast Avant-Garde) ===
-    hexPrimary: "#0F4C81",   // Ceramic Cobalt – bullet glyphs & structural accents
-    hexSecondary: "#C5A059", // Dentin Gold – left anchor column + chapter blocks
-    hexBg: "#F8F9FA",        // Clinical Base – solid canvas, zero textures
+    chipText: "text-[#0F4C81]",
+    ring: "ring-[#0F4C81]",
+    border: "border-[#0F4C81]",
+    // === GLOBAL DESIGN TOKENS (Clinical Minimalist) ===
+    hexPrimary: "#0F4C81",   // Ceramic Cobalt – headings, dividers, framing
+    hexSecondary: "#C5A059", // Dentin Gold – fine technical annotations
+    hexBg: "#F8F9FA",        // Clinical Off-White – solid canvas
     titleFont: "Inter",
-    bodyFont: "Inter",
-    captionFont: "Inter",
-    titleFontSizePptx: 40,
+    bodyFont: "Open Sans",
+    captionFont: "Open Sans",
+    titleFontSizePptx: 38,
     bodyFontSizePptx: 18,
     captionFontSizePptx: 12,
     titleColor: "#0F4C81",
-    bodyColor: "#1E293B",    // Deep Enamel – all body text
+    bodyColor: "#1E293B",    // Slate Charcoal – body text
     captionColor: "#64748B"
   }
 }
 
-export type SlideLayout = "STANDARD_CONTENT" | "TABULAR_DATA" | "CHAPTER_DIVIDER";
+export type SlideLayout = "STANDARD_CONTENT" | "TABULAR_DATA" | "CHAPTER_DIVIDER" | "EVIDENCE_COMPARATIVE";
 
 export interface Slide {
   id: number;
@@ -67,6 +67,7 @@ export const LAYOUT_LABELS: Record<LayoutTag, string> = {
   STANDARD_CONTENT: "STANDARD_CONTENT",
   TABULAR_DATA: "TABULAR_DATA",
   CHAPTER_DIVIDER: "CHAPTER_DIVIDER",
+  EVIDENCE_COMPARATIVE: "EVIDENCE_COMPARATIVE"
 }
 
 export function getSlideTitle(slide: Slide): string {
@@ -149,7 +150,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
   let currentChunk: string[] = [];
 
-  const pushNewSlide = (data: { title: string, content: string[], layout: "STANDARD_CONTENT" | "TABULAR_DATA" | "CHAPTER_DIVIDER" }) => {
+  const pushNewSlide = (data: { title: string, content: string[], layout: "STANDARD_CONTENT" | "TABULAR_DATA" | "CHAPTER_DIVIDER" | "EVIDENCE_COMPARATIVE" }) => {
     const sanitizedContent = data.content.filter(line => line.trim().length > 0);
     if (sanitizedContent.length === 0 && data.layout !== "CHAPTER_DIVIDER") return;
 
@@ -161,6 +162,14 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     });
   }
 
+  const determineLayout = (title: string, chunk: string[]): "STANDARD_CONTENT" | "TABULAR_DATA" | "EVIDENCE_COMPARATIVE" => {
+    const titleLower = title.toLowerCase();
+    const isComparative = /compar|vs\.?|versus|evidence/i.test(titleLower);
+    if (isComparative) return "EVIDENCE_COMPARATIVE";
+    if (isMatrixStructure(chunk)) return "TABULAR_DATA";
+    return "STANDARD_CONTENT";
+  };
+
   rawTokens.forEach((token) => {
     const topicHeader = isTopicHeader(token)
     if (topicHeader) {
@@ -168,7 +177,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
         pushNewSlide({
           title: currentTopicContext,
           content: [...currentChunk],
-          layout: isMatrixStructure(currentChunk) ? "TABULAR_DATA" : "STANDARD_CONTENT"
+          layout: determineLayout(currentTopicContext, currentChunk)
         });
         currentChunk = [];
       }
@@ -190,7 +199,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
         pushNewSlide({
           title: currentTopicContext,
           content: [...currentChunk],
-          layout: isMatrixStructure(currentChunk) ? "TABULAR_DATA" : "STANDARD_CONTENT"
+          layout: determineLayout(currentTopicContext, currentChunk)
         });
         currentChunk = [];
       }
@@ -203,7 +212,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
     pushNewSlide({
       title: currentTopicContext,
       content: [...currentChunk],
-      layout: isMatrixStructure(currentChunk) ? "TABULAR_DATA" : "STANDARD_CONTENT"
+      layout: determineLayout(currentTopicContext, currentChunk)
     });
   }
 
