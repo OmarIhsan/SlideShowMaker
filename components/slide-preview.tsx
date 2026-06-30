@@ -86,11 +86,11 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Vertical dividing line matching pptx x: 1.0 (left: 7.5%), y: 1.4 (top: 18.7%), h: 4.5 (height: 60.0%) */}
+      {/* Vertical dividing line matching pptx x: 3.0 (left: 22.5%), y: 1.4 (top: 18.7%), h: 4.5 (height: 60.0%) */}
       <div
         className="absolute z-10"
         style={{
-          left: "7.5%",
+          left: "22.5%",
           top: "18.7%",
           width: "1px",
           height: "60.0%",
@@ -99,11 +99,11 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 1.22, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 3.22, y: 0.6) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "9.1%",
+          left: "24.1%",
           top: "8%",
           color: TOKEN.gold,
           fontFamily: "Inter, sans-serif"
@@ -112,13 +112,13 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 1.22 (left: 9.1%), y: 1.4 (top: 18.7%), w: 11.5 (width: 86.5%), h: 4.5 (height: 60.0%) */}
+      {/* Main slide content bounding box: x: 3.22 (left: 24.1%), y: 1.4 (top: 18.7%), w: 9.5 (width: 71.5%), h: 4.5 (height: 60.0%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "9.1%",
+          left: "24.1%",
           top: "18.7%",
-          width: "86.5%",
+          width: "71.5%",
           height: "60.0%"
         }}
       >
@@ -132,13 +132,13 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* Running Footer aligned to left: 9.1% and width: 86.5% */}
+      {/* Running Footer aligned to left: 24.1% and width: 71.5% */}
       <div
         className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
         style={{ 
           borderColor: "#F1F5F9",
-          left: "9.1%",
-          width: "86.5%"
+          left: "24.1%",
+          width: "71.5%"
         }}
       >
         <span
