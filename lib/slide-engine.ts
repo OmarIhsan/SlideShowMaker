@@ -83,27 +83,27 @@ export type ParseResult = {
 export function isTopicHeader(line: string): string | null {
   const clean = line.trim()
   const COMMON_HEADERS = [
-    "introduction", "abstract", "literature review", "methodology", "methods", 
+    "introduction", "abstract", "literature review", "methodology", "methods",
     "results", "discussion", "conclusion", "conclusions", "references", "summary",
     "background", "objectives", "aims", "outline", "overview", "definition", "definitions",
     "measurement variables", "descriptive vs. inferential", "introduction & structural properties",
     "properties of enamel: hardness & brittleness", "solubility to acids", "clinical appearance & diagnostic signs"
   ]
-  
+
   const hasIndex = /^\d+(\.\d+)*[.)]?\s+/.test(clean)
   const endsWithPunctuation = /[.!?]$/.test(clean)
-  
-  const isHeader = 
-    clean.length > 0 && 
-    clean.length <= 55 && 
-    !clean.startsWith("-") && 
-    !clean.startsWith("*") && 
-    !clean.startsWith("•") && 
+
+  const isHeader =
+    clean.length > 0 &&
+    clean.length <= 55 &&
+    !clean.startsWith("-") &&
+    !clean.startsWith("*") &&
+    !clean.startsWith("•") &&
     (!endsWithPunctuation || (hasIndex && clean.endsWith("."))) &&
-    (COMMON_HEADERS.includes(clean.toLowerCase()) || 
-     (hasIndex && /^\d+(\.\d+)*[.)]?\s+[A-Z]/.test(clean)) ||
-     (/^[A-Z][A-Za-z0-9\s()&/,-:]+$/.test(clean)))
-     
+    (COMMON_HEADERS.includes(clean.toLowerCase()) ||
+      (hasIndex && /^\d+(\.\d+)*[.)]?\s+[A-Z]/.test(clean)) ||
+      (/^[A-Z][A-Za-z0-9\s()&/,-:]+$/.test(clean)))
+
   return isHeader ? clean : null
 }
 
@@ -111,16 +111,16 @@ function sanitizeText(text: string): string {
   let cleaned = text;
   // 1. Strip bullet prefixes (residual PDF symbols, raw bullets, Greek letters like Pi/Π)
   cleaned = cleaned.replace(/^[\u03A0\u03C0\u25A0\u2022\s\-]+/, "");
-  
+
   // 2. Clean broken word fragments (case-insensitive)
   cleaned = cleaned.replace(/\b(enam|completos|fuinath)\b/gi, "");
-  
+
   // 3. INDEX_NUMBER_BLEEDING: Strip structural slide digits if they stand before a capitalized academic keyword
   cleaned = cleaned.replace(/^\s*\b\d+\b\s*(?=[A-Z])/, "");
-  
+
   // Clean double spaces
   cleaned = cleaned.replace(/\s+/g, " ").trim();
-  
+
   return cleaned;
 }
 
@@ -267,7 +267,7 @@ export function getSlideHeight(content: string[]): number {
         .replace(/\|$/, "")
         .split("|")
         .map(c => c.trim())
-      
+
       const numCols = Math.max(1, cells.length)
       let maxLines = 1
       cells.forEach((cellText) => {
@@ -305,10 +305,10 @@ const isOverBudget = (content: string[]): boolean => {
   const allText = content.join(" ");
   const wordCount = allText.split(/\s+/).length;
   const visualLines = Math.ceil(wordCount / 22);
-  
+
   if (visualLines > 6) return true;
-  if (allText.length > 450) return true;
-  
+  if (allText.length > 400) return true;
+
   return false;
 };
 
@@ -334,7 +334,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
     for (let i = 0; i < slide.content.length; i++) {
       const line = slide.content[i]
       const tempChunk = [...currentChunk, line]
-      
+
       if (isOverBudget(tempChunk)) {
         if (currentChunk.length === 0) {
           finalResult.push({
@@ -378,7 +378,7 @@ function applyVerticalThresholds(slides: Slide[]): Slide[] {
     const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
     titleCounts.set(base, (titleCounts.get(base) || 0) + 1)
   })
-  
+
   finalResult.forEach(s => {
     if (s.layout === "CHAPTER_DIVIDER") return
     const base = s.title.replace(/\s*-\s*Part\s*\d+$/, "")
