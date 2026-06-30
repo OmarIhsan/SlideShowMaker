@@ -30,7 +30,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
         },
         color: "1E293B",
         fontSize: 24,
-        fontFace: "Arial",
+        fontFace: "Plus Jakarta Sans",
         lineSpacing: 34,
         bold: false,
       },
@@ -122,19 +122,45 @@ export async function exportSlidesToPowerPoint({ slides, theme, logoBase64, lect
       line: { color: "E2E8F0", width: 1 }
     })
 
-    if (lecturerName) {
-      const isAvantGarde = theme.id === "contrast_avant_garde"
-      pptxSlide.addText(`Lecturer: ${lecturerName}`, {
-        x: isAvantGarde ? 1.4 : SLIDE_FRAME.bodyX,
-        y: SLIDE_FRAME.footerY,
-        w: isAvantGarde ? 7.6 : SLIDE_FRAME.bodyW,
-        h: 0.3,
-        fontSize: theme.captionFontSizePptx || 26,
-        color: "777777",
-        fontFace: "Inter",
-        italic: true,
-      })
-    }
+    // Add brand metadata header at top left (x: 1.4, y: 0.6, w: 6.6, h: 0.4)
+    pptxSlide.addText("DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES", {
+      x: 1.4,
+      y: 0.6,
+      w: 6.6,
+      h: 0.4,
+      fontSize: 10,
+      bold: true,
+      color: "C5A059", // Dentin Gold
+      fontFace: "Plus Jakarta Sans",
+      align: "left",
+      valign: "middle"
+    })
+
+    // Running Footer Left
+    pptxSlide.addText("DR. CUBE DENTISTRY", {
+      x: 1.4,
+      y: SLIDE_FRAME.footerY,
+      w: 3.3,
+      h: 0.3,
+      fontSize: 10,
+      bold: true,
+      color: "64748B",
+      fontFace: "Plus Jakarta Sans",
+      align: "left"
+    })
+
+    // Running Footer Right
+    pptxSlide.addText("2026 EDITION", {
+      x: 4.7,
+      y: SLIDE_FRAME.footerY,
+      w: 3.3,
+      h: 0.3,
+      fontSize: 10,
+      bold: true,
+      color: "64748B",
+      fontFace: "Plus Jakarta Sans",
+      align: "right"
+    })
 
     // No slide title rendered on any slide — uniform titleless layout.
     // Content is rendered through the standard body text box for all slides.
@@ -325,13 +351,22 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
   doc.setLineWidth(0.01)
   doc.line(8.0, 1.0, 8.0, 5.0)
 
-  if (lecturerName) {
-    const isAvantGarde = theme.id === "contrast_avant_garde"
-    doc.setFont("Inter", "italic")
-    doc.setFontSize(22)
-    doc.setTextColor("#777777")
-    doc.text(`Lecturer: ${lecturerName}`, isAvantGarde ? 1.4 : SLIDE_FRAME.bodyX, SLIDE_FRAME.footerY)
-  }
+  const fontToUse = (typeof doc.getFontList === "function" && doc.getFontList()["Plus Jakarta Sans"]) ? "Plus Jakarta Sans" : "Helvetica";
+
+  // Add brand metadata header at top left (x: 1.4, y: 0.8)
+  doc.setFont(fontToUse, "bold")
+  doc.setFontSize(10)
+  doc.setTextColor("#C5A059") // Dentin Gold
+  doc.text("DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES", 1.4, 0.8)
+
+  // Running Footer Left
+  doc.setFont(fontToUse, "bold")
+  doc.setFontSize(10)
+  doc.setTextColor("#64748B")
+  doc.text("DR. CUBE DENTISTRY", 1.4, SLIDE_FRAME.footerY)
+
+  // Running Footer Right
+  doc.text("2026 EDITION", 8.0, SLIDE_FRAME.footerY, { align: "right" })
 
   if (slide.layout === "TABULAR_DATA") {
     const isAvantGarde = theme.id === "contrast_avant_garde"
@@ -407,6 +442,27 @@ export async function exportSlidesToPDF({ slides, theme, logoBase64, lecturerNam
     unit: "in",
     format: [10, 5.625],
   })
+
+  // Try to load Plus Jakarta Sans Google Font
+  try {
+    const fontUrl = "https://fonts.gstatic.com/s/plusjakartasans/v8/PlusJakartaSans-Medium.ttf"
+    const response = await fetch(fontUrl)
+    if (response.ok) {
+      const buffer = await response.arrayBuffer()
+      let binary = ""
+      const bytes = new Uint8Array(buffer)
+      const len = bytes.byteLength
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i])
+      }
+      const base64Font = btoa(binary)
+      doc.addFileToVFS("PlusJakartaSans-Medium.ttf", base64Font)
+      doc.addFont("PlusJakartaSans-Medium.ttf", "Plus Jakarta Sans", "normal")
+      doc.addFont("PlusJakartaSans-Medium.ttf", "Plus Jakarta Sans", "bold")
+    }
+  } catch (fontError) {
+    console.warn("Could not load Plus Jakarta Sans Google Font, falling back to Helvetica/Inter:", fontError)
+  }
 
   slides.forEach((slide, index) => {
     if (index > 0) {

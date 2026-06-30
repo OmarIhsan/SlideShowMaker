@@ -5,7 +5,8 @@ import type { Slide, Theme } from "@/lib/slide-engine"
 //   Canvas Base:            #F8F9FA  (Clinical Base)
 //   Bullet Glyph:           #0F4C81  (Ceramic Cobalt)
 //   Body Text:              #1E293B  (Deep Enamel)
-//   Structural Anchor:      #C5A059  (Dentin Gold)
+//   Structural Anchor:      #0F4C81  (Ceramic Cobalt)
+//   Precision Highlight:    #C5A059  (Dentin Gold)
 // ============================================================
 
 const TOKEN = {
@@ -65,13 +66,13 @@ export function SlideRenderer({
         </div>
       )}
 
-      {/* left-accent line/Cobalt column matching accentX: 0.6, accentY: 1.4, accentW: 0.08, accentH: 3.2 */}
+      {/* left-accent line/Cobalt column matching accentX: 0.8, accentY: 1.4, accentW: 0.1, accentH: 3.2 */}
       <div
         className="absolute z-10 rounded-r"
         style={{
-          left: "6%",
+          left: "8%",
           top: "24.9%",
-          width: "0.8%",
+          width: "1%",
           height: "56.9%",
           backgroundColor: TOKEN.cobalt
         }}
@@ -91,13 +92,26 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Main slide content bounding box: x: 1.2 (left: 12%), y: 1.4 (top: 24.9%), w: 6.8 (width: 68%), h: 3.2 (height: 56.9%) */}
+      {/* Subtle Brand Metadata Header at top left (x: 1.4, y: 0.6) */}
       <div
-        className="absolute flex flex-col justify-center text-left max-w-[68%] overflow-hidden break-words pr-2 z-10"
+        className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "12%",
+          left: "14%",
+          top: "10.6%",
+          color: TOKEN.gold,
+          fontFamily: "Inter, sans-serif"
+        }}
+      >
+        DR. CUBE DENTISTRY • ACADEMIC LECTURE SERIES
+      </div>
+
+      {/* Main slide content bounding box: x: 1.4 (left: 14%), y: 1.4 (top: 24.9%), w: 6.6 (width: 66%), h: 3.2 (height: 56.9%) */}
+      <div
+        className="absolute flex flex-col justify-center text-left max-w-[66%] overflow-hidden break-words pr-2 z-10"
+        style={{
+          left: "14%",
           top: "24.9%",
-          width: "68%",
+          width: "66%",
           height: "56.9%"
         }}
       >
@@ -111,12 +125,23 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* Footer */}
-      <div className="absolute bottom-4 left-8 right-8 flex items-center justify-between border-t border-slate-200/60 pt-2 z-10">
-        <span className="text-[10px]" style={{ color: TOKEN.caption, fontFamily: "'Open Sans', Arial, sans-serif" }}>
-          Lecturer: <strong>{lecturerName || "Academic Staff"}</strong>
+      {/* Running Footer */}
+      <div
+        className="absolute bottom-4 left-14 right-14 flex items-center justify-between border-t pt-2 z-10"
+        style={{ borderColor: "#F1F5F9" }}
+      >
+        <span
+          className="text-xs font-bold tracking-widest uppercase"
+          style={{ color: TOKEN.caption, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
+          DR. CUBE DENTISTRY
         </span>
-        <span />
+        <span
+          className="text-xs font-bold tracking-widest uppercase"
+          style={{ color: TOKEN.caption, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
+          2026 EDITION
+        </span>
       </div>
     </div>
   )
@@ -125,9 +150,9 @@ export function SlideRenderer({
 export function parseAndHighlightMetrics(text: string) {
   const metricRegex = /(\b\d+%\b|\b\d+-\d+\s*nm\b|\bHV\s*=\s*\d+\b|\b\d+,\d+\s*rods\b|\b\d+(?:\.\d+)?\s*(?:µm|mm)\b)/gi;
   if (!metricRegex.test(text)) return text;
-  
+
   const parts = text.split(metricRegex);
-  return parts.map((part, i) => 
+  return parts.map((part, i) =>
     metricRegex.test(part) ? <strong key={i} style={{ color: TOKEN.gold, fontWeight: 'bold' }}>{part}</strong> : part
   );
 }
@@ -180,10 +205,10 @@ function ContentSlide({ slide }: { slide: Slide }) {
           }
 
           return (
-            <li 
-              key={index} 
-              className="flex items-start text-2xl md:text-3xl font-medium leading-relaxed list-item"
-              style={{ fontFamily: "'Open Sans', Arial, sans-serif", lineHeight: "1.4" }}
+            <li
+              key={index}
+              className="flex items-start text-2xl md:text-3xl font-medium leading-relaxed list-item tracking-wide"
+              style={{ fontFamily: "'Cabinet Grotesk', 'Cl clash', 'Plus Jakarta Sans', sans-serif", lineHeight: "1.4" }}
             >
               {/* Circle bullet glyph colored in Ceramic Cobalt (#0F4C81) */}
               <span className="shrink-0 mt-2 mr-4 rounded-full"
