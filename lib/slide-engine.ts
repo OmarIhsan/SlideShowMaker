@@ -162,20 +162,44 @@ export type ParseResult = {
 }
 
 export function isTopicHeader(line: string): string | null {
-  const indexMatch = line.match(/^(?:-\s+|•\s+)?((\d+(?:\.\d+)*)\.?\s+([A-Z][A-Za-z0-9\s()&/,-:]+))$/);
-  if (indexMatch) {
-    return indexMatch[1].trim();
-  }
+  const clean = line.trim()
+  const COMMON_HEADERS = [
+    "introduction", "abstract", "literature review", "methodology", "methods", 
+    "results", "discussion", "conclusion", "conclusions", "references", "summary",
+    "background", "objectives", "aims", "outline", "overview", "definition", "definitions",
+    "measurement variables", "descriptive vs. inferential", "introduction & structural properties",
+    "properties of enamel: hardness & brittleness", "solubility to acids", "clinical appearance & diagnostic signs"
+  ]
+  
+  const hasIndex = /^\d+(\.\d+)*[.)]?\s+/.test(clean)
+  const endsWithPunctuation = /[.!?]$/.test(clean)
+  
+  const isHeader = 
+    clean.length > 0 && 
+    clean.length <= 55 && 
+    !clean.startsWith("-") && 
+    !clean.startsWith("*") && 
+    !clean.startsWith("•") && 
+    (!endsWithPunctuation || (hasIndex && clean.endsWith("."))) &&
+    (COMMON_HEADERS.includes(clean.toLowerCase()) || 
+     (hasIndex && /^\d+(\.\d+)*[.)]?\s+[A-Z]/.test(clean)) ||
+     (/^[A-Z][A-Za-z0-9\s()&/,-:]+$/.test(clean)))
+     
+  return isHeader ? clean : null
+}
 
-  // 2. Short non-bullet title-cased lines or localized text dividers
-  if (!line.startsWith("-") && !line.startsWith("*") && !line.startsWith("•") && !line.includes("|") && line.length > 2 && line.length < 70) {
-    // If line doesn't end with a typical sentence-ending punctuation (and it's not a bullet)
-    if (!/[.;!?]$/.test(line.trim())) {
-      // Return it as a valid header
-      return line.trim();
-    }
-  }
-  return null;
+function sanitizeText(text: string): string {
+  let cleaned = text;
+  // 1. Strip bullet prefixes (residual PDF symbols, raw bullets, Greek letters like Pi/Π)
+  cleaned = cleaned.replace(/^[\u03A0\u03C0\u25A0\u2022\s\-]+/, "");
+  
+  // 2. Clean broken word fragments (case-insensitive)
+  cleaned = cleaned.replace(/\b(enam|completos|fuinath)\b/gi, "");
+  
+  // Clean double spaces
+  cleaned = cleaned.replace(/\s+/g, " ").trim();
+  
+  return cleaned;
 }
 
 export function parseDocumentToSlides(raw: string): ParseResult {
@@ -186,22 +210,10 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
   let currentTopicContext = "General Concepts";
 
-  function determineActiveTopicContext(text: string): string {
-    if (/histolog/i.test(text)) return "Histological View & Cap Architecture";
-    if (/struct|prism/i.test(text)) return "Enamel Rod Matrix Structure";
-    if (/acid|etch|dissol/i.test(text)) return "Acid-Etch Demineralization Dynamics";
-    if (/hard|britt|perme/i.test(text)) return "Physical Properties & Biomechanics";
-    if (/color|translu|shad/i.test(text)) return "Optical Transmission & Shade Analysis";
-    if (/clinic|diagnos|cavit|wear/i.test(text)) return "Clinical Appearance & Trauma Pathologies";
-    if (/mcq|question/i.test(text)) return "Evaluation: Lecture Assessment MCQs";
-    return currentTopicContext; 
-  }
-
   function isMatrixStructure(chunk: string[]): boolean {
     return chunk.some(line => line.includes("|") || line.includes("\t"));
   }
 
-  // Hard-Coded Sentence Tokenizer Override
   const rawTokens = source
     .split(/(?<=\.|\:)\s+|\n+/)
     .map(token => token.replace(/[\/\\]/gi, '').trim())
@@ -211,11 +223,8 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   let slideIdCounter = 2;
 
   let currentChunk: string[] = [];
-  const maxCharacters = 350;
-  const maxLines = 3;
 
   const pushNewSlide = (data: { title: string, content: string[], layout: "STANDARD_CONTENT" | "TABULAR_DATA" | "CHAPTER_DIVIDER" }) => {
-    // Explicitly filter out empty or whitespace-only array elements
     const sanitizedContent = data.content.filter(line => line.trim().length > 0);
     if (sanitizedContent.length === 0 && data.layout !== "CHAPTER_DIVIDER") return;
 
@@ -228,26 +237,41 @@ export function parseDocumentToSlides(raw: string): ParseResult {
   }
 
   rawTokens.forEach((token) => {
-    const currentLen = currentChunk.join(' ').length;
-    currentTopicContext = determineActiveTopicContext(token);
-    
-    if (currentChunk.length >= maxLines || (currentLen + token.length) > maxCharacters) {
-      // Force a hard slide break natively
-      pushNewSlide({
-        title: currentTopicContext || "Biologic Matrix",
-        content: [...currentChunk],
-        layout: isMatrixStructure(currentChunk) ? "TABULAR_DATA" : "STANDARD_CONTENT"
-      });
-      currentChunk = [];
+    const topicHeader = isTopicHeader(token)
+    if (topicHeader) {
+      if (currentChunk.length > 0) {
+        pushNewSlide({
+          title: currentTopicContext,
+          content: [...currentChunk],
+          layout: isMatrixStructure(currentChunk) ? "TABULAR_DATA" : "STANDARD_CONTENT"
+        });
+        currentChunk = [];
+      }
+      currentTopicContext = topicHeader;
+      return;
     }
-    // format as bullet if not already
-    const formattedToken = token.startsWith("-") || token.startsWith("•") || /^\d+\./.test(token) 
-      ? token 
-      : `- ${token}`;
+
+    const cleanBody = sanitizeText(token);
+    if (cleanBody.length < 15) {
+      return; // Array pruning: discard sub-15 character lines
+    }
+
+    const formattedToken = `- ${cleanBody}`;
+
+    if (isOverBudget([...currentChunk, formattedToken])) {
+      if (currentChunk.length > 0) {
+        pushNewSlide({
+          title: currentTopicContext,
+          content: [...currentChunk],
+          layout: isMatrixStructure(currentChunk) ? "TABULAR_DATA" : "STANDARD_CONTENT"
+        });
+        currentChunk = [];
+      }
+    }
+
     currentChunk.push(formattedToken);
   });
 
-  // Flush outstanding lines
   if (currentChunk.length > 0) {
     pushNewSlide({
       title: currentTopicContext,
@@ -272,7 +296,7 @@ export function parseDocumentToSlides(raw: string): ParseResult {
 
   return {
     slides: finalSlides,
-    chapterCount: Math.max(uniqueHeaders.length - 1, 1) // exclude title slide from count
+    chapterCount: Math.max(uniqueHeaders.length - 1, 1)
   }
 }
 
@@ -320,12 +344,19 @@ export function getSlideHeight(content: string[]): number {
   return 1.4 + bodyHeight
 }
 
-// === HARD CHUNKING BUDGET (§4) ===
-// Maximum 4 bullet points OR 480 characters per slide frame.
-// Higher char budget compresses total slide count toward 20–25 target range.
 const isOverBudget = (content: string[]): boolean => {
+  let totalLines = 0;
+  content.forEach(text => {
+    const clean = text
+      .replace(/^[-*•]\s*/, "")
+      .replace(/^\d+[.)]\s*/, "")
+      .replace(/^[a-zA-Z][.)]\s*/, "")
+      .trim()
+    const words = clean.split(/\s+/).filter(Boolean).length
+    totalLines += Math.max(1, Math.ceil(words / 7))
+  })
   const charLength = content.join("\n").length;
-  return content.length > 4 || charLength > 480;
+  return totalLines > 4 || charLength > 380;
 };
 
 function applyVerticalThresholds(slides: Slide[]): Slide[] {

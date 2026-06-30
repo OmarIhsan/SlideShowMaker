@@ -5,7 +5,7 @@ import type { Slide, Theme } from "@/lib/slide-engine"
 //   Canvas Base:            #F8F9FA  (Clinical Base)
 //   Bullet Glyph:           #0F4C81  (Ceramic Cobalt)
 //   Body Text:              #1E293B  (Deep Enamel)
-//   Structural Anchor:      #C5A059  (Dentin Gold) — solid 24px left column
+//   Structural Anchor:      #C5A059  (Dentin Gold)
 // ============================================================
 
 const TOKEN = {
@@ -28,11 +28,7 @@ export function SlideRenderer({
   logoUrl: string | null
   lecturerName: string
 }) {
-  // All slides use the uniform standard layout — no distinct title slide template.
-
   // ── CHAPTER DIVIDER ─────────────────────────────────────────
-  // Full-bleed #1E293B canvas (left 60%) + solid #C5A059 block (right 40%).
-  // Zero background photography, zero floating lines.
   if (slide.layout === "CHAPTER_DIVIDER") {
     return (
       <div
@@ -51,32 +47,46 @@ export function SlideRenderer({
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight" style={{ color: TOKEN.snow }}>
             {slide.title}
           </h1>
-          {/* Small underline accent in gold beneath the title */}
           <div className="mt-5 h-1 w-20" style={{ backgroundColor: TOKEN.gold }} />
         </div>
       </div>
     )
   }
 
-  // ── STANDARD SLIDES ─────────────────────────────────────────
+  // ── STANDARD SLIDES (Unified Layout: Slide 1 is mirrored identically) ──
   return (
     <div
-      className="relative flex flex-col h-full w-full justify-between overflow-hidden select-none pb-14 text-left pl-14 pr-10 pt-8"
-      style={{ backgroundColor: TOKEN.canvas, fontFamily: "'Open Sans', Arial, sans-serif" }}
+      className="relative flex flex-col h-full w-full overflow-hidden select-none"
+      style={{ backgroundColor: TOKEN.canvas }}
     >
-      {/* === STRUCTURAL ARCHITECTURAL BLOCK ===
-          Solid 24px (#C5A059) Dentin Gold anchoring column.
-          Stretches from absolute top to absolute bottom of every slide — including Slide 1.
-          Completely replaces all floating line dividers. */}
+      {logoUrl && (
+        <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-10">
+          <img src={logoUrl} alt="Watermark Logo" className="h-[55%] w-[60%] object-contain" />
+        </div>
+      )}
+
+      {/* left-accent line/Dentin Gold column matching accentX: 0.8, accentY: 1.4, accentW: 0.08, accentH: 3.2 */}
       <div
-        className="absolute left-0 top-0 bottom-0 z-10"
-        style={{ width: "24px", backgroundColor: TOKEN.gold }}
+        className="absolute z-10 rounded-r"
+        style={{
+          left: "8%",
+          top: "24.9%",
+          width: "0.8%",
+          height: "56.9%",
+          backgroundColor: TOKEN.gold
+        }}
         aria-hidden="true"
       />
 
-      {/* ── MAIN BODY — vertically centered on all slides ── */}
+      {/* Main slide content bounding box: x: 1.2 (left: 12%), y: 1.4 (top: 24.9%), w: 7.6 (width: 76%), h: 3.2 (height: 56.9%) */}
       <div
-        className="flex-grow flex flex-col justify-center w-full overflow-hidden break-words z-10"
+        className="absolute flex flex-col justify-center text-left max-w-[76%] overflow-hidden break-words pr-2 z-10"
+        style={{
+          left: "12%",
+          top: "24.9%",
+          width: "76%",
+          height: "56.9%"
+        }}
       >
         {(() => {
           switch (slide.layout) {
@@ -88,9 +98,8 @@ export function SlideRenderer({
         })()}
       </div>
 
-      {/* ── FOOTER ── */}
-      <div className="absolute bottom-3 left-10 right-8 flex items-center justify-between border-t pt-2 z-10"
-           style={{ borderColor: "rgba(100,116,139,0.25)" }}>
+      {/* Footer */}
+      <div className="absolute bottom-4 left-8 right-8 flex items-center justify-between border-t border-slate-200/60 pt-2 z-10">
         <span className="text-[10px]" style={{ color: TOKEN.caption, fontFamily: "'Open Sans', Arial, sans-serif" }}>
           Lecturer: <strong>{lecturerName || "Academic Staff"}</strong>
         </span>
@@ -101,7 +110,6 @@ export function SlideRenderer({
 }
 
 export function parseAndHighlightMetrics(text: string) {
-  // Highlight clinical finish lines, percentages, numbers cleanly in Dentin Gold
   const metricRegex = /(\b\d+%\b|\b\d+-\d+\s*nm\b|\bHV\s*=\s*\d+\b|\b\d+,\d+\s*rods\b|\b\d+(?:\.\d+)?\s*(?:µm|mm)\b)/gi;
   if (!metricRegex.test(text)) return text;
   
@@ -111,14 +119,6 @@ export function parseAndHighlightMetrics(text: string) {
   );
 }
 
-// ──────────────────────────────────────────────────────────────
-// ContentSlide
-// Typography template (§2) — UNIFORM across ALL slides:
-//   Body text: text-3xl md:text-4xl font-medium tracking-wide leading-relaxed
-//   Alternating color: Odd lines → #1E293B (Deep Enamel) | Even lines → #0F4C81 (Ceramic Cobalt)
-//   Bullet glyph: solid square — color mirrors line text color
-//   Font: Open Sans, Arial
-// ──────────────────────────────────────────────────────────────
 function ContentSlide({ slide }: { slide: Slide }) {
   const isWarning = (text: string) => {
     const lower = text.toLowerCase()
@@ -127,10 +127,9 @@ function ContentSlide({ slide }: { slide: Slide }) {
     )
   }
 
-  // Apply the unified layout geometry
   return (
     <div className="w-full">
-      <ul className="space-y-6 pl-0">
+      <ul className="space-y-4 pl-0">
         {slide.content.filter(line => line.trim().length > 0).map((lineText: string, index: number) => {
           const cleanText = lineText
             .replace(/^[-*•]\s*/, "")
@@ -167,27 +166,23 @@ function ContentSlide({ slide }: { slide: Slide }) {
             )
           }
 
-          // Programmatic line-by-line color alternation rotation
-          const isOdd = index % 2 === 0;
-          const lineColor = isOdd ? TOKEN.enamel : TOKEN.cobalt;
-          
           return (
             <li 
               key={index} 
-              className="flex items-start text-3xl md:text-4xl font-medium leading-relaxed tracking-wide transition-colors duration-150"
-              style={{ color: lineColor }}
+              className="flex items-start text-2xl md:text-3xl font-medium leading-relaxed list-item"
+              style={{ fontFamily: "'Open Sans', Arial, sans-serif", lineHeight: "1.4" }}
             >
-              {/* Precision highlight parser for critical metrics */}
-              <span className="shrink-0 mt-2 mr-4"
+              {/* Circle bullet glyph colored in Ceramic Cobalt (#0F4C81) */}
+              <span className="shrink-0 mt-2 mr-4 rounded-full"
                 style={{
                   display: "inline-block",
-                  width: "10px",
-                  height: "10px",
-                  backgroundColor: lineColor,
+                  width: "8px",
+                  height: "8px",
+                  backgroundColor: TOKEN.cobalt,
                 }}
                 aria-hidden="true"
               />
-              <span style={{ color: lineColor }}>{cleanText}</span>
+              <span style={{ color: TOKEN.enamel }}>{cleanText}</span>
             </li>
           )
         })}
@@ -196,9 +191,6 @@ function ContentSlide({ slide }: { slide: Slide }) {
   )
 }
 
-// ──────────────────────────────────────────────────────────────
-// TableSlide
-// ──────────────────────────────────────────────────────────────
 function TableSlide({ slide, theme }: { slide: Slide; theme: Theme }) {
   const rowsParsed = slide.content.map((rowText) =>
     rowText

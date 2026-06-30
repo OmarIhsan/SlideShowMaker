@@ -3,20 +3,20 @@ import type { Slide, Theme } from "@/lib/slide-engine"
 export const SLIDE_FRAME = {
   titleY: 0.5,
   titleH: 0.8,
-  bodyX: 0.7,
-  bodyY: 1.1,
-  bodyW: 8.6,
-  bodyH: 3.8,
-  accentX: 0.3,
-  accentY: 1.1,
+  bodyX: 1.2,
+  bodyY: 1.4,
+  bodyW: 7.6,
+  bodyH: 3.2,
+  accentX: 0.8,
+  accentY: 1.4,
   accentW: 0.08,
-  accentH: 3.8,
+  accentH: 3.2,
   footerY: 5.2,
 }
 
-export const BODY_LINE_HEIGHT_IN = 0.28
-export const BODY_PARAGRAPH_GAP_IN = 0.12
-export const BODY_FONT_SIZE = 18
+export const BODY_LINE_HEIGHT_IN = 0.48
+export const BODY_PARAGRAPH_GAP_IN = 0.2
+export const BODY_FONT_SIZE = 24
 
 export type BodySegment = {
   text: string

@@ -19,33 +19,19 @@ function cleanHex(hex: string): string {
 
 function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
   const bodySegments = buildBodySegments(slide.content)
-  const isAvantGarde = theme.id === "contrast_avant_garde"
-
-  const isWarning = (text: string) => {
-    const lower = text.toLowerCase();
-    return ["warning", "caution", "ethics", "fabrication", "fraud", "violation", "critical"].some(w => lower.includes(w));
-  }
 
   return bodySegments.map((segment, index) => {
-    const warning = isWarning(segment.cleanText)
-    const fontSize = theme.bodyFontSizePptx || 34
-
-    // Alternating color: odd segments (0,2,4…) → Deep Enamel; even (1,3,5…) → Ceramic Cobalt
-    const textColor = warning ? "1E293B" : (index % 2 === 0 ? "1E293B" : "0F4C81")
-    const bulletColor = index % 2 === 0 ? "1E293B" : "0F4C81"
-
     return {
       text: segment.cleanText + (index < bodySegments.length - 1 ? "\n" : ""),
       options: {
-        bullet: warning ? undefined : {
-          code: "25A0",   // ■ square glyph — mirrors line text color
-          color: bulletColor
+        bullet: {
+          code: "25CF",   // circle glyph
+          color: "0F4C81"
         },
-        color: textColor,
-        fontSize: warning ? fontSize + 2 : fontSize,
-        fontFace: "Inter",
-        lineSpacing: 28,
-        fill: warning ? { color: "C5A059", transparency: 90 } : undefined,
+        color: "1E293B",
+        fontSize: 24,
+        fontFace: "Arial",
+        lineSpacing: 34,
         bold: false,
       },
     }
@@ -53,48 +39,7 @@ function buildFormattedContent(slide: Slide, primaryHex: string, theme: Theme) {
 }
 
 function addSlideTitle(doc: any, slide: Slide, theme: Theme) {
-  const titleColorClean = "0F4C81"
-  
-  if (typeof doc.text === "function") {
-    // jsPDF
-    doc.setFont("Inter", "bold")
-    doc.setFontSize(36)
-    doc.setTextColor("#0F4C81")
-    doc.text(slide.title, SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + (SLIDE_FRAME.titleH / 2), {
-      align: "left",
-      baseline: "middle",
-    })
-    if (theme.id === "academic_artisan") {
-      doc.setDrawColor("#0F4C81")
-      doc.setLineWidth(0.01)
-      doc.line(SLIDE_FRAME.bodyX, SLIDE_FRAME.titleY + SLIDE_FRAME.titleH, SLIDE_FRAME.bodyX + SLIDE_FRAME.bodyW, SLIDE_FRAME.titleY + SLIDE_FRAME.titleH)
-    }
-  } else {
-    // PptxGenJS
-    doc.addText(slide.title, {
-      x: 0.7,
-      y: 0.5,
-      w: 8.6,
-      h: 0.8,
-      fontSize: theme.titleFontSizePptx || 48,
-      bold: true,
-      color: titleColorClean,
-      fontFace: "Inter",
-      valign: "middle",
-      align: "left",
-      margin: 0,
-    })
-    
-    if (theme.id === "academic_artisan") {
-      doc.addShape("line", {
-        x: 0.7,
-        y: 1.3,
-        w: 8.6,
-        h: 0,
-        line: { color: titleColorClean, width: 1 }
-      })
-    }
-  }
+  // Titleless canvas layout: slide titles are not printed on the slides.
 }
 
 // addSlideDecoration: renders the solid 24px Dentin Gold (#C5A059) left anchor column
@@ -403,38 +348,37 @@ function renderPdfPage(doc: any, slide: Slide, theme: Theme, lecturerName: strin
       if (isWarning) {
         const lines = doc.splitTextToSize(segment.cleanText, 8.4 - 0.4)
         doc.setFillColor(248, 245, 237)
-        doc.rect(0.8, currentY - 0.2, 8.4, (lines.length * 0.28) + 0.2, "F")
+        doc.rect(0.8, currentY - 0.2, 8.4, (lines.length * 0.48) + 0.2, "F")
         doc.setDrawColor("#C5A059")
         doc.setLineWidth(0.04)
-        doc.line(0.8, currentY - 0.2, 0.8, currentY - 0.2 + (lines.length * 0.28) + 0.2)
+        doc.line(0.8, currentY - 0.2, 0.8, currentY - 0.2 + (lines.length * 0.48) + 0.2)
         doc.setFont("Inter", "bold")
         doc.setTextColor("#1E293B")
         doc.text(lines, 1.0, currentY)
-        currentY += (lines.length * 0.28) + 0.3
+        currentY += (lines.length * 0.48) + 0.3
         doc.setFont("Inter", "normal")
         return
       }
 
-      // Alternating color: odd segments (0,2,4…) → Deep Enamel; even (1,3,5…) → Ceramic Cobalt
-      const lineColor = segmentIndex % 2 === 0 ? "#1E293B" : "#0F4C81"
       doc.setFont("Inter", "normal")
-      doc.setFontSize(26)
-      doc.setTextColor(lineColor)
+      doc.setFontSize(24)
 
       if (segment.isListItem) {
-        // Square bullet — color mirrors line text color
-        doc.setFillColor(lineColor)
-        doc.rect(0.85, currentY - 0.09, 0.07, 0.07, "F")
+        // Circle bullet — color is #0F4C81
+        doc.setFillColor("#0F4C81")
+        doc.circle(0.88, currentY - 0.08, 0.035, "F")
+        doc.setTextColor("#1E293B")
         const lines = doc.splitTextToSize(segment.cleanText, 7.8)
         doc.text(lines, 1.02, currentY)
-        currentY += (lines.length * 0.3) + 0.16
+        currentY += (lines.length * 0.48) + 0.16
         return
       }
 
       // Non-list paragraph
+      doc.setTextColor("#1E293B")
       const lines = doc.splitTextToSize(segment.cleanText, 8.4)
       doc.text(lines, 0.8, currentY)
-      currentY += (lines.length * 0.3) + 0.12
+      currentY += (lines.length * 0.48) + 0.12
     })
   }
 }
