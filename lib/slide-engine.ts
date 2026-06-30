@@ -59,6 +59,7 @@ export interface Slide {
   title: string;
   content: string[]; // Verbatim text segments array
   layout: SlideLayout;
+  isPasteMode?: boolean;
 }
 
 export type LayoutTag = Slide["layout"]
@@ -123,10 +124,41 @@ function sanitizeText(text: string): string {
   return cleaned;
 }
 
-export function parseDocumentToSlides(raw: string): ParseResult {
+export function parseDocumentToSlides(raw: string, isPasteMode?: boolean): ParseResult {
   let source = raw || ""
   if (source.trim().length === 0) {
     return { slides: [], chapterCount: 0 }
+  }
+
+  if (isPasteMode) {
+    const slideSegments = source.split(/\/newslide/gi);
+    const bodySlides: Slide[] = [];
+    let slideIdCounter = 1;
+
+    slideSegments.forEach((segment) => {
+      const lines = segment
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      if (lines.length === 0) return;
+
+      const title = lines[0];
+      const content = lines.slice(1);
+
+      bodySlides.push({
+        id: slideIdCounter++,
+        title: title,
+        content: content,
+        layout: "STANDARD_CONTENT",
+        isPasteMode: true
+      });
+    });
+
+    return {
+      slides: bodySlides,
+      chapterCount: 1
+    };
   }
 
   // Sanitization Pipeline Filters

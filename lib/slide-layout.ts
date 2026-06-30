@@ -26,8 +26,11 @@ export type BodySegment = {
   isUnordered: boolean
 }
 
-export function buildBodySegments(content: string[]): BodySegment[] {
+export function buildBodySegments(content: string[], isPasteMode?: boolean): BodySegment[] {
   return content.map((text) => {
+    if (isPasteMode) {
+      return { text, cleanText: text, isListItem: false, isOrdered: false, isUnordered: false }
+    }
     const isUnordered = text.startsWith("-") || text.startsWith("*") || text.startsWith("•")
     const isOrdered = /^\d+[.)]/.test(text) || /^[a-zA-Z][.)]/.test(text)
     const isListItem = isUnordered || isOrdered

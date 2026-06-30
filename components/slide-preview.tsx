@@ -214,15 +214,17 @@ function ContentSlide({ slide }: { slide: Slide }) {
     <div className="w-full">
       <ul className="space-y-4 pl-0">
         {contentToRender.filter(line => line.trim().length > 0).map((lineText: string, index: number) => {
-          const isUnordered = lineText.startsWith("-") || lineText.startsWith("*") || lineText.startsWith("•")
-          const isOrdered = /^\d+[.)]/.test(lineText) || /^[a-zA-Z][.)]/.test(lineText)
+          const isUnordered = !slide.isPasteMode && (lineText.startsWith("-") || lineText.startsWith("*") || lineText.startsWith("•"))
+          const isOrdered = !slide.isPasteMode && (/^\d+[.)]/.test(lineText) || /^[a-zA-Z][.)]/.test(lineText))
           const isListItem = isUnordered || isOrdered
 
-          const cleanText = lineText
-            .replace(/^[-*•]\s*/, "")
-            .replace(/^\d+[.)]\s*/, "")
-            .replace(/^[a-zA-Z][.)]\s*/, "")
-            .trim()
+          const cleanText = slide.isPasteMode
+            ? lineText
+            : lineText
+                .replace(/^[-*•]\s*/, "")
+                .replace(/^\d+[.)]\s*/, "")
+                .replace(/^[a-zA-Z][.)]\s*/, "")
+                .trim()
 
           if (!cleanText) return null
 

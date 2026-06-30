@@ -277,7 +277,7 @@ export function useSlideDeckGeneration() {
     setStepIndex(0)
 
     const source = rawText
-    const result = parseDocumentToSlides(source)
+    const result = parseDocumentToSlides(source, fileName === "Pasted Outline.txt")
 
     let step = 0
     const interval = setInterval(() => {
