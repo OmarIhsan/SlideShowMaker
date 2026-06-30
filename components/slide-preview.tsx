@@ -184,7 +184,7 @@ export function SlideRenderer({
       {/* Running Footer aligned to left: 6.67% and width: 86.66% */}
       <div
         className="absolute bottom-4 flex items-center justify-between border-t pt-2 z-10"
-        style={{ borderColor: "#F1F5F9", left: "20.0%", width: "46.66%" }}
+        style={{ borderColor: "#F1F5F9", left: "6.67%", width: "86.66%" }}
       >
         <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: TOKEN.cobalt }}>
           {brandFooterLeft}

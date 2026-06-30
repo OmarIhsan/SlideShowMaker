@@ -196,14 +196,14 @@ export async function exportSlidesToPowerPoint({
 
     // Running Footer Right
     pptxSlide.addText(footerRightText, {
-      x: 3.5,
+      x: 4.0,
       y: 4.8,
-      w: 1.5,
+      w: 3.0,
       h: 0.3,
       fontSize: 8,
       bold: true,
       color: "94A3B8", // Slate Gray
-      fontFace: "Plus Jakarta Sans",
+      fontFace: "Inter",
       align: "right"
     })
 
@@ -477,10 +477,10 @@ function renderPdfPage(
   doc.text(footerLeftText, 0.5, 4.95)
 
   // Running Footer Right
-  doc.setFont("Plus Jakarta Sans", "bold")
+  doc.setFont("Inter", "bold")
   doc.setFontSize(8)
   doc.setTextColor("#94A3B8") // Slate Gray
-  doc.text(footerRightText, 5.0, 4.95, { align: "right" })
+  doc.text(footerRightText, 7.0, 4.95, { align: "right" })
 
   if (slide.layout === "EVIDENCE_COMPARATIVE") {
     // Render optional title for context
