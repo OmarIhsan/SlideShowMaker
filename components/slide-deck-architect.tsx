@@ -455,7 +455,7 @@ export default function SlideDeckArchitect() {
               </div>
 
               <div className="flex flex-1 items-center justify-center overflow-hidden p-4 sm:p-8">
-                <div className="aspect-[4/3] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5">
+                <div className="aspect-[16/9] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5">
                   <AnimatePresence mode="wait" custom={direction}>
                     <motion.div
                       key={slides[current].id}
