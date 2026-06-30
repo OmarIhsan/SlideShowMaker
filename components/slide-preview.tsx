@@ -86,11 +86,11 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Vertical dividing line matching pptx x: 4.0 (left: 30.0%), y: 1.4 (top: 18.7%), h: 4.5 (height: 60.0%) */}
+      {/* Vertical dividing line matching pptx x: 2.0 (left: 15.0%), y: 1.4 (top: 18.7%), h: 4.5 (height: 60.0%) */}
       <div
         className="absolute z-10"
         style={{
-          left: "30.0%",
+          left: "15.0%",
           top: "18.7%",
           width: "1px",
           height: "60.0%",
@@ -99,11 +99,11 @@ export function SlideRenderer({
         aria-hidden="true"
       />
 
-      {/* Subtle Brand Metadata Header at top left (x: 4.22, y: 0.6) */}
+      {/* Subtle Brand Metadata Header at top left (x: 2.22, y: 0.6) */}
       <div
         className="absolute z-10 text-xs font-bold tracking-widest uppercase"
         style={{
-          left: "31.5%",
+          left: "16.5%",
           top: "8%",
           color: TOKEN.gold,
           fontFamily: "Inter, sans-serif"
@@ -112,13 +112,13 @@ export function SlideRenderer({
         {brandHeader}
       </div>
 
-      {/* Main slide content bounding box: x: 4.22 (left: 31.5%), y: 1.4 (top: 18.7%), w: 8.5 (width: 65.0%), h: 4.5 (height: 60.0%) */}
+      {/* Main slide content bounding box: x: 2.22 (left: 16.5%), y: 1.4 (top: 18.7%), w: 10.5 (width: 80.0%), h: 4.5 (height: 60.0%) */}
       <div
         className="absolute flex flex-col justify-center text-left overflow-hidden break-words pr-2 z-10"
         style={{
-          left: "31.5%",
+          left: "16.5%",
           top: "18.7%",
-          width: "65.0%",
+          width: "80.0%",
           height: "60.0%"
         }}
       >
